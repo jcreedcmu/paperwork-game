@@ -62,23 +62,25 @@ function showState(state: State) {
 }
 
 type Action =
-  | 'sleep'
-  | 'collect'
-  | 'exit'
-  | 'recycle'
-  | 'purchase'
-  | 'compose'
-  | 'back'
+  | { t: 'sleep' }
+  | { t: 'collect' }
+  | { t: 'exit' }
+  | { t: 'recycle' }
+  | { t: 'purchase' }
+  | { t: 'compose' }
+  | { t: 'back' }
   ;
 
+const STATUS_COLUMN = 30;
+
 function renderState() {
-  term.moveTo(20, 1);
+  term.moveTo(STATUS_COLUMN, 1);
   term.green('time: '); term('' + state.time);
 
   let row = 2;
   resources.forEach((res, i) => {
     if (state.inv.res[res] > 0) {
-      term.moveTo(20, row);
+      term.moveTo(STATUS_COLUMN, row);
       term.blue(`${res}: `); term('' + state.inv.res[res]);
       row++;
     }
@@ -113,15 +115,37 @@ async function showMenu(which: Menu): Promise<Action> {
   }
 }
 
+function stringOfAction(action: Action): string {
+  switch (action.t) {
+    case 'sleep': return 'sleep';
+    case 'collect': return 'collect';
+    case 'purchase': return 'purchase freedom';
+    case 'exit': return 'exit';
+    case 'recycle': return 'recycle bottles';
+    case 'compose': return 'compose...';
+    case 'back': return '<-';
+  }
+}
+
+function actionMenu(actions: Action[], options: terminalKit.Terminal.SingleColumnMenuOptions):
+  Promise<terminalKit.Terminal.SingleColumnMenuResponse> {
+  const cont = term.singleColumnMenu(actions.map(stringOfAction), options);
+  return cont.promise;
+}
+
 async function mainMenu(): Promise<Action> {
   term.red('MAIN MENU');
-  const menu: Action[] = ['sleep', 'collect', 'recycle', 'compose'];
+  const menu: Action[] = [
+    { t: 'sleep' },
+    { t: 'collect' },
+    { t: 'recycle' },
+    { t: 'compose' }
+  ];
   if (state.inv.res.cash > 10) {
-    menu.push('purchase');
+    menu.push({ t: 'purchase' });
   }
-  menu.push('exit');
-  const cont = term.singleColumnMenu(menu, { selectedIndex: state.selectedIndex });
-  const result = await cont.promise;
+  menu.push({ t: 'exit' });
+  const result = await actionMenu(menu, { selectedIndex: state.selectedIndex });
   state.selectedIndex = result.selectedIndex;
   return menu[result.selectedIndex];
 }
@@ -132,11 +156,11 @@ async function composeMenu(): Promise<Action> {
   term.red('COMPOSE MENU');
   const cont = term.singleColumnMenu(['back']);
   const result = await cont.promise;
-  return 'back';
+  return { t: 'back' };
 }
 
 async function doAction(action: Action): Promise<void> {
-  switch (action) {
+  switch (action.t) {
     case 'exit': quit(); break;
     case 'sleep': state.time++; break;
     case 'collect': {

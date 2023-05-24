@@ -152,9 +152,11 @@ async function mainMenu(): Promise<Action> {
   const menuItems: Action[] = [
     { t: 'sleep' },
     { t: 'collect' },
-    { t: 'recycle' },
     { t: 'composeMenu' }
   ];
+  if (state.inv.res.bottle > 0) {
+    menuItems.push({ t: 'recycle' });
+  }
   if (state.inv.res.cash >= 10) {
     menuItems.push({ t: 'purchase' });
   }

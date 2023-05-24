@@ -141,7 +141,7 @@ async function mainMenu(): Promise<Action> {
     { t: 'recycle' },
     { t: 'compose' }
   ];
-  if (state.inv.res.cash > 10) {
+  if (state.inv.res.cash >= 10) {
     menu.push({ t: 'purchase' });
   }
   menu.push({ t: 'exit' });

@@ -19,7 +19,8 @@ term.addListener('key', (x: string) => {
   }
 });
 
-type Resources = 'cash' | 'bottles'
+const all_resources = ['cash', 'bottles', 'paper'] as const;
+type Resources = (typeof all_resources)[number];
 type State = {
   time: number,
   selectedIndex: number | undefined,
@@ -29,13 +30,12 @@ type State = {
 const state: State = {
   selectedIndex: undefined,
   time: 0,
-  inv: { res: { cash: 0, bottles: 0 } },
+  inv: { res: Object.fromEntries(all_resources.map(x => [x, 0])) as Record<Resources, number> },
 };
 
 function showState(state: State) {
   console.log(JSON.stringify(state));
 }
-
 
 type Action =
   | 'sleep'
@@ -46,12 +46,18 @@ type Action =
   ;
 
 function renderState() {
+
   term.moveTo(20, 1);
   term.green('time: '); term('' + state.time);
-  term.moveTo(20, 2);
-  term.blue('cash: '); term('' + state.inv.res.cash);
-  term.moveTo(20, 3);
-  term.blue('bottles: '); term('' + state.inv.res.bottles);
+
+  let row = 2;
+  all_resources.forEach((res, i) => {
+    if (state.inv.res[res] > 0) {
+      term.moveTo(20, row);
+      term.blue(`${res}: `); term('' + state.inv.res[res]);
+      row++;
+    }
+  });
 }
 
 async function mainMenu(): Promise<Action> {

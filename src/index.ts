@@ -66,11 +66,18 @@ type Action =
   | { t: 'exit' }
   | { t: 'recycle' }
   | { t: 'purchase' }
-  | { t: 'compose' }
+  | { t: 'composeMenu' }
+  | { t: 'newLetter' }
   | { t: 'back' }
   ;
 
 const STATUS_COLUMN = 30;
+
+function stringOfItem(item: Item): string {
+  switch (item.t) {
+    case 'letter': return item.body;
+  }
+}
 
 function renderState() {
   term.moveTo(STATUS_COLUMN, 1);
@@ -84,6 +91,13 @@ function renderState() {
       row++;
     }
   });
+  row++;
+  state.inv.items.forEach((item, i) => {
+    term.moveTo(STATUS_COLUMN, row);
+    term.red(`* `); term.red(stringOfItem(item));
+    row++;
+  });
+
 }
 
 function menuOfMenuStack(menuStack: MenuStackFrame[]): Menu {
@@ -118,7 +132,8 @@ function stringOfAction(action: Action): string {
     case 'purchase': return 'purchase freedom';
     case 'exit': return 'exit';
     case 'recycle': return 'recycle bottles';
-    case 'compose': return 'compose...';
+    case 'composeMenu': return 'compose...';
+    case 'newLetter': return 'new letter';
     case 'back': return '<-';
   }
 }
@@ -137,7 +152,7 @@ async function mainMenu(): Promise<Action> {
     { t: 'sleep' },
     { t: 'collect' },
     { t: 'recycle' },
-    { t: 'compose' }
+    { t: 'composeMenu' }
   ];
   if (state.inv.res.cash >= 10) {
     menuItems.push({ t: 'purchase' });
@@ -147,9 +162,12 @@ async function mainMenu(): Promise<Action> {
 }
 
 async function composeMenu(): Promise<Action> {
-  const menuItems: Action[] = [
-    { t: 'back' }
-  ];
+  const menuItems: Action[] = [];
+  if (state.inv.res.paper > 0 && state.inv.res.pencil > 0) {
+    menuItems.push({ t: 'newLetter' });
+  }
+  menuItems.push({ t: 'back' });
+
   return await actionMenu('COMPOSE MENU', menuItems);
 }
 
@@ -162,8 +180,9 @@ async function doAction(action: Action): Promise<void> {
     } break;
     case 'recycle': state.inv.res.cash += state.inv.res.bottle; state.inv.res.bottle = 0; state.time++; break;
     case 'purchase': win(); break;
-    case 'compose': state.menuStack.unshift({ which: 'compose', ix: 0 }); break;
+    case 'composeMenu': state.menuStack.unshift({ which: 'compose', ix: 0 }); break;
     case 'back': state.menuStack.shift(); break;
+    case 'newLetter': state.inv.res.paper--; state.inv.items.push({ t: 'letter', body: 'a letter' }); break;
     default: unreachable(action);
   }
 }

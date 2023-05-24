@@ -127,36 +127,36 @@ function stringOfAction(action: Action): string {
   }
 }
 
-function actionMenu(actions: Action[], options: terminalKit.Terminal.SingleColumnMenuOptions):
-  Promise<terminalKit.Terminal.SingleColumnMenuResponse> {
+async function actionMenu(title: string, actions: Action[], options?: terminalKit.Terminal.SingleColumnMenuOptions):
+  Promise<Action> {
+  term.red(title);
   const cont = term.singleColumnMenu(actions.map(stringOfAction), options);
-  return cont.promise;
+  const result = await cont.promise;
+  state.selectedIndex = result.selectedIndex;
+  return actions[result.selectedIndex];
 }
 
 async function mainMenu(): Promise<Action> {
-  term.red('MAIN MENU');
-  const menu: Action[] = [
+  const menuItems: Action[] = [
     { t: 'sleep' },
     { t: 'collect' },
     { t: 'recycle' },
     { t: 'compose' }
   ];
   if (state.inv.res.cash >= 10) {
-    menu.push({ t: 'purchase' });
+    menuItems.push({ t: 'purchase' });
   }
-  menu.push({ t: 'exit' });
-  const result = await actionMenu(menu, { selectedIndex: state.selectedIndex });
-  state.selectedIndex = result.selectedIndex;
-  return menu[result.selectedIndex];
+  menuItems.push({ t: 'exit' });
+  return await actionMenu('MAIN MENU', menuItems);
 }
 
 function unreachable(v: never): void { }
 
 async function composeMenu(): Promise<Action> {
-  term.red('COMPOSE MENU');
-  const cont = term.singleColumnMenu(['back']);
-  const result = await cont.promise;
-  return { t: 'back' };
+  const menuItems: Action[] = [
+    { t: 'back' }
+  ];
+  return await actionMenu('COMPOSE MENU', menuItems);
 }
 
 async function doAction(action: Action): Promise<void> {

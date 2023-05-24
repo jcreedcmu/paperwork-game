@@ -148,11 +148,22 @@ async function actionMenu(title: string, actions: Action[], options?: terminalKi
   return actions[result.selectedIndex];
 }
 
+function hasLetters(): boolean {
+  return state.inv.items.some(x => x.t == 'letter');
+}
+
+function canWriteLetter(): boolean {
+  return state.inv.res.paper > 0 && state.inv.res.pencil > 0;
+}
+
+function canCompose(): boolean {
+  return hasLetters() || canWriteLetter();
+}
+
 async function mainMenu(): Promise<Action> {
   const menuItems: Action[] = [
     { t: 'sleep' },
     { t: 'collect' },
-    { t: 'composeMenu' }
   ];
   if (state.inv.res.bottle > 0) {
     menuItems.push({ t: 'recycle' });
@@ -160,13 +171,16 @@ async function mainMenu(): Promise<Action> {
   if (state.inv.res.cash >= 10) {
     menuItems.push({ t: 'purchase' });
   }
+  if (canCompose()) {
+    menuItems.push({ t: 'composeMenu' });
+  }
   menuItems.push({ t: 'exit' });
   return await actionMenu('MAIN MENU', menuItems);
 }
 
 async function composeMenu(): Promise<Action> {
   const menuItems: Action[] = [];
-  if (state.inv.res.paper > 0 && state.inv.res.pencil > 0) {
+  if (canWriteLetter()) {
     menuItems.push({ t: 'newLetter' });
   }
   menuItems.push({ t: 'back' });

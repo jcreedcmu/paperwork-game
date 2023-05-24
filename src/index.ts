@@ -68,6 +68,7 @@ type Action =
   | { t: 'purchase' }
   | { t: 'composeMenu' }
   | { t: 'newLetter' }
+  | { t: 'editLetter', ix: number, body: string }
   | { t: 'back' }
   ;
 
@@ -134,6 +135,7 @@ function stringOfAction(action: Action): string {
     case 'recycle': return 'recycle bottles';
     case 'composeMenu': return 'compose...';
     case 'newLetter': return 'new letter';
+    case 'editLetter': return `edit letter ("${action.body.substring(0, 10)}")`;
     case 'back': return '<-';
   }
 }
@@ -180,6 +182,11 @@ async function mainMenu(): Promise<Action> {
 
 async function composeMenu(): Promise<Action> {
   const menuItems: Action[] = [];
+  state.inv.items.forEach((item, ix) => {
+    if (item.t == 'letter') {
+      menuItems.push({ t: 'editLetter', ix, body: item.body });
+    }
+  });
   if (canWriteLetter()) {
     menuItems.push({ t: 'newLetter' });
   }
@@ -200,6 +207,7 @@ async function doAction(action: Action): Promise<void> {
     case 'composeMenu': state.menuStack.unshift({ which: 'compose', ix: 0 }); break;
     case 'back': state.menuStack.shift(); break;
     case 'newLetter': state.inv.res.paper--; state.inv.items.push({ t: 'letter', body: 'a letter' }); break;
+    case 'editLetter': break;
     default: unreachable(action);
   }
 }

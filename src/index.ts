@@ -141,7 +141,8 @@ function stringOfAction(action: Action): string {
 async function actionMenu(title: string, actions: Action[], options?: terminalKit.Terminal.SingleColumnMenuOptions):
   Promise<Action> {
   term.red(title);
-  const cont = term.singleColumnMenu(actions.map(stringOfAction), { ...options, selectedIndex: state.menuStack[0].ix });
+  const selectedIndex = Math.min(state.menuStack[0].ix, actions.length - 1);
+  const cont = term.singleColumnMenu(actions.map(stringOfAction), { ...options, selectedIndex });
   const result = await cont.promise;
   state.menuStack[0].ix = result.selectedIndex;
   return actions[result.selectedIndex];

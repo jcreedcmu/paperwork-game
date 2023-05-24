@@ -31,13 +31,14 @@ type Resource = (typeof resources)[number];
 // An item, on the other hand, does has a distinct identity, and does
 // not 'stack'.
 type Item =
-  | { t: 'letter', body: string };
+  | { t: 'letter', id: number, body: string };
 
 type Menu = 'main' | 'compose';
 type MenuStackFrame = { which: Menu, ix: number };
 
 type State = {
   menuStack: MenuStackFrame[],
+  idCounter: number,
   time: number,
   selectedIndex: number | undefined,
   inv: {
@@ -49,6 +50,7 @@ type State = {
 const state: State = {
   menuStack: [{ which: 'main', ix: 0 }],
   selectedIndex: undefined,
+  idCounter: 0,
   time: 0,
   inv: {
     items: [],
@@ -73,6 +75,18 @@ type Action =
   ;
 
 const STATUS_COLUMN = 30;
+
+function getLetterBody(id: number): string {
+  const ix = state.inv.items.findIndex(x => x.id == id);
+  if (ix == -1) {
+    throw new Error(`no item with id ${id}`);
+  }
+  const item = state.inv.items[ix];
+  if (item.t != 'letter') {
+    throw new Error(`item with id ${id} not a letter`);
+  }
+  return item.body;
+}
 
 function stringOfItem(item: Item): string {
   switch (item.t) {
@@ -206,7 +220,12 @@ async function doAction(action: Action): Promise<void> {
     case 'purchase': win(); break;
     case 'composeMenu': state.menuStack.unshift({ which: 'compose', ix: 0 }); break;
     case 'back': state.menuStack.shift(); break;
-    case 'newLetter': state.inv.res.paper--; state.inv.items.push({ t: 'letter', body: 'a letter' }); break;
+    case 'newLetter': {
+      state.inv.res.paper--;
+      const id = state.idCounter++;
+      state.inv.items.push({ t: 'letter', id, body: 'a letter' });
+    }
+      break;
     case 'editLetter': break;
     default: unreachable(action);
   }

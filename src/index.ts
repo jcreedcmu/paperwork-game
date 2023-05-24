@@ -34,10 +34,11 @@ type Item =
   | { t: 'letter', id: number, body: string };
 
 type Menu = 'main' | 'compose';
-type MenuStackFrame = { which: Menu, ix: number };
+type UiStackFrame =
+  | { t: 'menu', which: Menu, ix: number };
 
 type State = {
-  menuStack: MenuStackFrame[],
+  uiStack: UiStackFrame[],
   idCounter: number,
   time: number,
   selectedIndex: number | undefined,
@@ -48,7 +49,7 @@ type State = {
 }
 
 const state: State = {
-  menuStack: [{ which: 'main', ix: 0 }],
+  uiStack: [{ t: 'menu', which: 'main', ix: 0 }],
   selectedIndex: undefined,
   idCounter: 0,
   time: 0,
@@ -112,11 +113,6 @@ function renderState() {
     term.red(`* `); term.red(stringOfItem(item));
     row++;
   });
-
-}
-
-function menuOfMenuStack(menuStack: MenuStackFrame[]): Menu {
-  return menuStack[0].which;
 }
 
 function getMenuHandler(which: Menu): () => Promise<Action> {
@@ -127,16 +123,22 @@ function getMenuHandler(which: Menu): () => Promise<Action> {
 }
 
 async function showMenu(which: Menu): Promise<Action> {
-  term.clear();
-  term.hideCursor(true);
-  renderState();
-  term.moveTo(1, 1);
   try {
     const menuHandler = getMenuHandler(which);
     return await menuHandler();
   }
   finally {
     term.hideCursor(false);
+  }
+}
+async function showUi(uiStackFrame: UiStackFrame): Promise<Action> {
+  term.clear();
+  term.hideCursor(true);
+  renderState();
+  term.moveTo(1, 1);
+
+  switch (uiStackFrame.t) {
+    case 'menu': return await showMenu(uiStackFrame.which);
   }
 }
 
@@ -157,10 +159,10 @@ function stringOfAction(action: Action): string {
 async function actionMenu(title: string, actions: Action[], options?: terminalKit.Terminal.SingleColumnMenuOptions):
   Promise<Action> {
   term.red(title);
-  const selectedIndex = Math.min(state.menuStack[0].ix, actions.length - 1);
+  const selectedIndex = Math.min(state.uiStack[0].ix, actions.length - 1);
   const cont = term.singleColumnMenu(actions.map(stringOfAction), { ...options, selectedIndex });
   const result = await cont.promise;
-  state.menuStack[0].ix = result.selectedIndex;
+  state.uiStack[0].ix = result.selectedIndex;
   return actions[result.selectedIndex];
 }
 
@@ -218,9 +220,10 @@ async function doAction(action: Action): Promise<void> {
     } break;
     case 'recycle': state.inv.res.cash += state.inv.res.bottle; state.inv.res.bottle = 0; state.time++; break;
     case 'purchase': win(); break;
-    case 'composeMenu': state.menuStack.unshift({ which: 'compose', ix: 0 }); break;
-    case 'back': state.menuStack.shift(); break;
+    case 'composeMenu': state.uiStack.unshift({ t: 'menu', which: 'compose', ix: 0 }); break;
+    case 'back': state.uiStack.shift(); break;
     case 'newLetter': {
+      //  state.menuStack.unshift({ which: 'edit', id: newId });
       state.inv.res.paper--;
       const id = state.idCounter++;
       state.inv.items.push({ t: 'letter', id, body: 'a letter' });
@@ -234,7 +237,7 @@ async function doAction(action: Action): Promise<void> {
 const history: string[] = [];
 async function go() {
   while (1) {
-    const action = await showMenu(menuOfMenuStack(state.menuStack));
+    const action = await showUi(state.uiStack[0]);
     doAction(action);
   }
 }

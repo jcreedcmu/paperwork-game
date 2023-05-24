@@ -1,4 +1,5 @@
 import * as terminalKit from 'terminal-kit';
+import { randElt } from './util';
 const term = terminalKit.terminal;
 
 function quit() {
@@ -19,18 +20,20 @@ term.addListener('key', (x: string) => {
   }
 });
 
-const all_resources = ['cash', 'bottles', 'paper'] as const;
-type Resources = (typeof all_resources)[number];
+const resources = ['cash', 'bottle', 'paper', 'pencil'] as const;
+const collectResources: Resource[] = ['bottle', 'paper', 'pencil'];
+
+type Resource = (typeof resources)[number];
 type State = {
   time: number,
   selectedIndex: number | undefined,
-  inv: { res: Record<Resources, number> },
+  inv: { res: Record<Resource, number> },
 }
 
 const state: State = {
   selectedIndex: undefined,
   time: 0,
-  inv: { res: Object.fromEntries(all_resources.map(x => [x, 0])) as Record<Resources, number> },
+  inv: { res: Object.fromEntries(resources.map(x => [x, 0])) as Record<Resource, number> },
 };
 
 function showState(state: State) {
@@ -51,7 +54,7 @@ function renderState() {
   term.green('time: '); term('' + state.time);
 
   let row = 2;
-  all_resources.forEach((res, i) => {
+  resources.forEach((res, i) => {
     if (state.inv.res[res] > 0) {
       term.moveTo(20, row);
       term.blue(`${res}: `); term('' + state.inv.res[res]);
@@ -92,8 +95,10 @@ function doAction(action: Action): void {
   switch (action) {
     case 'exit': quit(); break;
     case 'sleep': state.time++; break;
-    case 'collect': state.inv.res.bottles++; state.time++; break;
-    case 'recycle': state.inv.res.cash += state.inv.res.bottles; state.inv.res.bottles = 0; state.time++; break;
+    case 'collect': {
+      state.inv.res[randElt(collectResources)]++; state.time++;
+    } break;
+    case 'recycle': state.inv.res.cash += state.inv.res.bottle; state.inv.res.bottle = 0; state.time++; break;
     case 'purchase': win(); break;
     default: unreachable(action);
   }

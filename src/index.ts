@@ -35,7 +35,7 @@ type Item =
   | { t: 'letter', body: string };
 
 type Menu = 'main' | 'compose';
-type MenuStackFrame = 'compose';
+type MenuStackFrame = { which: Menu, ix: number };
 
 type State = {
   menuStack: MenuStackFrame[],
@@ -48,7 +48,7 @@ type State = {
 }
 
 const state: State = {
-  menuStack: [],
+  menuStack: [{ which: 'main', ix: 0 }],
   selectedIndex: undefined,
   time: 0,
   inv: {
@@ -88,10 +88,7 @@ function renderState() {
 }
 
 function menuOfMenuStack(menuStack: MenuStackFrame[]): Menu {
-  if (menuStack.length == 0) return 'main';
-  else switch (menuStack[0]) {
-    case 'compose': return 'compose';
-  }
+  return menuStack[0].which;
 }
 
 function getMenuHandler(which: Menu): () => Promise<Action> {
@@ -127,12 +124,13 @@ function stringOfAction(action: Action): string {
   }
 }
 
+
 async function actionMenu(title: string, actions: Action[], options?: terminalKit.Terminal.SingleColumnMenuOptions):
   Promise<Action> {
   term.red(title);
-  const cont = term.singleColumnMenu(actions.map(stringOfAction), options);
+  const cont = term.singleColumnMenu(actions.map(stringOfAction), { ...options, selectedIndex: state.menuStack[0].ix });
   const result = await cont.promise;
-  state.selectedIndex = result.selectedIndex;
+  state.menuStack[0].ix = result.selectedIndex;
   return actions[result.selectedIndex];
 }
 
@@ -168,8 +166,8 @@ async function doAction(action: Action): Promise<void> {
     } break;
     case 'recycle': state.inv.res.cash += state.inv.res.bottle; state.inv.res.bottle = 0; state.time++; break;
     case 'purchase': win(); break;
-    case 'compose': state.menuStack.push('compose'); break;
-    case 'back': state.menuStack.pop(); break;
+    case 'compose': state.menuStack.unshift({ which: 'compose', ix: 0 }); break;
+    case 'back': state.menuStack.shift(); break;
     default: unreachable(action);
   }
 }

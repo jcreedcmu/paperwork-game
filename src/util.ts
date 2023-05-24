@@ -207,3 +207,5 @@ export function sum(xs: number[]): number {
 export function randElt<T>(x: T[]): T {
   return x[Math.floor(Math.random() * x.length)];
 }
+
+export function unreachable(v: never): void { }

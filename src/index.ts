@@ -1,5 +1,5 @@
 import * as terminalKit from 'terminal-kit';
-import { randElt } from './util';
+import { randElt, unreachable } from './util';
 const term = terminalKit.terminal;
 
 function quit() {
@@ -13,7 +13,6 @@ function win() {
   term.green('you win!\n');
   process.exit(0);
 }
-
 
 term.addListener('key', (x: string) => {
   if (x == 'ESCAPE' || x == 'q') {
@@ -124,7 +123,6 @@ function stringOfAction(action: Action): string {
   }
 }
 
-
 async function actionMenu(title: string, actions: Action[], options?: terminalKit.Terminal.SingleColumnMenuOptions):
   Promise<Action> {
   term.red(title);
@@ -147,8 +145,6 @@ async function mainMenu(): Promise<Action> {
   menuItems.push({ t: 'exit' });
   return await actionMenu('MAIN MENU', menuItems);
 }
-
-function unreachable(v: never): void { }
 
 async function composeMenu(): Promise<Action> {
   const menuItems: Action[] = [

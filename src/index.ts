@@ -23,13 +23,13 @@ type Resources = 'cash' | 'bottles'
 type State = {
   time: number,
   selectedIndex: number | undefined,
-  inv: Record<Resources, number>,
+  inv: { res: Record<Resources, number> },
 }
 
 const state: State = {
   selectedIndex: undefined,
   time: 0,
-  inv: { cash: 0, bottles: 0 },
+  inv: { res: { cash: 0, bottles: 0 } },
 };
 
 function showState(state: State) {
@@ -49,9 +49,9 @@ function renderState() {
   term.moveTo(20, 1);
   term.green('time: '); term('' + state.time);
   term.moveTo(20, 2);
-  term.blue('cash: '); term('' + state.inv.cash);
+  term.blue('cash: '); term('' + state.inv.res.cash);
   term.moveTo(20, 3);
-  term.blue('bottles: '); term('' + state.inv.bottles);
+  term.blue('bottles: '); term('' + state.inv.res.bottles);
 }
 
 async function mainMenu(): Promise<Action> {
@@ -70,7 +70,7 @@ async function mainMenu(): Promise<Action> {
 async function _mainMenu(): Promise<Action> {
   term.red('MAIN MENU');
   const menu: Action[] = ['sleep', 'collect', 'recycle'];
-  if (state.inv.cash > 10) {
+  if (state.inv.res.cash > 10) {
     menu.push('purchase');
   }
   menu.push('exit');
@@ -86,8 +86,8 @@ function doAction(action: Action): void {
   switch (action) {
     case 'exit': quit(); break;
     case 'sleep': state.time++; break;
-    case 'collect': state.inv.bottles++; state.time++; break;
-    case 'recycle': state.inv.cash += state.inv.bottles; state.inv.bottles = 0; state.time++; break;
+    case 'collect': state.inv.res.bottles++; state.time++; break;
+    case 'recycle': state.inv.res.cash += state.inv.res.bottles; state.inv.res.bottles = 0; state.time++; break;
     case 'purchase': win(); break;
     default: unreachable(action);
   }

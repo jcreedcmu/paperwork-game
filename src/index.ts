@@ -1,6 +1,9 @@
 import * as terminalKit from 'terminal-kit';
+import { Action, MenuAction, stringOfMenuAction } from './action';
+import { EditFrame, showEditDialog } from './dialog';
 import { randElt, unreachable } from './util';
-const term = terminalKit.terminal;
+
+const term: terminalKit.Terminal = terminalKit.terminal;
 
 function quit() {
   term.clear();
@@ -31,11 +34,16 @@ type Resource = (typeof resources)[number];
 // An item, on the other hand, does has a distinct identity, and does
 // not 'stack'.
 type Item =
-  | { t: 'letter', id: number, body: string };
+  | LetterItem;
+
+export type LetterItem = { t: 'letter', id: number, body: string };
 
 type Menu = 'main' | 'compose';
+type MenuFrame = { t: 'menu', which: Menu, ix: number };
 type UiStackFrame =
-  | { t: 'menu', which: Menu, ix: number };
+  | MenuFrame
+  | EditFrame
+  ;
 
 type State = {
   uiStack: UiStackFrame[],
@@ -63,21 +71,9 @@ function showState(state: State) {
   console.log(JSON.stringify(state));
 }
 
-type Action =
-  | { t: 'sleep' }
-  | { t: 'collect' }
-  | { t: 'exit' }
-  | { t: 'recycle' }
-  | { t: 'purchase' }
-  | { t: 'composeMenu' }
-  | { t: 'newLetter' }
-  | { t: 'editLetter', ix: number, body: string }
-  | { t: 'back' }
-  ;
-
 const STATUS_COLUMN = 30;
 
-function getLetterBody(id: number): string {
+function findLetter(id: number): LetterItem {
   const ix = state.inv.items.findIndex(x => x.id == id);
   if (ix == -1) {
     throw new Error(`no item with id ${id}`);
@@ -86,7 +82,7 @@ function getLetterBody(id: number): string {
   if (item.t != 'letter') {
     throw new Error(`item with id ${id} not a letter`);
   }
-  return item.body;
+  return item;
 }
 
 function stringOfItem(item: Item): string {
@@ -115,17 +111,17 @@ function renderState() {
   });
 }
 
-function getMenuHandler(which: Menu): () => Promise<Action> {
+function getMenuHandler(which: Menu): (frame: MenuFrame) => Promise<MenuAction> {
   switch (which) {
     case 'main': return mainMenu;
     case 'compose': return composeMenu;
   }
 }
 
-async function showMenu(which: Menu): Promise<Action> {
+async function showMenu(frame: MenuFrame): Promise<MenuAction> {
   try {
-    const menuHandler = getMenuHandler(which);
-    return await menuHandler();
+    const menuHandler = getMenuHandler(frame.which);
+    return await menuHandler(frame);
   }
   finally {
     term.hideCursor(false);
@@ -138,31 +134,18 @@ async function showUi(uiStackFrame: UiStackFrame): Promise<Action> {
   term.moveTo(1, 1);
 
   switch (uiStackFrame.t) {
-    case 'menu': return await showMenu(uiStackFrame.which);
+    case 'menu': return await showMenu(uiStackFrame);
+    case 'edit': return await showEditDialog(uiStackFrame, term);
   }
 }
 
-function stringOfAction(action: Action): string {
-  switch (action.t) {
-    case 'sleep': return 'sleep';
-    case 'collect': return 'collect';
-    case 'purchase': return 'purchase freedom';
-    case 'exit': return 'exit';
-    case 'recycle': return 'recycle bottles';
-    case 'composeMenu': return 'compose...';
-    case 'newLetter': return 'new letter';
-    case 'editLetter': return `edit letter ("${action.body.substring(0, 10)}")`;
-    case 'back': return '<-';
-  }
-}
-
-async function actionMenu(title: string, actions: Action[], options?: terminalKit.Terminal.SingleColumnMenuOptions):
-  Promise<Action> {
+async function actionMenu(title: string, frame: MenuFrame, actions: MenuAction[], options?: terminalKit.Terminal.SingleColumnMenuOptions):
+  Promise<MenuAction> {
   term.red(title);
-  const selectedIndex = Math.min(state.uiStack[0].ix, actions.length - 1);
-  const cont = term.singleColumnMenu(actions.map(stringOfAction), { ...options, selectedIndex });
+  const selectedIndex = Math.min(frame.ix, actions.length - 1);
+  const cont = term.singleColumnMenu(actions.map(stringOfMenuAction), { ...options, selectedIndex });
   const result = await cont.promise;
-  state.uiStack[0].ix = result.selectedIndex;
+  frame.ix = result.selectedIndex;
   return actions[result.selectedIndex];
 }
 
@@ -178,8 +161,8 @@ function canCompose(): boolean {
   return hasLetters() || canWriteLetter();
 }
 
-async function mainMenu(): Promise<Action> {
-  const menuItems: Action[] = [
+async function mainMenu(frame: MenuFrame): Promise<MenuAction> {
+  const menuItems: MenuAction[] = [
     { t: 'sleep' },
     { t: 'collect' },
   ];
@@ -193,14 +176,14 @@ async function mainMenu(): Promise<Action> {
     menuItems.push({ t: 'composeMenu' });
   }
   menuItems.push({ t: 'exit' });
-  return await actionMenu('MAIN MENU', menuItems);
+  return await actionMenu('MAIN MENU', frame, menuItems);
 }
 
-async function composeMenu(): Promise<Action> {
-  const menuItems: Action[] = [];
+async function composeMenu(frame: MenuFrame): Promise<MenuAction> {
+  const menuItems: MenuAction[] = [];
   state.inv.items.forEach((item, ix) => {
     if (item.t == 'letter') {
-      menuItems.push({ t: 'editLetter', ix, body: item.body });
+      menuItems.push({ t: 'editLetter', id: item.id, body: item.body });
     }
   });
   if (canWriteLetter()) {
@@ -208,7 +191,19 @@ async function composeMenu(): Promise<Action> {
   }
   menuItems.push({ t: 'back' });
 
-  return await actionMenu('COMPOSE MENU', menuItems);
+  return await actionMenu('COMPOSE MENU', frame, menuItems);
+}
+
+function setLetterText(id: number, text: string): void {
+  const ix = state.inv.items.findIndex(x => x.id == id);
+  if (ix == -1) {
+    throw new Error(`no item with id ${id}`);
+  }
+  const item = state.inv.items[ix];
+  if (item.t != 'letter') {
+    throw new Error(`item with id ${id} not a letter`);
+  }
+  item.body = text;
 }
 
 async function doAction(action: Action): Promise<void> {
@@ -223,13 +218,25 @@ async function doAction(action: Action): Promise<void> {
     case 'composeMenu': state.uiStack.unshift({ t: 'menu', which: 'compose', ix: 0 }); break;
     case 'back': state.uiStack.shift(); break;
     case 'newLetter': {
-      //  state.menuStack.unshift({ which: 'edit', id: newId });
-      state.inv.res.paper--;
-      const id = state.idCounter++;
-      state.inv.items.push({ t: 'letter', id, body: 'a letter' });
+      state.uiStack.unshift({ t: 'edit', id: undefined });
     }
       break;
-    case 'editLetter': break;
+    case 'editLetter':
+      state.uiStack.unshift({ t: 'edit', id: action.id });
+      break;
+    case 'setLetterText': {
+      const { id, text } = action;
+      if (id == undefined) {
+        state.inv.res.paper--;
+        const newId = state.idCounter++;
+        const id = state.idCounter++;
+        state.inv.items.push({ t: 'letter', id, body: text });
+      }
+      else {
+        findLetter(id).body = text;
+      }
+      state.uiStack.shift();
+    } break;
     default: unreachable(action);
   }
 }

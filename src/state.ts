@@ -1,6 +1,6 @@
 import { EditFrame } from "./dialog";
 
-export type Menu = 'main' | 'compose';
+export type Menu = 'main' | 'inventory';
 export type MenuFrame = { t: 'menu', which: Menu, ix: number };
 export type UiStackFrame =
   | MenuFrame

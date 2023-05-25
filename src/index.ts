@@ -56,7 +56,7 @@ function renderState() {
 async function showMenu(frame: MenuFrame): Promise<MenuAction> {
   switch (frame.which) {
     case 'main': return await mainMenu(frame);
-    case 'compose': return await composeMenu(frame);
+    case 'inventory': return await inventoryMenu(frame);
   }
 }
 
@@ -119,26 +119,26 @@ async function mainMenu(frame: MenuFrame): Promise<MenuAction> {
   if (state.inv.res.cash >= 10) {
     menuItems.push({ t: 'purchase' });
   }
+  if (canWriteLetter()) {
+    menuItems.push({ t: 'newLetter' });
+  }
   if (canCompose()) {
-    menuItems.push({ t: 'enterComposeMenu' });
+    menuItems.push({ t: 'enterInventoryMenu' });
   }
   menuItems.push({ t: 'exit' });
   return await actionMenu('MAIN MENU', frame, menuItems);
 }
 
-async function composeMenu(frame: MenuFrame): Promise<MenuAction> {
+async function inventoryMenu(frame: MenuFrame): Promise<MenuAction> {
   const menuItems: MenuAction[] = [];
   state.inv.items.forEach((item, ix) => {
     if (item.t == 'letter') {
       menuItems.push({ t: 'editLetter', id: item.id, body: item.body });
     }
   });
-  if (canWriteLetter()) {
-    menuItems.push({ t: 'newLetter' });
-  }
   menuItems.push({ t: 'back' });
 
-  return await actionMenu('COMPOSE MENU', frame, menuItems);
+  return await actionMenu('INVENTORY MENU', frame, menuItems);
 }
 
 function setLetterText(id: number, text: string): void {
@@ -162,7 +162,7 @@ async function doAction(action: Action): Promise<void> {
     } break;
     case 'recycle': state.inv.res.cash += state.inv.res.bottle; state.inv.res.bottle = 0; state.time++; break;
     case 'purchase': win(); break;
-    case 'enterComposeMenu': state.uiStack.unshift({ t: 'menu', which: 'compose', ix: 0 }); break;
+    case 'enterInventoryMenu': state.uiStack.unshift({ t: 'menu', which: 'inventory', ix: 0 }); break;
     case 'back': state.uiStack.shift(); break;
     case 'newLetter': {
       state.uiStack.unshift({ t: 'edit', id: undefined });

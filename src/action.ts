@@ -4,7 +4,7 @@ export type MenuAction =
   | { t: 'exit' }
   | { t: 'recycle' }
   | { t: 'purchase' }
-  | { t: 'enterComposeMenu' }
+  | { t: 'enterInventoryMenu' }
   | { t: 'newLetter' }
   | { t: 'editLetter', id: number, body: string }
   | { t: 'back' }
@@ -21,7 +21,7 @@ export function stringOfMenuAction(action: MenuAction): string {
     case 'purchase': return 'purchase freedom';
     case 'exit': return 'exit';
     case 'recycle': return 'recycle bottles';
-    case 'enterComposeMenu': return 'compose...';
+    case 'enterInventoryMenu': return 'inventory...';
     case 'newLetter': return 'new letter';
     case 'editLetter': return `edit letter ("${action.body.substring(0, 10)}")`;
     case 'back': return '<-';

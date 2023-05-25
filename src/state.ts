@@ -1,4 +1,5 @@
 import { Action } from "./action";
+import { DocCode } from "./doc";
 import { UiStackFrame } from "./menu";
 
 export const resources = ['cash', 'bottle', 'paper', 'pencil'] as const;
@@ -10,11 +11,15 @@ export const collectResources: Resource[] = ['bottle', 'paper', 'pencil'];
 type Resource = (typeof resources)[number];
 
 export type LetterItem = { t: 'letter', id: number, body: string };
+export type DocItem = { t: 'doc', id: number, code: DocCode };
 
 // An item, on the other hand, does has a distinct identity, and does
 // not 'stack'.
 export type Item =
-  | LetterItem;
+  | LetterItem
+  | DocItem;
+
+export type InboxItem = { t: 'inbox', unread: boolean, item: Item };
 
 export type Future = { time: number, action: Action };
 
@@ -26,6 +31,7 @@ export type State = {
   time: number,
   selectedIndex: number | undefined,
   inv: {
+    inbox: InboxItem[],
     items: Item[],
     res: Record<Resource, number>
   },
@@ -39,6 +45,7 @@ export const state: State = {
   idCounter: 0,
   time: 0,
   inv: {
+    inbox: [],
     items: [],
     res: Object.fromEntries(resources.map(x => [x, 0])) as Record<Resource, number>
   },

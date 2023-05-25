@@ -1,3 +1,5 @@
+import { Item } from './state';
+
 export type MenuAction =
   | { t: 'sleep' }
   | { t: 'collect' }
@@ -15,6 +17,7 @@ export type Action =
   | MenuAction
   | { t: 'setLetterText', id: number | undefined, text: string }
   | { t: 'bigMoney' }
+  | { t: 'addInbox', item: Item }
   | { t: 'nothing' }
   ;
 

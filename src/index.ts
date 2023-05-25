@@ -4,6 +4,7 @@ import { EditFrame, showEditDialog } from './dialog';
 import { randElt, unreachable } from './util';
 import { state, Item, resources, findLetter, collectResources, State, Future, LetterItem } from './state';
 import { LetterMenu, MenuFrame, UiStackFrame } from "./menu";
+import { stringOfDocCode } from './doc';
 
 
 const term: terminalKit.Terminal = terminalKit.terminal;
@@ -33,6 +34,7 @@ const FREEDOM_PRICE = 100;
 function stringOfItem(item: Item): string {
   switch (item.t) {
     case 'letter': return item.body;
+    case 'doc': return stringOfDocCode(item.code);
   }
 }
 
@@ -227,6 +229,9 @@ async function doAction(action: Action): Promise<void> {
     case 'nothing':
       logger('letter had no effect');
       break;
+    case 'addInbox':
+      state.inv.inbox.push({ t: 'inbox', unread: true, item: action.item });
+      break;
     default: unreachable(action);
   }
 }
@@ -240,7 +245,7 @@ function resolveLetter(letter: LetterItem): Action {
     return { t: 'bigMoney' };
   }
   else {
-    return { t: 'nothing' };
+    return { t: 'addInbox', item: { t: 'doc', code: 'brochure', id: 0 } };
   }
 }
 

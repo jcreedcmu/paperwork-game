@@ -111,31 +111,27 @@ function renderState() {
   });
 }
 
-function getMenuHandler(which: Menu): (frame: MenuFrame) => Promise<MenuAction> {
-  switch (which) {
-    case 'main': return mainMenu;
-    case 'compose': return composeMenu;
+async function showMenu(frame: MenuFrame): Promise<MenuAction> {
+  switch (frame.which) {
+    case 'main': return await mainMenu(frame);
+    case 'compose': return await composeMenu(frame);
   }
 }
 
-async function showMenu(frame: MenuFrame): Promise<MenuAction> {
-  try {
-    const menuHandler = getMenuHandler(frame.which);
-    return await menuHandler(frame);
-  }
-  finally {
-    term.hideCursor(false);
-  }
-}
 async function showUi(uiStackFrame: UiStackFrame): Promise<Action> {
   term.clear();
   term.hideCursor(true);
   renderState();
   term.moveTo(1, 1);
 
-  switch (uiStackFrame.t) {
-    case 'menu': return await showMenu(uiStackFrame);
-    case 'edit': return await showEditDialog(uiStackFrame, term);
+  try {
+    switch (uiStackFrame.t) {
+      case 'menu': return await showMenu(uiStackFrame);
+      case 'edit': return await showEditDialog(uiStackFrame, term);
+    }
+  }
+  finally {
+    term.hideCursor(false);
   }
 }
 
@@ -173,7 +169,7 @@ async function mainMenu(frame: MenuFrame): Promise<MenuAction> {
     menuItems.push({ t: 'purchase' });
   }
   if (canCompose()) {
-    menuItems.push({ t: 'composeMenu' });
+    menuItems.push({ t: 'enterComposeMenu' });
   }
   menuItems.push({ t: 'exit' });
   return await actionMenu('MAIN MENU', frame, menuItems);
@@ -215,7 +211,7 @@ async function doAction(action: Action): Promise<void> {
     } break;
     case 'recycle': state.inv.res.cash += state.inv.res.bottle; state.inv.res.bottle = 0; state.time++; break;
     case 'purchase': win(); break;
-    case 'composeMenu': state.uiStack.unshift({ t: 'menu', which: 'compose', ix: 0 }); break;
+    case 'enterComposeMenu': state.uiStack.unshift({ t: 'menu', which: 'compose', ix: 0 }); break;
     case 'back': state.uiStack.shift(); break;
     case 'newLetter': {
       state.uiStack.unshift({ t: 'edit', id: undefined });

@@ -4,7 +4,8 @@ import { Action } from './action';
 export type EditFrame = { t: 'edit', id: number | undefined };
 
 export async function showEditDialog(frame: EditFrame, term: Terminal): Promise<Action> {
-  const result = await term.inputField().promise;
+  term('> ');
+  const result = await (term.inputField()).promise;
   if (result == undefined) {
     return { t: 'back' };
   }

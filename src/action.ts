@@ -14,6 +14,8 @@ export type MenuAction =
 export type Action =
   | MenuAction
   | { t: 'setLetterText', id: number | undefined, text: string }
+  | { t: 'bigMoney' }
+  | { t: 'nothing' }
   ;
 
 export function stringOfMenuAction(action: MenuAction): string {

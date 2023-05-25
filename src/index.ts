@@ -2,7 +2,7 @@ import * as terminalKit from 'terminal-kit';
 import { Action, MenuAction, stringOfMenuAction } from './action';
 import { EditFrame, showEditDialog } from './dialog';
 import { randElt, unreachable } from './util';
-import { state, Item, resources, findLetter, collectResources, State } from './state';
+import { state, Item, resources, findLetter, collectResources, State, Future, LetterItem } from './state';
 import { LetterMenu, MenuFrame, UiStackFrame } from "./menu";
 
 
@@ -27,6 +27,7 @@ term.addListener('key', (x: string) => {
 });
 
 const STATUS_COLUMN = 30;
+const FREEDOM_PRICE = 100;
 
 function stringOfItem(item: Item): string {
   switch (item.t) {
@@ -114,7 +115,7 @@ async function mainMenu(frame: MenuFrame): Promise<MenuAction> {
   if (state.inv.res.bottle > 0) {
     menuItems.push({ t: 'recycle' });
   }
-  if (state.inv.res.cash >= 10) {
+  if (state.inv.res.cash >= FREEDOM_PRICE) {
     menuItems.push({ t: 'purchase' });
   }
   if (canWriteLetter()) {
@@ -205,11 +206,31 @@ async function doAction(action: Action): Promise<void> {
       state.uiStack.unshift({ t: 'menu', which: { t: 'letter', id: action.id }, ix: 0 });
       break;
     case 'sendLetter':
+      const letter = findLetter(state, action.id);
+      addFuture(state, 3, resolveLetter(letter));
       state.inv.items = state.inv.items.filter(x => x.id != action.id);
       goBack(state);
       break;
+    case 'bigMoney':
+      state.inv.res.cash += 50;
+      break;
+    case 'nothing':
+      break;
     default: unreachable(action);
   }
+}
+
+function resolveLetter(letter: LetterItem): Action {
+  if (letter.body.match('money')) {
+    return { t: 'bigMoney' };
+  }
+  else {
+    return { t: 'nothing' };
+  }
+}
+
+function addFuture(state: State, delta_time: number, action: Action): void {
+  state.futures.push({ action, time: state.time + delta_time });
 }
 
 function resolveFutures(state: State): void {

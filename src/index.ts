@@ -167,11 +167,17 @@ function goBack(state: State): void {
 async function doAction(action: Action): Promise<void> {
   switch (action.t) {
     case 'exit': quit(); break;
-    case 'sleep': state.time++; break;
+    case 'sleep':
+      state.time++;
+      break;
     case 'collect': {
-      state.inv.res[randElt(collectResources)]++; state.time++;
+      state.inv.res[randElt(collectResources)]++;
+      state.time++;
     } break;
-    case 'recycle': state.inv.res.cash += state.inv.res.bottle; state.inv.res.bottle = 0; state.time++; break;
+    case 'recycle':
+      state.inv.res.cash += state.inv.res.bottle;
+      state.inv.res.bottle = 0;
+      break;
     case 'purchase': win(); break;
     case 'enterInventoryMenu': state.uiStack.unshift({ t: 'menu', which: { t: 'inventory' }, ix: 0 }); break;
     case 'back': goBack(state); break;
@@ -206,11 +212,20 @@ async function doAction(action: Action): Promise<void> {
   }
 }
 
+function resolveFutures(state: State): void {
+  const time = state.time;
+  const fsNow = state.futures.filter(x => x.time <= time);
+  const fsLater = state.futures.filter(x => x.time > time);
+  state.futures = fsLater;
+  fsNow.forEach(f => doAction(f.action));
+}
+
 const history: string[] = [];
 async function go() {
   while (1) {
     const action = await showUi(state.uiStack[0]);
     doAction(action);
+    resolveFutures(state);
   }
 }
 

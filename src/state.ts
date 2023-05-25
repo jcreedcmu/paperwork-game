@@ -1,3 +1,4 @@
+import { Action } from "./action";
 import { UiStackFrame } from "./menu";
 
 export const resources = ['cash', 'bottle', 'paper', 'pencil'] as const;
@@ -15,7 +16,10 @@ export type LetterItem = { t: 'letter', id: number, body: string };
 export type Item =
   | LetterItem;
 
+export type Future = { time: number, action: Action };
+
 export type State = {
+  futures: Future[],
   uiStack: UiStackFrame[],
   idCounter: number,
   time: number,
@@ -27,6 +31,7 @@ export type State = {
 }
 
 export const state: State = {
+  futures: [],
   uiStack: [{ t: 'menu', which: { t: 'main' }, ix: 0 }],
   selectedIndex: undefined,
   idCounter: 0,

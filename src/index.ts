@@ -2,6 +2,8 @@ import * as terminalKit from 'terminal-kit';
 import { Action, MenuAction, stringOfMenuAction } from './action';
 import { EditFrame, showEditDialog } from './dialog';
 import { randElt, unreachable } from './util';
+import { state, Item, resources, MenuFrame, UiStackFrame, findLetter, collectResources } from './state';
+
 
 const term: terminalKit.Terminal = terminalKit.terminal;
 
@@ -23,67 +25,7 @@ term.addListener('key', (x: string) => {
   }
 });
 
-const resources = ['cash', 'bottle', 'paper', 'pencil'] as const;
-const collectResources: Resource[] = ['bottle', 'paper', 'pencil'];
-
-// A resource is just a thing that you can have some number of --- and
-// the number of them that you have is the only information that is
-// kept track of. They don't have any notion of identity.
-type Resource = (typeof resources)[number];
-
-// An item, on the other hand, does has a distinct identity, and does
-// not 'stack'.
-type Item =
-  | LetterItem;
-
-export type LetterItem = { t: 'letter', id: number, body: string };
-
-type Menu = 'main' | 'compose';
-type MenuFrame = { t: 'menu', which: Menu, ix: number };
-type UiStackFrame =
-  | MenuFrame
-  | EditFrame
-  ;
-
-type State = {
-  uiStack: UiStackFrame[],
-  idCounter: number,
-  time: number,
-  selectedIndex: number | undefined,
-  inv: {
-    items: Item[],
-    res: Record<Resource, number>
-  },
-}
-
-const state: State = {
-  uiStack: [{ t: 'menu', which: 'main', ix: 0 }],
-  selectedIndex: undefined,
-  idCounter: 0,
-  time: 0,
-  inv: {
-    items: [],
-    res: Object.fromEntries(resources.map(x => [x, 0])) as Record<Resource, number>
-  },
-};
-
-function showState(state: State) {
-  console.log(JSON.stringify(state));
-}
-
 const STATUS_COLUMN = 30;
-
-function findLetter(id: number): LetterItem {
-  const ix = state.inv.items.findIndex(x => x.id == id);
-  if (ix == -1) {
-    throw new Error(`no item with id ${id}`);
-  }
-  const item = state.inv.items[ix];
-  if (item.t != 'letter') {
-    throw new Error(`item with id ${id} not a letter`);
-  }
-  return item;
-}
 
 function stringOfItem(item: Item): string {
   switch (item.t) {
@@ -229,7 +171,7 @@ async function doAction(action: Action): Promise<void> {
         state.inv.items.push({ t: 'letter', id, body: text });
       }
       else {
-        findLetter(id).body = text;
+        findLetter(state, id).body = text;
       }
       state.uiStack.shift();
     } break;

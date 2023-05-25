@@ -27,6 +27,7 @@ term.addListener('key', (x: string) => {
 });
 
 const STATUS_COLUMN = 30;
+const LOG_ROW = 15;
 const FREEDOM_PRICE = 100;
 
 function stringOfItem(item: Item): string {
@@ -53,6 +54,14 @@ function renderState() {
     term.red(`* `); term.red(stringOfItem(item));
     row++;
   });
+
+  if (state.log.length > 0) {
+    const lines = state.log.slice(-10).reverse();
+    lines.forEach((line, i) => {
+      term.moveTo(STATUS_COLUMN, LOG_ROW + i);
+      term.gray(line);
+    });
+  }
 }
 
 async function showMenu(frame: MenuFrame): Promise<MenuAction> {
@@ -212,12 +221,18 @@ async function doAction(action: Action): Promise<void> {
       goBack(state);
       break;
     case 'bigMoney':
+      logger('got big money');
       state.inv.res.cash += 50;
       break;
     case 'nothing':
+      logger('letter had no effect');
       break;
     default: unreachable(action);
   }
+}
+
+function logger(msg: string): void {
+  state.log.push(`[${state.time}] ${msg}`);
 }
 
 function resolveLetter(letter: LetterItem): Action {

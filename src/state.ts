@@ -19,6 +19,7 @@ export type Item =
 export type Future = { time: number, action: Action };
 
 export type State = {
+  log: string[],
   futures: Future[],
   uiStack: UiStackFrame[],
   idCounter: number,
@@ -31,6 +32,7 @@ export type State = {
 }
 
 export const state: State = {
+  log: [],
   futures: [],
   uiStack: [{ t: 'menu', which: { t: 'main' }, ix: 0 }],
   selectedIndex: undefined,

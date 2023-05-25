@@ -2,7 +2,7 @@ import * as terminalKit from 'terminal-kit';
 import { Action, MenuAction, stringOfMenuAction } from './action';
 import { EditFrame, showEditDialog } from './dialog';
 import { randElt, unreachable } from './util';
-import { state, Item, resources, findLetter, collectResources } from './state';
+import { state, Item, resources, findLetter, collectResources, State } from './state';
 import { LetterMenu, MenuFrame, UiStackFrame } from "./menu";
 
 
@@ -142,6 +142,7 @@ async function inventoryMenu(frame: MenuFrame): Promise<MenuAction> {
 async function letterMenu(frame: MenuFrame, which: LetterMenu): Promise<MenuAction> {
   const menuItems: MenuAction[] = [
     { t: 'editLetter', id: which.id },
+    { t: 'sendLetter', id: which.id },
     { t: 'back' },
   ];
   return await actionMenu('LETTER MENU', frame, menuItems);
@@ -159,6 +160,10 @@ function setLetterText(id: number, text: string): void {
   item.body = text;
 }
 
+function goBack(state: State): void {
+  state.uiStack.shift();
+}
+
 async function doAction(action: Action): Promise<void> {
   switch (action.t) {
     case 'exit': quit(); break;
@@ -169,7 +174,7 @@ async function doAction(action: Action): Promise<void> {
     case 'recycle': state.inv.res.cash += state.inv.res.bottle; state.inv.res.bottle = 0; state.time++; break;
     case 'purchase': win(); break;
     case 'enterInventoryMenu': state.uiStack.unshift({ t: 'menu', which: { t: 'inventory' }, ix: 0 }); break;
-    case 'back': state.uiStack.shift(); break;
+    case 'back': goBack(state); break;
     case 'newLetter': {
       state.uiStack.unshift({ t: 'edit', id: undefined });
     }
@@ -188,10 +193,14 @@ async function doAction(action: Action): Promise<void> {
       else {
         findLetter(state, id).body = text;
       }
-      state.uiStack.shift();
+      goBack(state);
     } break;
     case 'enterLetterMenu':
       state.uiStack.unshift({ t: 'menu', which: { t: 'letter', id: action.id }, ix: 0 });
+      break;
+    case 'sendLetter':
+      state.inv.items = state.inv.items.filter(x => x.id != action.id);
+      goBack(state);
       break;
     default: unreachable(action);
   }

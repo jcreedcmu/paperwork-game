@@ -1,29 +1,17 @@
 import * as terminalKit from 'terminal-kit';
-import { Action, MenuAction, stringOfMenuAction } from './action';
-import { EditFrame, showEditDialog } from './dialog';
-import { randElt, unreachable } from './util';
-import { state, Item, resources, findLetter, collectResources, State, Future, LetterItem } from './state';
-import { LetterMenu, MenuFrame, UiStackFrame } from "./menu";
+import { Action, MenuAction, doAction, quit, resolveFutures, stringOfMenuAction } from './action';
+import { showEditDialog } from './dialog';
 import { stringOfDocCode } from './doc';
+import { LetterMenu, MenuFrame, UiStackFrame } from "./menu";
+import { Item, resources, state } from './state';
 
 
 const term: terminalKit.Terminal = terminalKit.terminal;
 
-function quit() {
-  term.clear();
-  term.reset();
-  process.exit(0);
-}
-
-function win() {
-  term.clear();
-  term.green('you win!\n');
-  process.exit(0);
-}
 
 term.addListener('key', (x: string) => {
   if (x == 'ESCAPE' || x == 'q') {
-    quit();
+    quit(term);
   }
 });
 
@@ -172,101 +160,13 @@ function setLetterText(id: number, text: string): void {
   item.body = text;
 }
 
-function goBack(state: State): void {
-  state.uiStack.shift();
-}
-
-async function doAction(action: Action): Promise<void> {
-  switch (action.t) {
-    case 'exit': quit(); break;
-    case 'sleep':
-      state.time++;
-      break;
-    case 'collect': {
-      state.inv.res[randElt(collectResources)]++;
-      state.time++;
-    } break;
-    case 'recycle':
-      state.inv.res.cash += state.inv.res.bottle;
-      state.inv.res.bottle = 0;
-      break;
-    case 'purchase': win(); break;
-    case 'enterInventoryMenu': state.uiStack.unshift({ t: 'menu', which: { t: 'inventory' }, ix: 0 }); break;
-    case 'back': goBack(state); break;
-    case 'newLetter': {
-      state.uiStack.unshift({ t: 'edit', id: undefined });
-    }
-      break;
-    case 'editLetter':
-      state.uiStack.unshift({ t: 'edit', id: action.id });
-      break;
-    case 'setLetterText': {
-      const { id, text } = action;
-      if (id == undefined) {
-        state.inv.res.paper--;
-        const newId = state.idCounter++;
-        const id = state.idCounter++;
-        state.inv.items.push({ t: 'letter', id, body: text });
-      }
-      else {
-        findLetter(state, id).body = text;
-      }
-      goBack(state);
-    } break;
-    case 'enterLetterMenu':
-      state.uiStack.unshift({ t: 'menu', which: { t: 'letter', id: action.id }, ix: 0 });
-      break;
-    case 'sendLetter':
-      const letter = findLetter(state, action.id);
-      addFuture(state, 3, resolveLetter(letter));
-      state.inv.items = state.inv.items.filter(x => x.id != action.id);
-      goBack(state);
-      break;
-    case 'bigMoney':
-      logger('got big money');
-      state.inv.res.cash += 50;
-      break;
-    case 'nothing':
-      logger('letter had no effect');
-      break;
-    case 'addInbox':
-      state.inv.inbox.push({ t: 'inbox', unread: true, item: action.item });
-      break;
-    default: unreachable(action);
-  }
-}
-
-function logger(msg: string): void {
-  state.log.push(`[${state.time}] ${msg}`);
-}
-
-function resolveLetter(letter: LetterItem): Action {
-  if (letter.body.match('money')) {
-    return { t: 'bigMoney' };
-  }
-  else {
-    return { t: 'addInbox', item: { t: 'doc', code: 'brochure', id: 0 } };
-  }
-}
-
-function addFuture(state: State, delta_time: number, action: Action): void {
-  state.futures.push({ action, time: state.time + delta_time });
-}
-
-function resolveFutures(state: State): void {
-  const time = state.time;
-  const fsNow = state.futures.filter(x => x.time <= time);
-  const fsLater = state.futures.filter(x => x.time > time);
-  state.futures = fsLater;
-  fsNow.forEach(f => doAction(f.action));
-}
 
 const history: string[] = [];
 async function go() {
   while (1) {
     const action = await showUi(state.uiStack[0]);
-    doAction(action);
-    resolveFutures(state);
+    doAction(term, action);
+    resolveFutures(term, state);
   }
 }
 

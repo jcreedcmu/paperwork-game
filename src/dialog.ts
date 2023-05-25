@@ -32,7 +32,7 @@ const keyBindings = {
 export type EditFrame = { t: 'edit', id: number | undefined };
 
 export async function showEditDialog(frame: EditFrame, term: Terminal): Promise<Action> {
-  term('> ');
+  term.red('EDIT TEXT OF LETTER\n> ');
   term.hideCursor(false);
   let def = '';
   if (frame.id !== undefined) {

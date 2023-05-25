@@ -60,16 +60,25 @@ async function showMenu(frame: MenuFrame): Promise<MenuAction> {
   }
 }
 
-async function showUi(uiStackFrame: UiStackFrame): Promise<Action> {
+function renderStateForFrame(frame: UiStackFrame): boolean {
+  switch (frame.t) {
+    case 'menu': return true;
+    case 'edit': return false;
+  }
+}
+
+async function showUi(frame: UiStackFrame): Promise<Action> {
   term.clear();
   term.hideCursor(true);
-  renderState();
+  if (renderStateForFrame(frame)) {
+    renderState();
+  }
   term.moveTo(1, 1);
 
   try {
-    switch (uiStackFrame.t) {
-      case 'menu': return await showMenu(uiStackFrame);
-      case 'edit': return await showEditDialog(uiStackFrame, term);
+    switch (frame.t) {
+      case 'menu': return await showMenu(frame);
+      case 'edit': return await showEditDialog(frame, term);
     }
   }
   finally {

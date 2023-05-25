@@ -1,7 +1,12 @@
 import { EditFrame } from "./dialog";
 
-export type Menu = 'main' | 'inventory';
-export type MenuFrame = { t: 'menu', which: Menu, ix: number };
+export type Menu =
+  | { t: 'main' }
+  | { t: 'inventory' }
+  ;
+export type MenuFrame =
+  { t: 'menu', which: Menu, ix: number };
+
 export type UiStackFrame =
   | MenuFrame
   | EditFrame
@@ -34,7 +39,7 @@ export type State = {
 }
 
 export const state: State = {
-  uiStack: [{ t: 'menu', which: 'main', ix: 0 }],
+  uiStack: [{ t: 'menu', which: { t: 'main' }, ix: 0 }],
   selectedIndex: undefined,
   idCounter: 0,
   time: 0,

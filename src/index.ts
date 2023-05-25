@@ -54,7 +54,7 @@ function renderState() {
 }
 
 async function showMenu(frame: MenuFrame): Promise<MenuAction> {
-  switch (frame.which) {
+  switch (frame.which.t) {
     case 'main': return await mainMenu(frame);
     case 'inventory': return await inventoryMenu(frame);
   }
@@ -162,7 +162,7 @@ async function doAction(action: Action): Promise<void> {
     } break;
     case 'recycle': state.inv.res.cash += state.inv.res.bottle; state.inv.res.bottle = 0; state.time++; break;
     case 'purchase': win(); break;
-    case 'enterInventoryMenu': state.uiStack.unshift({ t: 'menu', which: 'inventory', ix: 0 }); break;
+    case 'enterInventoryMenu': state.uiStack.unshift({ t: 'menu', which: { t: 'inventory' }, ix: 0 }); break;
     case 'back': state.uiStack.shift(); break;
     case 'newLetter': {
       state.uiStack.unshift({ t: 'edit', id: undefined });

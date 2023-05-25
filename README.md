@@ -71,5 +71,7 @@ paper. Bottles can be put in recycling bin for money.
 building
 ========
 
+```shell
 make build
 make run
+```

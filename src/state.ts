@@ -1,16 +1,4 @@
-import { EditFrame } from "./dialog";
-
-export type Menu =
-  | { t: 'main' }
-  | { t: 'inventory' }
-  ;
-export type MenuFrame =
-  { t: 'menu', which: Menu, ix: number };
-
-export type UiStackFrame =
-  | MenuFrame
-  | EditFrame
-  ;
+import { UiStackFrame } from "./menu";
 
 export const resources = ['cash', 'bottle', 'paper', 'pencil'] as const;
 export const collectResources: Resource[] = ['bottle', 'paper', 'pencil'];

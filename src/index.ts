@@ -2,7 +2,8 @@ import * as terminalKit from 'terminal-kit';
 import { Action, MenuAction, stringOfMenuAction } from './action';
 import { EditFrame, showEditDialog } from './dialog';
 import { randElt, unreachable } from './util';
-import { state, Item, resources, MenuFrame, UiStackFrame, findLetter, collectResources } from './state';
+import { state, Item, resources, findLetter, collectResources } from './state';
+import { LetterMenu, MenuFrame, UiStackFrame } from "./menu";
 
 
 const term: terminalKit.Terminal = terminalKit.terminal;
@@ -57,6 +58,7 @@ async function showMenu(frame: MenuFrame): Promise<MenuAction> {
   switch (frame.which.t) {
     case 'main': return await mainMenu(frame);
     case 'inventory': return await inventoryMenu(frame);
+    case 'letter': return await letterMenu(frame, frame.which);
   }
 }
 
@@ -96,16 +98,12 @@ async function actionMenu(title: string, frame: MenuFrame, actions: MenuAction[]
   return actions[result.selectedIndex];
 }
 
-function hasLetters(): boolean {
-  return state.inv.items.some(x => x.t == 'letter');
+function hasItems(): boolean {
+  return state.inv.items.length > 0;
 }
 
 function canWriteLetter(): boolean {
   return state.inv.res.paper > 0 && state.inv.res.pencil > 0;
-}
-
-function canCompose(): boolean {
-  return hasLetters() || canWriteLetter();
 }
 
 async function mainMenu(frame: MenuFrame): Promise<MenuAction> {
@@ -122,7 +120,7 @@ async function mainMenu(frame: MenuFrame): Promise<MenuAction> {
   if (canWriteLetter()) {
     menuItems.push({ t: 'newLetter' });
   }
-  if (canCompose()) {
+  if (hasItems()) {
     menuItems.push({ t: 'enterInventoryMenu' });
   }
   menuItems.push({ t: 'exit' });
@@ -133,12 +131,20 @@ async function inventoryMenu(frame: MenuFrame): Promise<MenuAction> {
   const menuItems: MenuAction[] = [];
   state.inv.items.forEach((item, ix) => {
     if (item.t == 'letter') {
-      menuItems.push({ t: 'editLetter', id: item.id, body: item.body });
+      menuItems.push({ t: 'enterLetterMenu', id: item.id, body: item.body });
     }
   });
   menuItems.push({ t: 'back' });
 
   return await actionMenu('INVENTORY MENU', frame, menuItems);
+}
+
+async function letterMenu(frame: MenuFrame, which: LetterMenu): Promise<MenuAction> {
+  const menuItems: MenuAction[] = [
+    { t: 'editLetter', id: which.id },
+    { t: 'back' },
+  ];
+  return await actionMenu('LETTER MENU', frame, menuItems);
 }
 
 function setLetterText(id: number, text: string): void {
@@ -184,6 +190,9 @@ async function doAction(action: Action): Promise<void> {
       }
       state.uiStack.shift();
     } break;
+    case 'enterLetterMenu':
+      state.uiStack.unshift({ t: 'menu', which: { t: 'letter', id: action.id }, ix: 0 });
+      break;
     default: unreachable(action);
   }
 }

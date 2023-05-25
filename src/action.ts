@@ -5,8 +5,9 @@ export type MenuAction =
   | { t: 'recycle' }
   | { t: 'purchase' }
   | { t: 'enterInventoryMenu' }
+  | { t: 'enterLetterMenu', id: number, body: string }
   | { t: 'newLetter' }
-  | { t: 'editLetter', id: number, body: string }
+  | { t: 'editLetter', id: number }
   | { t: 'back' }
   ;
 export type Action =
@@ -22,8 +23,9 @@ export function stringOfMenuAction(action: MenuAction): string {
     case 'exit': return 'exit';
     case 'recycle': return 'recycle bottles';
     case 'enterInventoryMenu': return 'inventory...';
+    case 'enterLetterMenu': return `letter ("${action.body.substring(0, 10)}")`;
     case 'newLetter': return 'new letter';
-    case 'editLetter': return `edit letter ("${action.body.substring(0, 10)}")`;
+    case 'editLetter': return 'edit';
     case 'back': return '<-';
   }
 }

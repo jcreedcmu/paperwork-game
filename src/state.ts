@@ -66,3 +66,23 @@ export function findLetter(state: State, id: number): LetterItem {
   }
   return item;
 }
+
+export function setLetterText(id: number, text: string): void {
+  const ix = state.inv.items.findIndex(x => x.id == id);
+  if (ix == -1) {
+    throw new Error(`no item with id ${id}`);
+  }
+  const item = state.inv.items[ix];
+  if (item.t != 'letter') {
+    throw new Error(`item with id ${id} not a letter`);
+  }
+  item.body = text;
+}
+
+export function hasItems(): boolean {
+  return state.inv.items.length > 0;
+}
+
+export function canWriteLetter(): boolean {
+  return state.inv.res.paper > 0 && state.inv.res.pencil > 0;
+}

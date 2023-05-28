@@ -83,6 +83,10 @@ export function hasItems(): boolean {
   return state.inv.items.length > 0;
 }
 
+export function hasInboxItems(): boolean {
+  return state.inv.inbox.length > 0;
+}
+
 export function canWriteLetter(): boolean {
   return state.inv.res.paper > 0 && state.inv.res.pencil > 0;
 }

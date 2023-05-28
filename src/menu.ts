@@ -1,26 +1,31 @@
 import { Terminal } from 'terminal-kit';
-import { MenuAction, stringOfMenuAction } from './action';
+import { MenuAction, logger, stringOfMenuAction } from './action';
 import { EditFrame } from './edit-letter';
-import { State, canWriteLetter, hasItems } from './state';
+import { State, canWriteLetter, hasInboxItems, hasItems } from './state';
+import { DocCode } from './doc';
 
 export type LetterMenu = { t: 'letter', id: number };
 
 export type Menu =
   | { t: 'main' }
   | { t: 'inventory' }
+  | { t: 'inbox' }
   | LetterMenu;
 
+export type DisplayFrame = { t: 'display', which: DocCode };
 export type MenuFrame = { t: 'menu', which: Menu, ix: number };
 
 export type UiStackFrame =
   | MenuFrame
-  | EditFrame;
+  | EditFrame
+  | DisplayFrame;
 
 export async function showMenu(state: State, term: Terminal, frame: MenuFrame): Promise<MenuAction> {
   switch (frame.which.t) {
     case 'main': return await mainMenu(state, term, frame);
     case 'inventory': return await inventoryMenu(state, term, frame);
     case 'letter': return await letterMenu(state, term, frame, frame.which);
+    case 'inbox': return await inboxMenu(state, term, frame);
   }
 }
 
@@ -53,6 +58,9 @@ async function mainMenu(state: State, term: Terminal, frame: MenuFrame): Promise
   if (hasItems()) {
     menuItems.push({ t: 'enterInventoryMenu' });
   }
+  if (hasInboxItems()) {
+    menuItems.push({ t: 'enterInboxMenu' });
+  }
   menuItems.push({ t: 'exit' });
   return await actionMenu(term, 'MAIN MENU', frame, menuItems);
 }
@@ -67,6 +75,18 @@ async function inventoryMenu(state: State, term: Terminal, frame: MenuFrame): Pr
   menuItems.push({ t: 'back' });
 
   return await actionMenu(term, 'INVENTORY MENU', frame, menuItems);
+}
+
+async function inboxMenu(state: State, term: Terminal, frame: MenuFrame): Promise<MenuAction> {
+  const menuItems: MenuAction[] = [];
+  state.inv.inbox.forEach((ibit, ix) => {
+    if (ibit.item.t == 'doc') {
+      menuItems.push({ t: 'displayDoc', code: ibit.item.code });
+    }
+  });
+  menuItems.push({ t: 'back' });
+
+  return await actionMenu(term, 'INBOX MENU', frame, menuItems);
 }
 
 async function letterMenu(state: State, term: Terminal, frame: MenuFrame, which: LetterMenu): Promise<MenuAction> {

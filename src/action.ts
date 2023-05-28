@@ -1,6 +1,7 @@
 import { Terminal } from 'terminal-kit';
 import { Item, LetterItem, State, collectResources, findLetter, state } from './state';
 import { randElt, unreachable } from './util';
+import { DocCode, stringOfDocCode } from './doc';
 
 export type MenuAction =
   | { t: 'sleep' }
@@ -9,11 +10,13 @@ export type MenuAction =
   | { t: 'recycle' }
   | { t: 'purchase' }
   | { t: 'enterInventoryMenu' }
+  | { t: 'enterInboxMenu' }
   | { t: 'enterLetterMenu', id: number, body: string }
   | { t: 'newLetter' }
   | { t: 'editLetter', id: number }
   | { t: 'sendLetter', id: number }
   | { t: 'back' }
+  | { t: 'displayDoc', code: DocCode }
   ;
 export type Action =
   | MenuAction
@@ -30,11 +33,13 @@ export function stringOfMenuAction(action: MenuAction): string {
     case 'exit': return 'exit';
     case 'recycle': return 'recycle bottles';
     case 'enterInventoryMenu': return 'inventory...';
+    case 'enterInboxMenu': return 'inbox...';
     case 'enterLetterMenu': return `letter ("${action.body.substring(0, 10)}")`;
     case 'newLetter': return 'new letter';
     case 'sendLetter': return 'send';
     case 'editLetter': return 'edit';
     case 'back': return '<-';
+    case 'displayDoc': return stringOfDocCode(action.code);
   }
 }
 
@@ -54,7 +59,7 @@ function goBack(state: State): void {
   state.uiStack.shift();
 }
 
-function logger(msg: string): void {
+export function logger(msg: string): void {
   state.log.push(`[${state.time}] ${msg}`);
 }
 
@@ -133,6 +138,12 @@ export function doAction(term: Terminal, action: Action): void {
       break;
     case 'addInbox':
       state.inv.inbox.push({ unread: true, item: action.item });
+      break;
+    case 'enterInboxMenu':
+      state.uiStack.unshift({ t: 'menu', which: { t: 'inbox' }, ix: 0 });
+      break;
+    case 'displayDoc':
+      state.uiStack.unshift({ t: 'display', which: action.code });
       break;
     default: unreachable(action);
   }

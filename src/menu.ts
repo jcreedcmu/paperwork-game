@@ -1,6 +1,6 @@
 import { Terminal } from 'terminal-kit';
 import { MenuAction, stringOfMenuAction } from './action';
-import { EditFrame } from './dialog';
+import { EditFrame } from './edit-letter';
 import { State, canWriteLetter, hasItems } from './state';
 
 export type LetterMenu = { t: 'letter', id: number };

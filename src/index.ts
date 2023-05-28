@@ -1,6 +1,6 @@
 import * as terminalKit from 'terminal-kit';
 import { Action, doAction, quit, resolveFutures } from './action';
-import { showEditDialog } from './dialog';
+import { showEditDialog } from './edit-letter';
 import { stringOfDocCode } from './doc';
 import { UiStackFrame, showMenu } from './menu';
 import { Item, resources, state } from './state';

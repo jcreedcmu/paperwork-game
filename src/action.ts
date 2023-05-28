@@ -20,7 +20,6 @@ export type Action =
   | { t: 'setLetterText', id: number | undefined, text: string }
   | { t: 'bigMoney' }
   | { t: 'addInbox', item: Item }
-  | { t: 'nothing' }
   ;
 
 export function stringOfMenuAction(action: MenuAction): string {
@@ -132,11 +131,8 @@ export function doAction(term: Terminal, action: Action): void {
       logger('got big money');
       state.inv.res.cash += 50;
       break;
-    case 'nothing':
-      logger('letter had no effect');
-      break;
     case 'addInbox':
-      state.inv.inbox.push({ t: 'inbox', unread: true, item: action.item });
+      state.inv.inbox.push({ unread: true, item: action.item });
       break;
     default: unreachable(action);
   }

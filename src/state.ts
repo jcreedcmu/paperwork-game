@@ -19,7 +19,7 @@ export type Item =
   | LetterItem
   | DocItem;
 
-export type InboxItem = { t: 'inbox', unread: boolean, item: Item };
+export type InboxItem = { unread: boolean, item: Item };
 
 export type Future = { time: number, action: Action };
 

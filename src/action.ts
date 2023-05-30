@@ -1,7 +1,7 @@
 import { Terminal } from 'terminal-kit';
 import { Item, LetterItem, State, collectResources, findLetter, state } from './state';
 import { randElt, unreachable } from './util';
-import { DocCode, stringOfDocCode } from './doc';
+import { Document, stringOfDoc } from './doc';
 
 export type MenuAction =
   | { t: 'sleep' }
@@ -16,7 +16,7 @@ export type MenuAction =
   | { t: 'editLetter', id: number }
   | { t: 'sendLetter', id: number }
   | { t: 'back' }
-  | { t: 'displayDoc', code: DocCode }
+  | { t: 'displayDoc', doc: Document }
   ;
 export type Action =
   | MenuAction
@@ -39,7 +39,7 @@ export function stringOfMenuAction(action: MenuAction): string {
     case 'sendLetter': return 'send';
     case 'editLetter': return 'edit';
     case 'back': return '<-';
-    case 'displayDoc': return stringOfDocCode(action.code);
+    case 'displayDoc': return stringOfDoc(action.doc);
   }
 }
 
@@ -68,7 +68,7 @@ function resolveLetter(letter: LetterItem): Action {
     return { t: 'bigMoney' };
   }
   else {
-    return { t: 'addInbox', item: { t: 'doc', code: 'brochure', id: 0 } };
+    return { t: 'addInbox', item: { t: 'doc', doc: { t: 'brochure' }, id: 0 } };
   }
 }
 
@@ -114,6 +114,7 @@ export function doAction(term: Terminal, action: Action): void {
       const { id, text } = action;
       if (id == undefined) {
         state.inv.res.paper--;
+        state.inv.res.pencil--;
         const newId = state.idCounter++;
         const id = state.idCounter++;
         state.inv.items.push({ t: 'letter', id, body: text });
@@ -143,7 +144,7 @@ export function doAction(term: Terminal, action: Action): void {
       state.uiStack.unshift({ t: 'menu', which: { t: 'inbox' }, ix: 0 });
       break;
     case 'displayDoc':
-      state.uiStack.unshift({ t: 'display', which: action.code });
+      state.uiStack.unshift({ t: 'display', which: action.doc });
       break;
     default: unreachable(action);
   }

@@ -2,7 +2,7 @@ import { Terminal } from 'terminal-kit';
 import { MenuAction, logger, stringOfMenuAction } from './action';
 import { EditFrame } from './edit-letter';
 import { State, canWriteLetter, hasInboxItems, hasItems } from './state';
-import { DocCode } from './doc';
+import { Document } from './doc';
 
 export type LetterMenu = { t: 'letter', id: number };
 
@@ -12,7 +12,7 @@ export type Menu =
   | { t: 'inbox' }
   | LetterMenu;
 
-export type DisplayFrame = { t: 'display', which: DocCode };
+export type DisplayFrame = { t: 'display', which: Document };
 export type MenuFrame = { t: 'menu', which: Menu, ix: number };
 
 export type UiStackFrame =
@@ -81,7 +81,7 @@ async function inboxMenu(state: State, term: Terminal, frame: MenuFrame): Promis
   const menuItems: MenuAction[] = [];
   state.inv.inbox.forEach((ibit, ix) => {
     if (ibit.item.t == 'doc') {
-      menuItems.push({ t: 'displayDoc', code: ibit.item.code });
+      menuItems.push({ t: 'displayDoc', doc: ibit.item.doc });
     }
   });
   menuItems.push({ t: 'back' });

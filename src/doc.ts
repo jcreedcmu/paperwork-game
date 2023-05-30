@@ -2,11 +2,11 @@ import { Terminal } from 'terminal-kit';
 import { DisplayFrame } from './menu';
 import { Action } from './action';
 
-export type DocCode =
-  | 'brochure';
+export type Document =
+  | { t: 'brochure' };
 
-export function stringOfDocCode(code: DocCode): string {
-  switch (code) {
+export function stringOfDoc(doc: Document): string {
+  switch (doc.t) {
     case 'brochure': return 'Brochure';
   }
 }

@@ -1,7 +1,7 @@
 import * as terminalKit from 'terminal-kit';
 import { Action, doAction, quit, resolveFutures } from './action';
 import { showEditDialog } from './edit-letter';
-import { showDisplayDoc, stringOfDocCode } from './doc';
+import { showDisplayDoc, stringOfDoc } from './doc';
 import { UiStackFrame, showMenu } from './menu';
 import { Item, resources, state } from './state';
 
@@ -19,7 +19,7 @@ const LOG_ROW = 15;
 function stringOfItem(item: Item): string {
   switch (item.t) {
     case 'letter': return item.body;
-    case 'doc': return stringOfDocCode(item.code);
+    case 'doc': return stringOfDoc(item.doc);
   }
 }
 

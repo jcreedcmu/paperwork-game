@@ -1,7 +1,7 @@
 import * as terminalKit from 'terminal-kit';
 import { Action, doAction, quit, resolveFutures } from './action';
-import { showEditDialog } from './edit-letter';
 import { showDisplayDoc, stringOfDoc } from './doc';
+import { showEditDialog } from './edit-letter';
 import { UiStackFrame, showMenu } from './menu';
 import { Item, resources, state } from './state';
 
@@ -72,7 +72,7 @@ async function showUi(frame: UiStackFrame): Promise<Action> {
     switch (frame.t) {
       case 'menu': return await showMenu(state, term, frame);
       case 'edit': return await showEditDialog(frame, term);
-      case 'display': return await showDisplayDoc(frame, term);
+      case 'display': return await showDisplayDoc(frame, term, frame.which);
     }
   }
   finally {

@@ -1,7 +1,7 @@
 import { Terminal } from 'terminal-kit';
+import { Document, stringOfDoc } from './doc';
 import { Item, LetterItem, State, collectResources, findLetter, state } from './state';
 import { randElt, unreachable } from './util';
-import { Document, stringOfDoc } from './doc';
 
 export type MenuAction =
   | { t: 'sleep' }
@@ -68,7 +68,7 @@ function resolveLetter(letter: LetterItem): Action {
     return { t: 'bigMoney' };
   }
   else {
-    return { t: 'addInbox', item: { t: 'doc', doc: { t: 'brochure' }, id: 0 } };
+    return { t: 'addInbox', item: { t: 'doc', doc: { t: 'brochure', inResponseTo: letter.body }, id: 0 } };
   }
 }
 

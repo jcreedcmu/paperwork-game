@@ -63,12 +63,22 @@ export function logger(msg: string): void {
   state.log.push(`[${state.time}] ${msg}`);
 }
 
-function resolveLetter(letter: LetterItem): Action {
-  if (letter.body.match('money')) {
+function addInboxAction(state: State, doc: Document): Action {
+  // XXX the fact that state is changing during action creation is
+  // bad. should really have a compound action that increments the id
+  // counter during action reducer.
+  return { t: 'addInbox', item: { t: 'doc', doc, id: state.idCounter++ } };
+}
+
+function resolveLetter(state: State, letter: LetterItem): Action {
+  if (letter.body.match(/catalog/i)) {
+    return addInboxAction(state, { t: 'store-catalog' });
+  }
+  else if (letter.body.match('money')) {
     return { t: 'bigMoney' };
   }
   else {
-    return { t: 'addInbox', item: { t: 'doc', doc: { t: 'brochure', inResponseTo: letter.body }, id: 0 } };
+    return addInboxAction(state, { t: 'brochure', inResponseTo: letter.body });
   }
 }
 
@@ -129,7 +139,7 @@ export function doAction(term: Terminal, action: Action): void {
       break;
     case 'sendLetter':
       const letter = findLetter(state, action.id);
-      addFuture(state, 3, resolveLetter(letter));
+      addFuture(state, 3, resolveLetter(state, letter));
       state.inv.items = state.inv.items.filter(x => x.id != action.id);
       goBack(state);
       break;

@@ -52,13 +52,13 @@ async function mainMenu(state: State, term: Terminal, frame: MenuFrame): Promise
   if (state.inv.res.cash >= FREEDOM_PRICE) {
     menuItems.push({ t: 'purchase' });
   }
-  if (canWriteLetter()) {
+  if (canWriteLetter(state)) {
     menuItems.push({ t: 'newLetter' });
   }
-  if (hasItems()) {
+  if (hasItems(state)) {
     menuItems.push({ t: 'enterInventoryMenu' });
   }
-  if (hasInboxItems()) {
+  if (hasInboxItems(state)) {
     menuItems.push({ t: 'enterInboxMenu' });
   }
   menuItems.push({ t: 'exit' });

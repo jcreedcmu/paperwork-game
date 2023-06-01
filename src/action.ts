@@ -1,6 +1,6 @@
 import { Terminal } from 'terminal-kit';
 import { Document, stringOfDoc } from './doc';
-import { Item, LetterItem, State, collectResources, findLetter, state } from './state';
+import { Item, LetterItem, State, collectResources, findLetter } from './state';
 import { randElt, unreachable } from './util';
 
 export type MenuAction =
@@ -59,7 +59,7 @@ function goBack(state: State): void {
   state.uiStack.shift();
 }
 
-export function logger(msg: string): void {
+export function logger(state: State, msg: string): void {
   state.log.push(`[${state.time}] ${msg}`);
 }
 
@@ -92,11 +92,11 @@ export function resolveFutures(term: Terminal, state: State): void {
   const fsLater = state.futures.filter(x => x.time > time);
   state.futures = fsLater;
   for (const f of fsNow) {
-    doAction(term, f.action);
+    doAction(state, term, f.action);
   }
 }
 
-export function doAction(term: Terminal, action: Action): void {
+export function doAction(state: State, term: Terminal, action: Action): void {
   switch (action.t) {
     case 'exit': quit(term); break;
     case 'sleep':
@@ -144,7 +144,7 @@ export function doAction(term: Terminal, action: Action): void {
       goBack(state);
       break;
     case 'bigMoney':
-      logger('got big money');
+      logger(state, 'got big money');
       state.inv.res.cash += 50;
       break;
     case 'addInbox':

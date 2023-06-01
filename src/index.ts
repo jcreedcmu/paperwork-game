@@ -3,7 +3,7 @@ import { Action, doAction, quit, resolveFutures } from './action';
 import { showDisplayDoc, stringOfDoc } from './doc';
 import { showEditDialog } from './edit-letter';
 import { UiStackFrame, showMenu } from './menu';
-import { Item, resources, state } from './state';
+import { initState, Item, resources, State } from './state';
 
 const term: terminalKit.Terminal = terminalKit.terminal;
 
@@ -23,7 +23,7 @@ function stringOfItem(item: Item): string {
   }
 }
 
-function renderState() {
+function renderState(state: State) {
   term.moveTo(STATUS_COLUMN, 1);
   term.green('time: '); term('' + state.time);
 
@@ -60,18 +60,19 @@ function renderStateForFrame(frame: UiStackFrame): boolean {
   }
 }
 
-async function showUi(frame: UiStackFrame): Promise<Action> {
+async function showUi(state: State): Promise<Action> {
+  const frame = state.uiStack[0];
   term.clear();
   term.hideCursor(true);
   if (renderStateForFrame(frame)) {
-    renderState();
+    renderState(state);
   }
   term.moveTo(1, 1);
 
   try {
     switch (frame.t) {
       case 'menu': return await showMenu(state, term, frame);
-      case 'edit': return await showEditDialog(frame, term);
+      case 'edit': return await showEditDialog(state, frame, term);
       case 'display': return await showDisplayDoc(frame, term, frame.which);
     }
   }
@@ -81,9 +82,10 @@ async function showUi(frame: UiStackFrame): Promise<Action> {
 }
 
 async function go() {
+  const state = initState();
   while (1) {
-    const action = await showUi(state.uiStack[0]);
-    doAction(term, action);
+    const action = await showUi(state);
+    doAction(state, term, action);
     resolveFutures(term, state);
   }
 }

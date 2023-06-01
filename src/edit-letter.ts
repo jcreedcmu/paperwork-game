@@ -1,6 +1,6 @@
 import { Terminal } from 'terminal-kit';
 import { Action } from './action';
-import { findLetter, state } from './state';
+import { State, findLetter } from './state';
 
 const keyBindings = {
   CTRL_A: 'startOfInput',
@@ -31,7 +31,7 @@ const keyBindings = {
 
 export type EditFrame = { t: 'edit', id: number | undefined };
 
-export async function showEditDialog(frame: EditFrame, term: Terminal): Promise<Action> {
+export async function showEditDialog(state: State, frame: EditFrame, term: Terminal): Promise<Action> {
   term.red('EDIT TEXT OF LETTER\n> ');
   term.hideCursor(false);
   let def = '';

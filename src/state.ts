@@ -37,19 +37,21 @@ export type State = {
   },
 }
 
-export const state: State = {
-  log: [],
-  futures: [],
-  uiStack: [{ t: 'menu', which: { t: 'main' }, ix: 0 }],
-  selectedIndex: undefined,
-  idCounter: 0,
-  time: 0,
-  inv: {
-    inbox: [],
-    items: [],
-    res: Object.fromEntries(resources.map(x => [x, 0])) as Record<Resource, number>
-  },
-};
+export function initState(): State {
+  return {
+    log: [],
+    futures: [],
+    uiStack: [{ t: 'menu', which: { t: 'main' }, ix: 0 }],
+    selectedIndex: undefined,
+    idCounter: 0,
+    time: 0,
+    inv: {
+      inbox: [],
+      items: [],
+      res: Object.fromEntries(resources.map(x => [x, 0])) as Record<Resource, number>
+    },
+  };
+}
 
 export function showState(state: State) {
   console.log(JSON.stringify(state));
@@ -67,7 +69,7 @@ export function findLetter(state: State, id: number): LetterItem {
   return item;
 }
 
-export function setLetterText(id: number, text: string): void {
+export function setLetterText(state: State, id: number, text: string): void {
   const ix = state.inv.items.findIndex(x => x.id == id);
   if (ix == -1) {
     throw new Error(`no item with id ${id}`);
@@ -79,14 +81,14 @@ export function setLetterText(id: number, text: string): void {
   item.body = text;
 }
 
-export function hasItems(): boolean {
+export function hasItems(state: State): boolean {
   return state.inv.items.length > 0;
 }
 
-export function hasInboxItems(): boolean {
+export function hasInboxItems(state: State): boolean {
   return state.inv.inbox.length > 0;
 }
 
-export function canWriteLetter(): boolean {
+export function canWriteLetter(state: State): boolean {
   return state.inv.res.paper > 0 && state.inv.res.pencil > 0;
 }

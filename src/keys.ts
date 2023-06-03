@@ -1,5 +1,5 @@
 import { Action, logger } from './action';
-import { UiStackFrame } from './menu';
+import { UiStackFrame, menuUiAction } from './menu';
 import { State } from './state';
 
 
@@ -18,9 +18,9 @@ export type KeyMap = {
 const debugKeyMap: KeyMap = { bind: {} };
 const menuKeyMap: KeyMap = {
   bind: {
-    UP: { t: 'menuPrev' },
-    DOWN: { t: 'menuNext' },
-    ENTER: { t: 'menuSelect' },
+    UP: menuUiAction({ t: 'menuPrev' }),
+    DOWN: menuUiAction({ t: 'menuNext' }),
+    ENTER: menuUiAction({ t: 'menuSelect' }),
   }
 };
 const editKeyMap: KeyMap = {

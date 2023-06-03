@@ -1,5 +1,5 @@
 import { ScreenBuffer, Terminal } from 'terminal-kit';
-import { MenuAction, logger, stringOfMenuAction } from './action';
+import { Action, MenuAction, logger, stringOfMenuAction } from './action';
 import { EditFrame } from './edit-letter';
 import { State, canWriteLetter, hasInboxItems, hasItems } from './state';
 import { Document } from './doc';
@@ -103,5 +103,14 @@ export function renderMenu(buf: ScreenBuffer, state: State, frame: MenuFrame): v
   });
 }
 
-
 const FREEDOM_PRICE = 100;
+
+export type MenuUiAction =
+  | { t: 'menuNext' }
+  | { t: 'menuPrev' }
+  | { t: 'menuSelect' }
+  ;
+
+export function menuUiAction(action: MenuUiAction): Action {
+  return { t: 'menuUiAction', action }
+}

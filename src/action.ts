@@ -2,7 +2,7 @@ import { Terminal } from 'terminal-kit';
 import { Document, stringOfDoc } from './doc';
 import { Item, LetterItem, State, collectResources, findLetter } from './state';
 import { mod, randElt, unreachable } from './util';
-import { menuItemsOfFrame } from './menu';
+import { MenuFrame, MenuUiAction, menuItemsOfFrame } from './menu';
 import { quit, win } from '.';
 
 export type MenuAction =
@@ -21,15 +21,14 @@ export type MenuAction =
   | { t: 'displayDoc', doc: Document }
   | { t: 'debug' }
   ;
+
 export type Action =
   | MenuAction
   | { t: 'none' }
   | { t: 'setLetterText', id: number | undefined, text: string }
   | { t: 'bigMoney' }
   | { t: 'addInbox', item: Item }
-  | { t: 'menuNext' }
-  | { t: 'menuPrev' }
-  | { t: 'menuSelect' }
+  | { t: 'menuUiAction', action: MenuUiAction }
   ;
 
 export function stringOfMenuAction(action: MenuAction): string {
@@ -50,8 +49,6 @@ export function stringOfMenuAction(action: MenuAction): string {
     case 'debug': return 'debug';
   }
 }
-
-
 
 function goBack(state: State): void {
   state.uiStack.shift();
@@ -94,22 +91,22 @@ export function resolveFutures(state: State): void {
   }
 }
 
-function menuInc(state: State, delta: number): void {
-  const frame = state.uiStack[0];
-  if (frame.t != 'menu') {
-    throw new Error('Trying to reduce menuNext action when not in a menu');
-  }
+function menuInc(state: State, frame: MenuFrame, delta: number): void {
   const menuLength = menuItemsOfFrame(state, frame).length;
   frame.ix = mod(frame.ix + delta, menuLength);
 }
 
-function menuSelect(state: State): void {
-  const frame = state.uiStack[0];
-  if (frame.t != 'menu') {
-    throw new Error('Trying to reduce menuNext action when not in a menu');
-  }
+function menuSelect(state: State, frame: MenuFrame): void {
   const items = menuItemsOfFrame(state, frame);
   doAction(state, items[frame.ix]);
+}
+
+function doMenuUiAction(state: State, frame: MenuFrame, action: MenuUiAction): void {
+  switch (action.t) {
+    case 'menuNext': menuInc(state, frame, 1); break;
+    case 'menuPrev': menuInc(state, frame, -1); break;
+    case 'menuSelect': menuSelect(state, frame); break;
+  }
 }
 
 export function doAction(state: State, action: Action): void {
@@ -177,9 +174,13 @@ export function doAction(state: State, action: Action): void {
       break;
     case 'none':
       break;
-    case 'menuNext': menuInc(state, 1); break;
-    case 'menuPrev': menuInc(state, -1); break;
-    case 'menuSelect': menuSelect(state); break;
+    case 'menuUiAction':
+      const frame = state.uiStack[0];
+      if (frame.t != 'menu') {
+        throw new Error('Trying to reduce menuNext action when not in a menu');
+      }
+      doMenuUiAction(state, frame, action.action);
+      break;
     default: unreachable(action);
   }
 }

@@ -1,7 +1,8 @@
 import { Terminal } from 'terminal-kit';
 import { Document, stringOfDoc } from './doc';
 import { Item, LetterItem, State, collectResources, findLetter } from './state';
-import { randElt, unreachable } from './util';
+import { mod, randElt, unreachable } from './util';
+import { menuItemsOfFrame } from './menu';
 
 export type MenuAction =
   | { t: 'sleep' }
@@ -25,6 +26,8 @@ export type Action =
   | { t: 'setLetterText', id: number | undefined, text: string }
   | { t: 'bigMoney' }
   | { t: 'addInbox', item: Item }
+  | { t: 'menuNext' }
+  | { t: 'menuPrev' }
   ;
 
 export function stringOfMenuAction(action: MenuAction): string {
@@ -99,6 +102,15 @@ export function resolveFutures(term: Terminal, state: State): void {
   }
 }
 
+function menuInc(state: State, delta: number): void {
+  const frame = state.uiStack[0];
+  if (frame.t != 'menu') {
+    throw new Error('Trying to reduce menuNext action when not in a menu');
+  }
+  const menuLength = menuItemsOfFrame(state, frame).length;
+  frame.ix = mod(frame.ix + delta, menuLength);
+}
+
 export function doAction(state: State, term: Terminal, action: Action): void {
   switch (action.t) {
     case 'exit': quit(term); break;
@@ -164,6 +176,8 @@ export function doAction(state: State, term: Terminal, action: Action): void {
       break;
     case 'none':
       break;
+    case 'menuNext': menuInc(state, 1); break;
+    case 'menuPrev': menuInc(state, -1); break;
     default: unreachable(action);
   }
 }

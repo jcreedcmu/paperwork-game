@@ -128,7 +128,10 @@ function render(term: Terminal, state: State): void {
 export type KeyMap = Record<string, Action>;
 
 const debugKeyMap: KeyMap = {};
-const menuKeyMap: KeyMap = { c: { t: 'collect' } };
+const menuKeyMap: KeyMap = {
+  UP: { t: 'menuPrev' },
+  DOWN: { t: 'menuNext' },
+};
 const editKeyMap: KeyMap = {};
 const displayKeyMap: KeyMap = {};
 const defaultKeyMap: KeyMap = { ESCAPE: { t: 'exit' } };

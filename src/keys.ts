@@ -1,4 +1,5 @@
 import { Action, logger } from './action';
+import { editUiAction } from './edit-letter';
 import { UiStackFrame, menuUiAction } from './menu';
 import { State } from './state';
 
@@ -26,6 +27,13 @@ const menuKeyMap: KeyMap = {
 const editKeyMap: KeyMap = {
   skip: 0,
   bind: {
+    LEFT: editUiAction({ t: 'left' }),
+    RIGHT: editUiAction({ t: 'right' }),
+    CTRL_A: editUiAction({ t: 'home' }),
+    CTRL_E: editUiAction({ t: 'end' }),
+    CTRL_K: editUiAction({ t: 'kill' }),
+    BACKSPACE: editUiAction({ t: 'deleteLeft' }),
+    ENTER: editUiAction({ t: 'submit' }),
     ESCAPE: { t: 'back' },
   }
 };

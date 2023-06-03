@@ -1,33 +1,7 @@
 import { ScreenBuffer, Terminal } from 'terminal-kit';
-import { Action } from './action';
+import { Action, doAction } from './action';
 import { State, findLetter } from './state';
-
-// const keyBindings = {
-//   CTRL_A: 'startOfInput',
-//   ENTER: 'submit',
-//   KP_ENTER: 'submit',
-//   ESCAPE: 'cancel',
-//   BACKSPACE: 'backDelete',
-//   DELETE: 'delete',
-//   LEFT: 'backward',
-//   RIGHT: 'forward',
-//   UP: 'historyPrevious',
-//   DOWN: 'historyNext',
-//   HOME: 'startOfInput',
-//   END: 'endOfInput',
-//   CTRL_E: 'endOfInput',
-//   TAB: 'autoComplete',
-//   CTRL_R: 'autoCompleteUsingHistory',
-//   CTRL_LEFT: 'previousWord',
-//   CTRL_RIGHT: 'nextWord',
-//   ALT_D: 'deleteNextWord',
-//   CTRL_W: 'deletePreviousWord',
-//   CTRL_D: 'delete',
-//   CTRL_C: 'cancel',
-//   CTRL_Z: 'cancel',
-//   CTRL_U: 'deleteAllBefore',
-//   CTRL_K: 'deleteAllAfter'
-// };
+import { unreachable } from './util';
 
 export type EditFrame = { t: 'edit', id: number | undefined, text: string };
 
@@ -37,4 +11,31 @@ export function renderEditPane(buf: ScreenBuffer, state: State, frame: EditFrame
   buf.put({}, frame.text);
 }
 
-// return { t: 'setLetterText', id: frame.id, text: result };
+export type EditUiAction =
+  | { t: 'left' }
+  | { t: 'right' }
+  | { t: 'deleteLeft' }
+  | { t: 'home' }
+  | { t: 'end' }
+  | { t: 'submit' }
+  | { t: 'kill' }
+  ;
+
+export function doEditUiAction(state: State, frame: EditFrame, action: EditUiAction): void {
+  switch (action.t) {
+    case 'left': break;
+    case 'right': break;
+    case 'deleteLeft': break;
+    case 'home': break;
+    case 'end': break;
+    case 'kill': break;
+    case 'submit': {
+      doAction(state, { t: 'setLetterText', id: frame.id, text: frame.text });
+    } break;
+    default: unreachable(action);
+  }
+}
+
+export function editUiAction(action: EditUiAction): Action {
+  return { t: 'editUiAction', action }
+}

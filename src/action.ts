@@ -1,9 +1,9 @@
-import { Terminal } from 'terminal-kit';
-import { Document, stringOfDoc } from './doc';
-import { Item, LetterItem, State, collectResources, findLetter } from './state';
-import { mod, randElt, unreachable } from './util';
-import { MenuFrame, MenuUiAction, menuItemsOfFrame } from './menu';
 import { quit, win } from '.';
+import { Document, stringOfDoc } from './doc';
+import { EditUiAction, doEditUiAction } from './edit-letter';
+import { MenuUiAction, doMenuUiAction } from './menu';
+import { Item, LetterItem, State, collectResources, findLetter } from './state';
+import { randElt, unreachable } from './util';
 
 export type MenuAction =
   | { t: 'sleep' }
@@ -29,6 +29,7 @@ export type Action =
   | { t: 'bigMoney' }
   | { t: 'addInbox', item: Item }
   | { t: 'menuUiAction', action: MenuUiAction }
+  | { t: 'editUiAction', action: EditUiAction }
   ;
 
 export function stringOfMenuAction(action: MenuAction): string {
@@ -88,24 +89,6 @@ export function resolveFutures(state: State): void {
   state.futures = fsLater;
   for (const f of fsNow) {
     doAction(state, f.action);
-  }
-}
-
-function menuInc(state: State, frame: MenuFrame, delta: number): void {
-  const menuLength = menuItemsOfFrame(state, frame).length;
-  frame.ix = mod(frame.ix + delta, menuLength);
-}
-
-function menuSelect(state: State, frame: MenuFrame): void {
-  const items = menuItemsOfFrame(state, frame);
-  doAction(state, items[frame.ix]);
-}
-
-function doMenuUiAction(state: State, frame: MenuFrame, action: MenuUiAction): void {
-  switch (action.t) {
-    case 'menuNext': menuInc(state, frame, 1); break;
-    case 'menuPrev': menuInc(state, frame, -1); break;
-    case 'menuSelect': menuSelect(state, frame); break;
   }
 }
 
@@ -174,13 +157,21 @@ export function doAction(state: State, action: Action): void {
       break;
     case 'none':
       break;
-    case 'menuUiAction':
+    case 'menuUiAction': {
       const frame = state.uiStack[0];
       if (frame.t != 'menu') {
         throw new Error('Trying to reduce menuNext action when not in a menu');
       }
       doMenuUiAction(state, frame, action.action);
-      break;
+    } break;
+    case 'editUiAction': {
+      const frame = state.uiStack[0];
+      if (frame.t != 'edit') {
+        throw new Error('Trying to reduce editNext action when not in a edit');
+      }
+      doEditUiAction(state, frame, action.action);
+    } break;
+
     default: unreachable(action);
   }
 }

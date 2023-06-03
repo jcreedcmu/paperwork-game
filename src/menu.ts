@@ -1,8 +1,9 @@
-import { ScreenBuffer, Terminal } from 'terminal-kit';
-import { Action, MenuAction, logger, stringOfMenuAction } from './action';
+import { ScreenBuffer } from 'terminal-kit';
+import { Action, MenuAction, doAction, stringOfMenuAction } from './action';
+import { Document } from './doc';
 import { EditFrame } from './edit-letter';
 import { State, canWriteLetter, hasInboxItems, hasItems } from './state';
-import { Document } from './doc';
+import { mod } from './util';
 
 export type LetterMenu = { t: 'letter', id: number };
 
@@ -113,4 +114,22 @@ export type MenuUiAction =
 
 export function menuUiAction(action: MenuUiAction): Action {
   return { t: 'menuUiAction', action }
+}
+
+function menuInc(state: State, frame: MenuFrame, delta: number): void {
+  const menuLength = menuItemsOfFrame(state, frame).length;
+  frame.ix = mod(frame.ix + delta, menuLength);
+}
+
+function menuSelect(state: State, frame: MenuFrame): void {
+  const items = menuItemsOfFrame(state, frame);
+  doAction(state, items[frame.ix]);
+}
+
+export function doMenuUiAction(state: State, frame: MenuFrame, action: MenuUiAction): void {
+  switch (action.t) {
+    case 'menuNext': menuInc(state, frame, 1); break;
+    case 'menuPrev': menuInc(state, frame, -1); break;
+    case 'menuSelect': menuSelect(state, frame); break;
+  }
 }

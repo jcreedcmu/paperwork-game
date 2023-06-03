@@ -92,7 +92,6 @@ function getMenuTitle(frame: MenuFrame): string {
 }
 
 export function renderMenu(buf: ScreenBuffer, state: State, frame: MenuFrame): void {
-  buf.moveTo(0, 0);
   buf.put({ attr: { color: 'red', bold: true } }, getMenuTitle(frame));
   const items = menuItemsOfFrame(state, frame);
 

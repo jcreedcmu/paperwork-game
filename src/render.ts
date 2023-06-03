@@ -67,6 +67,7 @@ export function render(term: Terminal, state: State): void {
   const buf = new ScreenBuffer({ width: WIDTH, height: HEIGHT, dst: term });
   buf.fill({ char: ' ' });
   renderLog(buf, state.log);
+  buf.moveTo(0, 0);
   renderToBuffer(buf, state);
   buf.draw({ delta: true });
 }

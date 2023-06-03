@@ -1,6 +1,6 @@
 import { quit, win } from '.';
 import { Document, stringOfDoc } from './doc';
-import { EditUiAction, doEditUiAction } from './edit-letter';
+import { EditUiAction, doEditUiAction, makeEditFrame } from './edit-letter';
 import { logger } from './logger';
 import { MenuUiAction, doMenuUiAction } from './menu';
 import { Item, LetterItem, State, collectResources, findLetter } from './state';
@@ -89,6 +89,7 @@ export function resolveFutures(state: State): void {
   }
 }
 
+
 export function doAction(state: State, action: Action): void {
   switch (action.t) {
     case 'exit': quit(); break;
@@ -106,12 +107,11 @@ export function doAction(state: State, action: Action): void {
     case 'purchase': win(); break;
     case 'enterInventoryMenu': state.uiStack.unshift({ t: 'menu', which: { t: 'inventory' }, ix: 0 }); break;
     case 'back': goBack(state); break;
-    case 'newLetter': {
-      state.uiStack.unshift({ t: 'edit', id: undefined, text: '' });
-    }
+    case 'newLetter':
+      state.uiStack.unshift(makeEditFrame(undefined, ''));
       break;
     case 'editLetter':
-      state.uiStack.unshift({ t: 'edit', id: action.id, text: findLetter(state, action.id).body });
+      state.uiStack.unshift(makeEditFrame(action.id, findLetter(state, action.id).body));
       break;
     case 'setLetterText': {
       const { id, text } = action;

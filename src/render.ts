@@ -1,10 +1,10 @@
 import { ScreenBuffer, Terminal } from 'terminal-kit';
 import { renderDisplay, stringOfDoc } from './doc';
 import { renderEditPane } from './edit-letter';
+import { renderLog } from './logger';
 import { UiStackFrame, renderMenu } from './menu';
 import { Item, State, resources } from './state';
 import { unreachable } from './util';
-import { renderLog } from './logger';
 
 export const STATUS_COLUMN = 30;
 export function stringOfItem(item: Item): string {
@@ -63,6 +63,16 @@ function renderToBuffer(buf: ScreenBuffer, state: State): void {
 export const WIDTH = 80;
 export const HEIGHT = 25;
 
+function showCursorOfState(state: State): boolean {
+  const frame = state.uiStack[0];
+  switch (frame.t) {
+    case 'debug': return true;
+    case 'edit': return true;
+    case 'menu': return false;
+    case 'display': return false;
+  }
+}
+
 export function render(term: Terminal, state: State): void {
   const buf = new ScreenBuffer({ width: WIDTH, height: HEIGHT, dst: term });
   buf.fill({ char: ' ' });
@@ -70,4 +80,6 @@ export function render(term: Terminal, state: State): void {
   buf.moveTo(0, 0);
   renderToBuffer(buf, state);
   buf.draw({ delta: true });
+  term.hideCursor(!showCursorOfState(state));
+  term.moveTo((buf as any).cx + 1, (buf as any).cy + 1);
 }

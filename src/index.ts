@@ -42,8 +42,6 @@ async function go() {
     resolveFutures(state);
     render(term, state);
   });
-
-  //   const action = await showUi(state);
 }
 
 go();

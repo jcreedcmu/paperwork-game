@@ -3,6 +3,7 @@ import { Document, stringOfDoc } from './doc';
 import { Item, LetterItem, State, collectResources, findLetter } from './state';
 import { mod, randElt, unreachable } from './util';
 import { menuItemsOfFrame } from './menu';
+import { quit, win } from '.';
 
 export type MenuAction =
   | { t: 'sleep' }
@@ -28,6 +29,7 @@ export type Action =
   | { t: 'addInbox', item: Item }
   | { t: 'menuNext' }
   | { t: 'menuPrev' }
+  | { t: 'menuSelect' }
   ;
 
 export function stringOfMenuAction(action: MenuAction): string {
@@ -49,17 +51,7 @@ export function stringOfMenuAction(action: MenuAction): string {
   }
 }
 
-export function quit(term: Terminal) {
-  term.clear();
-  term.reset();
-  process.exit(0);
-}
 
-function win(term: Terminal) {
-  term.clear();
-  term.green('you win!\n');
-  process.exit(0);
-}
 
 function goBack(state: State): void {
   state.uiStack.shift();
@@ -92,13 +84,13 @@ function addFuture(state: State, delta_time: number, action: Action): void {
   state.futures.push({ action, time: state.time + delta_time });
 }
 
-export function resolveFutures(term: Terminal, state: State): void {
+export function resolveFutures(state: State): void {
   const time = state.time;
   const fsNow = state.futures.filter(x => x.time <= time);
   const fsLater = state.futures.filter(x => x.time > time);
   state.futures = fsLater;
   for (const f of fsNow) {
-    doAction(state, term, f.action);
+    doAction(state, f.action);
   }
 }
 
@@ -111,9 +103,19 @@ function menuInc(state: State, delta: number): void {
   frame.ix = mod(frame.ix + delta, menuLength);
 }
 
-export function doAction(state: State, term: Terminal, action: Action): void {
+function menuSelect(state: State): void {
+  logger(state, "hello?");
+  const frame = state.uiStack[0];
+  if (frame.t != 'menu') {
+    throw new Error('Trying to reduce menuNext action when not in a menu');
+  }
+  const items = menuItemsOfFrame(state, frame);
+  doAction(state, items[frame.ix]);
+}
+
+export function doAction(state: State, action: Action): void {
   switch (action.t) {
-    case 'exit': quit(term); break;
+    case 'exit': quit(); break;
     case 'sleep':
       state.time++;
       break;
@@ -125,7 +127,7 @@ export function doAction(state: State, term: Terminal, action: Action): void {
       state.inv.res.cash += state.inv.res.bottle;
       state.inv.res.bottle = 0;
       break;
-    case 'purchase': win(term); break;
+    case 'purchase': win(); break;
     case 'enterInventoryMenu': state.uiStack.unshift({ t: 'menu', which: { t: 'inventory' }, ix: 0 }); break;
     case 'back': goBack(state); break;
     case 'newLetter': {
@@ -178,6 +180,7 @@ export function doAction(state: State, term: Terminal, action: Action): void {
       break;
     case 'menuNext': menuInc(state, 1); break;
     case 'menuPrev': menuInc(state, -1); break;
+    case 'menuSelect': menuSelect(state); break;
     default: unreachable(action);
   }
 }

@@ -1,5 +1,5 @@
 import { ScreenBuffer, Terminal, terminal } from 'terminal-kit';
-import { Action, doAction, logger, quit, resolveFutures } from './action';
+import { Action, doAction, logger, resolveFutures } from './action';
 import { showDisplayDoc, stringOfDoc } from './doc';
 import { showEditDialog } from './edit-letter';
 import { MenuFrame, UiStackFrame, renderMenu } from './menu';
@@ -7,6 +7,18 @@ import { initState, Item, LogLine, resources, State } from './state';
 import { showDebug } from './debug';
 
 const term: Terminal = terminal;
+
+export function quit() {
+  term.clear();
+  term.reset();
+  process.exit(0);
+}
+
+export function win() {
+  term.clear();
+  term.green('you win!\n');
+  process.exit(0);
+}
 
 declare module "terminal-kit" {
   class ScreenBuffer {
@@ -131,6 +143,7 @@ const debugKeyMap: KeyMap = {};
 const menuKeyMap: KeyMap = {
   UP: { t: 'menuPrev' },
   DOWN: { t: 'menuNext' },
+  ENTER: { t: 'menuSelect' },
 };
 const editKeyMap: KeyMap = {};
 const displayKeyMap: KeyMap = {};
@@ -171,8 +184,8 @@ async function go() {
   term.grabInput(true);
   term.on('key', (key: string) => {
     const action = actionOfKey(state, key);
-    doAction(state, term, action);
-    resolveFutures(term, state);
+    doAction(state, action);
+    resolveFutures(state);
     render(term, state);
   });
 

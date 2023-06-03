@@ -14,8 +14,10 @@ export type Menu =
 
 export type DisplayFrame = { t: 'display', which: Document };
 export type MenuFrame = { t: 'menu', which: Menu, ix: number };
+export type DebugFrame = { t: 'debug' };
 
 export type UiStackFrame =
+  | DebugFrame
   | MenuFrame
   | EditFrame
   | DisplayFrame;
@@ -43,6 +45,7 @@ const FREEDOM_PRICE = 100;
 
 async function mainMenu(state: State, term: Terminal, frame: MenuFrame): Promise<MenuAction> {
   const menuItems: MenuAction[] = [
+    { t: 'debug' },
     { t: 'sleep' },
     { t: 'collect' },
   ];

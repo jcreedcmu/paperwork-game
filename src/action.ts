@@ -17,6 +17,7 @@ export type MenuAction =
   | { t: 'sendLetter', id: number }
   | { t: 'back' }
   | { t: 'displayDoc', doc: Document }
+  | { t: 'debug' }
   ;
 export type Action =
   | MenuAction
@@ -40,6 +41,7 @@ export function stringOfMenuAction(action: MenuAction): string {
     case 'editLetter': return 'edit';
     case 'back': return '<-';
     case 'displayDoc': return stringOfDoc(action.doc);
+    case 'debug': return 'debug';
   }
 }
 
@@ -155,6 +157,9 @@ export function doAction(state: State, term: Terminal, action: Action): void {
       break;
     case 'displayDoc':
       state.uiStack.unshift({ t: 'display', which: action.doc });
+      break;
+    case 'debug':
+      state.uiStack.unshift({ t: 'debug' });
       break;
     default: unreachable(action);
   }

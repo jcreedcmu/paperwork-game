@@ -4,6 +4,7 @@ import { showDisplayDoc, stringOfDoc } from './doc';
 import { showEditDialog } from './edit-letter';
 import { UiStackFrame, showMenu } from './menu';
 import { initState, Item, resources, State } from './state';
+import { showDebug } from './debug';
 
 const term: terminalKit.Terminal = terminalKit.terminal;
 
@@ -57,6 +58,7 @@ function renderStateForFrame(frame: UiStackFrame): boolean {
     case 'menu': return true;
     case 'edit': return false;
     case 'display': return false;
+    case 'debug': return false;
   }
 }
 
@@ -74,6 +76,7 @@ async function showUi(state: State): Promise<Action> {
       case 'menu': return await showMenu(state, term, frame);
       case 'edit': return await showEditDialog(state, frame, term);
       case 'display': return await showDisplayDoc(frame, term, frame.which);
+      case 'debug': return await showDebug(term);
     }
   }
   finally {

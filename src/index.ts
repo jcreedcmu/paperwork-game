@@ -2,7 +2,7 @@ import { ScreenBuffer, Terminal, terminal } from 'terminal-kit';
 import { Action, doAction, logger, quit, resolveFutures } from './action';
 import { showDisplayDoc, stringOfDoc } from './doc';
 import { showEditDialog } from './edit-letter';
-import { MenuFrame, UiStackFrame, showMenu } from './menu';
+import { MenuFrame, UiStackFrame, renderMenu } from './menu';
 import { initState, Item, LogLine, resources, State } from './state';
 import { showDebug } from './debug';
 
@@ -72,7 +72,7 @@ async function showUi(state: State): Promise<Action> {
 
   try {
     switch (frame.t) {
-      case 'menu': return await showMenu(state, term, frame);
+      case 'menu': throw 'Deprecated'; // return await showMenu(state, term, frame);
       case 'edit': return await showEditDialog(state, frame, term);
       case 'display': return await showDisplayDoc(frame, term, frame.which);
       case 'debug': return await showDebug(term);
@@ -83,21 +83,13 @@ async function showUi(state: State): Promise<Action> {
   }
 }
 
-function renderMenu(buf: ScreenBuffer, frame: MenuFrame): void {
-  buf.moveTo(0, 0);
-  switch (frame.which.t) {
-    case 'main': buf.put({ attr: { color: 'red', bold: true, inverse: true } }, 'MAIN MENU'); break;
-    case 'inventory': buf.put({ attr: { color: 'red', bold: true } }, 'INVENTORY'); break;
-    case 'letter': break;
-    case 'inbox': break;
-  }
-}
+
 
 function renderToBuffer(buf: ScreenBuffer, state: State): void {
   const frame = state.uiStack[0];
   switch (frame.t) {
     case 'menu':
-      renderMenu(buf, frame);
+      renderMenu(buf, state, frame);
       break;
     case 'debug':
       break;

@@ -1,4 +1,4 @@
-import { Terminal } from 'terminal-kit';
+import { ScreenBuffer, Terminal } from 'terminal-kit';
 import { MenuAction, logger, stringOfMenuAction } from './action';
 import { EditFrame } from './edit-letter';
 import { State, canWriteLetter, hasInboxItems, hasItems } from './state';
@@ -22,15 +22,97 @@ export type UiStackFrame =
   | EditFrame
   | DisplayFrame;
 
-// deprecated
-export async function showMenu(state: State, term: Terminal, frame: MenuFrame): Promise<MenuAction> {
+function menuItemsOfFrame(state: State, frame: MenuFrame): MenuAction[] {
   switch (frame.which.t) {
-    case 'main': return await mainMenu(state, term, frame);
-    case 'inventory': return await inventoryMenu(state, term, frame);
-    case 'letter': return await letterMenu(state, term, frame, frame.which);
-    case 'inbox': return await inboxMenu(state, term, frame);
+    case 'main': {
+      const menuItems: MenuAction[] = [
+        { t: 'debug' },
+        { t: 'sleep' },
+        { t: 'collect' },
+      ];
+
+      if (state.inv.res.bottle > 0) {
+        menuItems.push({ t: 'recycle' });
+      }
+      if (state.inv.res.cash >= FREEDOM_PRICE) {
+        menuItems.push({ t: 'purchase' });
+      }
+      if (canWriteLetter(state)) {
+        menuItems.push({ t: 'newLetter' });
+      }
+      if (hasItems(state)) {
+        menuItems.push({ t: 'enterInventoryMenu' });
+      }
+      if (hasInboxItems(state)) {
+        menuItems.push({ t: 'enterInboxMenu' });
+      }
+      menuItems.push({ t: 'exit' });
+      return menuItems;
+    }
+
+    case 'inventory': {
+      const menuItems: MenuAction[] = [];
+      state.inv.items.forEach((item, ix) => {
+        if (item.t == 'letter') {
+          menuItems.push({ t: 'enterLetterMenu', id: item.id, body: item.body });
+        }
+      });
+      menuItems.push({ t: 'back' });
+      return menuItems;
+    }
+
+    case 'inbox': {
+      const menuItems: MenuAction[] = [];
+      state.inv.inbox.forEach((ibit, ix) => {
+        if (ibit.item.t == 'doc') {
+          menuItems.push({ t: 'displayDoc', doc: ibit.item.doc });
+        }
+      });
+      menuItems.push({ t: 'back' });
+      return menuItems;
+    }
+
+    case 'letter':
+      return [
+        { t: 'editLetter', id: frame.which.id },
+        { t: 'sendLetter', id: frame.which.id },
+        { t: 'back' },
+      ];
   }
 }
+
+function getMenuTitle(frame: MenuFrame): string {
+  switch (frame.which.t) {
+    case 'main': return 'MAIN MENU';
+    case 'inventory': return 'INVENTORY MENU';
+    case 'letter': return 'LETTER MENU';
+    case 'inbox': return 'INBOX MENU';
+  }
+}
+
+export function renderMenu(buf: ScreenBuffer, state: State, frame: MenuFrame): void {
+  buf.moveTo(0, 0);
+  buf.put({ attr: { color: 'red', bold: true } }, getMenuTitle(frame));
+  const items = menuItemsOfFrame(state, frame);
+
+  items.forEach((item, ix) => {
+    const itemStr = stringOfMenuAction(item);
+    const selected = frame.ix == ix;
+    buf.moveTo(0, ix + 2);
+    buf.put({ attr: { inverse: selected } }, itemStr);
+  });
+}
+
+// Dead code
+
+// export async function showMenu(state: State, term: Terminal, frame: MenuFrame): Promise<MenuAction> {
+//   switch (frame.which.t) {
+//     case 'main': return await mainMenu(state, term, frame);
+//     case 'inventory': return await inventoryMenu(state, term, frame);
+//     case 'letter': return await letterMenu(state, term, frame, frame.which);
+//     case 'inbox': return await inboxMenu(state, term, frame);
+//   }
+// }
 
 async function actionMenu(term: Terminal, title: string, frame: MenuFrame, actions: MenuAction[], options?: Terminal.SingleColumnMenuOptions):
   Promise<MenuAction> {

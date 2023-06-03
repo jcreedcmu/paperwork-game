@@ -1,9 +1,8 @@
 import { Terminal, terminal } from 'terminal-kit';
 import { doAction, resolveFutures } from './action';
-import { stringOfDoc } from './doc';
 import { actionOfKey } from './keys';
 import { render } from './render';
-import { Item, initState } from './state';
+import { initState } from './state';
 
 export const term: Terminal = terminal;
 
@@ -27,16 +26,6 @@ declare module "terminal-kit" {
       ...formatArgumets: any[]
     ): void;
     fill(options: { char: string, attr?: ScreenBuffer.Attributes | number }): void;
-  }
-}
-
-export const STATUS_COLUMN = 30;
-const LOG_ROW = 15;
-
-export function stringOfItem(item: Item): string {
-  switch (item.t) {
-    case 'letter': return item.body;
-    case 'doc': return stringOfDoc(item.doc);
   }
 }
 

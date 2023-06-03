@@ -1,8 +1,8 @@
-import { Action, logger } from './action';
+import { Action } from './action';
+import { logger } from './logger';
 import { editUiAction } from './edit-letter';
 import { UiStackFrame, menuUiAction } from './menu';
 import { State } from './state';
-
 
 export type KeyMap = {
   // ignore all succeeding keymaps with precedence ≤ this.

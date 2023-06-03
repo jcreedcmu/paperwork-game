@@ -1,6 +1,7 @@
-import { Terminal } from 'terminal-kit';
+import { ScreenBuffer, Terminal } from 'terminal-kit';
 import { DisplayFrame } from './menu';
 import { Action } from './action';
+import { State } from './state';
 
 export type Document =
   | { t: 'brochure', inResponseTo: string }
@@ -35,9 +36,7 @@ export function contentOfDoc(doc: Document): string {
   }
 }
 
-export async function showDisplayDoc(frame: DisplayFrame, term: Terminal, doc: Document): Promise<Action> {
-  term.gray(contentOfDoc(doc) + '\n');
-  const cont = term.singleColumnMenu(['<-']);
-  const result = await cont.promise;
-  return { t: 'back' };
+export function renderDisplay(buf: ScreenBuffer, state: State, frame: DisplayFrame): void {
+  const doc = frame.which;
+  buf.put({ newLine: true }, contentOfDoc(doc) + '\n\n[any key to go back]');
 }

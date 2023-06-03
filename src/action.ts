@@ -1,6 +1,7 @@
 import { quit, win } from '.';
 import { Document, stringOfDoc } from './doc';
 import { EditUiAction, doEditUiAction } from './edit-letter';
+import { logger } from './logger';
 import { MenuUiAction, doMenuUiAction } from './menu';
 import { Item, LetterItem, State, collectResources, findLetter } from './state';
 import { randElt, unreachable } from './util';
@@ -53,10 +54,6 @@ export function stringOfMenuAction(action: MenuAction): string {
 
 function goBack(state: State): void {
   state.uiStack.shift();
-}
-
-export function logger(state: State, msg: string): void {
-  state.log.push({ time: state.time, msg: msg });
 }
 
 function addInboxAction(state: State, doc: Document): Action {

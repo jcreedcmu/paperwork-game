@@ -1,5 +1,6 @@
 import { Action } from "./action";
 import { Document } from "./doc";
+import { LogLine } from "./logger";
 import { UiStackFrame } from "./menu";
 
 export const resources = ['cash', 'bottle', 'paper', 'pencil'] as const;
@@ -23,7 +24,6 @@ export type InboxItem = { unread: boolean, item: Item };
 
 export type Future = { time: number, action: Action };
 
-export type LogLine = { time: number, msg: string };
 export type State = {
   log: LogLine[],
   futures: Future[],

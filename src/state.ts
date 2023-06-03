@@ -23,8 +23,9 @@ export type InboxItem = { unread: boolean, item: Item };
 
 export type Future = { time: number, action: Action };
 
+export type LogLine = { time: number, msg: string };
 export type State = {
-  log: string[],
+  log: LogLine[],
   futures: Future[],
   uiStack: UiStackFrame[],
   idCounter: number,

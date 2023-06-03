@@ -62,7 +62,7 @@ function goBack(state: State): void {
 }
 
 export function logger(state: State, msg: string): void {
-  state.log.push(`[${state.time}] ${msg}`);
+  state.log.push({ time: state.time, msg: msg });
 }
 
 function addInboxAction(state: State, doc: Document): Action {

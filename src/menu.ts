@@ -22,6 +22,7 @@ export type UiStackFrame =
   | EditFrame
   | DisplayFrame;
 
+// deprecated
 export async function showMenu(state: State, term: Terminal, frame: MenuFrame): Promise<MenuAction> {
   switch (frame.which.t) {
     case 'main': return await mainMenu(state, term, frame);

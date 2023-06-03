@@ -1,18 +1,23 @@
-import * as terminalKit from 'terminal-kit';
-import { Action, doAction, quit, resolveFutures } from './action';
+import { ScreenBuffer, Terminal, terminal } from 'terminal-kit';
+import { Action, doAction, logger, quit, resolveFutures } from './action';
 import { showDisplayDoc, stringOfDoc } from './doc';
 import { showEditDialog } from './edit-letter';
-import { UiStackFrame, showMenu } from './menu';
-import { initState, Item, resources, State } from './state';
+import { MenuFrame, UiStackFrame, showMenu } from './menu';
+import { initState, Item, LogLine, resources, State } from './state';
 import { showDebug } from './debug';
 
-const term: terminalKit.Terminal = terminalKit.terminal;
+const term: Terminal = terminal;
 
-term.addListener('key', (x: string) => {
-  if (x == 'ESCAPE' || x == 'q') {
-    quit(term);
+declare module "terminal-kit" {
+  class ScreenBuffer {
+    put(
+      options: Partial<ScreenBuffer.PutOptions> & { newLine?: boolean },
+      format: string,
+      ...formatArgumets: any[]
+    ): void;
+    fill(options: { char: string, attr?: ScreenBuffer.Attributes | number }): void;
   }
-});
+}
 
 const STATUS_COLUMN = 30;
 const LOG_ROW = 15;
@@ -84,13 +89,79 @@ async function showUi(state: State): Promise<Action> {
   }
 }
 
+function renderMenu(buf: ScreenBuffer, frame: MenuFrame): void {
+  buf.moveTo(0, 0);
+  switch (frame.which.t) {
+    case 'main': buf.put({ attr: { color: 'red', bold: true, inverse: true } }, 'MAIN MENU'); break;
+    case 'inventory': buf.put({ attr: { color: 'red', bold: true } }, 'INVENTORY'); break;
+    case 'letter': break;
+    case 'inbox': break;
+  }
+}
+
+function renderToBuffer(buf: ScreenBuffer, state: State): void {
+  const frame = state.uiStack[0];
+  switch (frame.t) {
+    case 'menu':
+      renderMenu(buf, frame);
+      break;
+    case 'debug':
+      break;
+    case 'edit':
+      break;
+    case 'display':
+      break;
+    default:
+      unreachable(frame);
+  }
+}
+
+const WIDTH = 80;
+const HEIGHT = 25;
+
+function renderLog(buf: ScreenBuffer, log: LogLine[]): void {
+  const lines = log.slice(-10).reverse();
+  lines.forEach((line, ix) => {
+    buf.moveTo(WIDTH - 20, ix);
+    buf.put({ attr: { color: 'white' } }, `[${line.time}] `);
+    buf.put({}, line.msg);
+  });
+}
+
+function render(term: Terminal, state: State): void {
+  const buf = new ScreenBuffer({ width: WIDTH, height: HEIGHT, dst: term });
+  buf.fill({ char: ' ' });
+  renderLog(buf, state.log);
+  renderToBuffer(buf, state);
+  buf.draw({ delta: true });
+}
+
+function actionOfKey(state: State, key: string): Action {
+  if (key == 'ESCAPE') {
+    return { t: 'exit' };
+  }
+  logger(state, key);
+  return { t: 'sleep' };
+}
+
+import * as events from 'events';
+import { unreachable } from './util';
+
 async function go() {
   const state = initState();
-  while (1) {
-    const action = await showUi(state);
+  term.clear();
+  render(term, state);
+
+  term.hideCursor(true);
+  term.grabInput(true);
+  term.on('key', (key: string) => {
+    const action = actionOfKey(state, key);
     doAction(state, term, action);
     resolveFutures(term, state);
-  }
+    render(term, state);
+  });
+
+  //   const action = await showUi(state);
 }
 
 go();

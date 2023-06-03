@@ -31,6 +31,8 @@ const menuKeyMap: KeyMap = {
     UP: menuUiAction({ t: 'menuPrev' }),
     DOWN: menuUiAction({ t: 'menuNext' }),
     ENTER: menuUiAction({ t: 'menuSelect' }),
+    RIGHT: menuUiAction({ t: 'menuSelect' }),
+    LEFT: { t: 'maybeBack' },
   }
 };
 

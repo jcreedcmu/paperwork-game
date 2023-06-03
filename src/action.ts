@@ -26,6 +26,7 @@ export type MenuAction =
 export type Action =
   | MenuAction
   | { t: 'none' }
+  | { t: 'maybeBack' }
   | { t: 'setLetterText', id: number | undefined, text: string }
   | { t: 'bigMoney' }
   | { t: 'addInbox', item: Item }
@@ -168,7 +169,11 @@ export function doAction(state: State, action: Action): void {
       }
       doEditUiAction(state, frame, action.action);
     } break;
-
+    case 'maybeBack': {
+      if (state.uiStack.length > 1) {
+        goBack(state);
+      }
+    } break;
     default: unreachable(action);
   }
 }

@@ -21,6 +21,7 @@ export type MenuAction =
   ;
 export type Action =
   | MenuAction
+  | { t: 'none' }
   | { t: 'setLetterText', id: number | undefined, text: string }
   | { t: 'bigMoney' }
   | { t: 'addInbox', item: Item }
@@ -160,6 +161,8 @@ export function doAction(state: State, term: Terminal, action: Action): void {
       break;
     case 'debug':
       state.uiStack.unshift({ t: 'debug' });
+      break;
+    case 'none':
       break;
     default: unreachable(action);
   }

@@ -29,32 +29,26 @@ function stringOfItem(item: Item): string {
   }
 }
 
-function renderState(state: State) {
-  term.moveTo(STATUS_COLUMN, 1);
-  term.green('time: '); term('' + state.time);
+function renderState(buf: ScreenBuffer, state: State) {
+  buf.moveTo(STATUS_COLUMN, 1);
+  buf.put({ attr: { color: 'green' } }, 'time:');
+  buf.put({}, '' + state.time);
 
   let row = 2;
   resources.forEach((res, i) => {
     if (state.inv.res[res] > 0) {
-      term.moveTo(STATUS_COLUMN, row);
-      term.blue(`${res}: `); term('' + state.inv.res[res]);
+      buf.moveTo(STATUS_COLUMN, row);
+      buf.put({ attr: { color: 'blue' } }, `${res}: `);
+      buf.put({}, '' + state.inv.res[res]);
       row++;
     }
   });
   row++;
   state.inv.items.forEach((item, i) => {
-    term.moveTo(STATUS_COLUMN, row);
-    term.red(`* `); term.red(stringOfItem(item));
+    buf.moveTo(STATUS_COLUMN, row);
+    buf.put({ attr: { color: 'red' } }, `* ${stringOfItem(item)}`);
     row++;
   });
-
-  if (state.log.length > 0) {
-    const lines = state.log.slice(-10).reverse();
-    lines.forEach((line, i) => {
-      term.moveTo(STATUS_COLUMN, LOG_ROW + i);
-      term.gray(line);
-    });
-  }
 }
 
 
@@ -72,7 +66,7 @@ async function showUi(state: State): Promise<Action> {
   term.clear();
   term.hideCursor(true);
   if (renderStateForFrame(frame)) {
-    renderState(state);
+    // renderState(state); // DEPRECATED
   }
   term.moveTo(1, 1);
 
@@ -114,6 +108,9 @@ function renderToBuffer(buf: ScreenBuffer, state: State): void {
     default:
       unreachable(frame);
   }
+  if (renderStateForFrame(frame)) {
+    renderState(buf, state);
+  }
 }
 
 const WIDTH = 80;
@@ -136,12 +133,35 @@ function render(term: Terminal, state: State): void {
   buf.draw({ delta: true });
 }
 
-function actionOfKey(state: State, key: string): Action {
-  if (key == 'ESCAPE') {
-    return { t: 'exit' };
+export type KeyMap = Record<string, Action>;
+
+const debugKeyMap: KeyMap = {};
+const menuKeyMap: KeyMap = { c: { t: 'collect' } };
+const editKeyMap: KeyMap = {};
+const displayKeyMap: KeyMap = {};
+const defaultKeyMap: KeyMap = { ESCAPE: { t: 'exit' } };
+
+function keyMapOfFrame(frame: UiStackFrame): KeyMap {
+  switch (frame.t) {
+    case 'debug': return debugKeyMap;
+    case 'menu': return menuKeyMap;
+    case 'edit': return editKeyMap;
+    case 'display': return displayKeyMap;
   }
+}
+
+function actionOfKey(state: State, key: string): Action {
+  const keymaps = state.uiStack.map(keyMapOfFrame);
+  keymaps.push(defaultKeyMap);
   logger(state, key);
-  return { t: 'sleep' };
+
+  for (const keymap of keymaps) {
+    const m = keymap[key];
+    if (m !== undefined)
+      return m;
+  }
+
+  return { t: 'none' };
 }
 
 import * as events from 'events';

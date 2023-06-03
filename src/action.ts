@@ -104,7 +104,6 @@ function menuInc(state: State, delta: number): void {
 }
 
 function menuSelect(state: State): void {
-  logger(state, "hello?");
   const frame = state.uiStack[0];
   if (frame.t != 'menu') {
     throw new Error('Trying to reduce menuNext action when not in a menu');
@@ -131,11 +130,11 @@ export function doAction(state: State, action: Action): void {
     case 'enterInventoryMenu': state.uiStack.unshift({ t: 'menu', which: { t: 'inventory' }, ix: 0 }); break;
     case 'back': goBack(state); break;
     case 'newLetter': {
-      state.uiStack.unshift({ t: 'edit', id: undefined });
+      state.uiStack.unshift({ t: 'edit', id: undefined, text: '' });
     }
       break;
     case 'editLetter':
-      state.uiStack.unshift({ t: 'edit', id: action.id });
+      state.uiStack.unshift({ t: 'edit', id: action.id, text: findLetter(state, action.id).body });
       break;
     case 'setLetterText': {
       const { id, text } = action;

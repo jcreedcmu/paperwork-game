@@ -26,7 +26,7 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuAction[] {
   switch (frame.which.t) {
     case 'main': {
       const menuItems: MenuAction[] = [
-        { t: 'debug' },
+        // { t: 'debug' },
         { t: 'sleep' },
         { t: 'collect' },
       ];

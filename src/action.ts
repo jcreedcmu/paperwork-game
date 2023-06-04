@@ -18,7 +18,7 @@ export type MenuAction =
   | { t: 'newLetter' }
   | { t: 'sendLetter', id: number }
   | { t: 'back' }
-  | { t: 'displayDoc', doc: Document }
+  | { t: 'displayDoc', doc: Document, ibix: number }
   | { t: 'debug' }
   | { t: 'addMoney', id: number }
   | { t: 'removeMoney', id: number }
@@ -129,6 +129,7 @@ export function doAction(state: State, action: Action): void {
       state.uiStack.unshift({ t: 'menu', which: { t: 'inbox' }, ix: 0 });
       break;
     case 'displayDoc':
+      state.inv.inbox[action.ibix].unread = false;
       state.uiStack.unshift({ t: 'display', which: action.doc });
       break;
     case 'debug':

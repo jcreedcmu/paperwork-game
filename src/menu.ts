@@ -46,7 +46,9 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
         menuItems.push({ name: 'inventory...', action: { t: 'enterInventoryMenu' } });
       }
       if (hasInboxItems(state)) {
-        menuItems.push({ name: 'inbox...', action: { t: 'enterInboxMenu' } });
+        const unreadCount = state.inv.inbox.filter(x => x.unread).length;
+        const unread = unreadCount > 0 ? ` (${unreadCount})` : '';
+        menuItems.push({ name: `inbox${unread}...`, action: { t: 'enterInboxMenu' } });
       }
       menuItems.push({ name: 'exit', action: { t: 'exit' } });
       return menuItems;
@@ -74,7 +76,8 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
       const menuItems: MenuItem[] = [];
       state.inv.inbox.forEach((ibit, ix) => {
         if (ibit.item.t == 'doc') {
-          menuItems.push({ name: stringOfDoc(ibit.item.doc), action: { t: 'displayDoc', doc: ibit.item.doc } });
+          const unreadMarker = ibit.unread ? '* ' : '  ';
+          menuItems.push({ name: unreadMarker + stringOfDoc(ibit.item.doc), action: { t: 'displayDoc', doc: ibit.item.doc, ibix: ix } });
         }
       });
       menuItems.push({ name: '<-', action: { t: 'back' } });

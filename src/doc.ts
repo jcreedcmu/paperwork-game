@@ -2,6 +2,7 @@ import { ScreenBuffer, Terminal } from 'terminal-kit';
 import { DisplayFrame } from './menu';
 import { Action } from './action';
 import { State } from './state';
+import { TextBuffer } from './buffer';
 
 export type Document =
   | { t: 'brochure', inResponseTo: string }
@@ -36,7 +37,7 @@ export function contentOfDoc(doc: Document): string {
   }
 }
 
-export function renderDisplay(buf: ScreenBuffer, state: State, frame: DisplayFrame): void {
+export function renderDisplay(buf: TextBuffer, state: State, frame: DisplayFrame): void {
   const doc = frame.which;
-  buf.put({ newLine: true }, contentOfDoc(doc) + '\n\n[any key to go back]');
+  buf.newLine().put(contentOfDoc(doc) + '\n\n[any key to go back]');
 }

@@ -2,6 +2,7 @@ import { ScreenBuffer } from 'terminal-kit';
 import { Action, doAction } from './action';
 import { State } from './state';
 import { unreachable } from './util';
+import { TextBuffer } from './buffer';
 
 export type EditFrame = { t: 'edit', id: number | undefined, text: string, cursorPos: number };
 
@@ -9,9 +10,8 @@ export function makeEditFrame(id: number | undefined, text: string): EditFrame {
   return { t: 'edit', id, text, cursorPos: text.length }
 }
 
-export function renderEditPane(buf: ScreenBuffer, state: State, frame: EditFrame): void {
-  buf.put({ attr: { color: 'red' }, newLine: true }, 'EDIT TEXT OF LETTER\n> ');
-  buf.put({}, frame.text);
+export function renderEditPane(buf: TextBuffer, state: State, frame: EditFrame): void {
+  buf.red().newLine().put('EDIT TEXT OF LETTER\n> ').put(frame.text);
   buf.moveTo(frame.cursorPos + 2, 1);
 }
 

@@ -5,6 +5,7 @@ import { renderLog } from './logger';
 import { UiStackFrame, renderMenu } from './menu';
 import { Item, State, resources } from './state';
 import { unreachable } from './util';
+import { TextBuffer } from './buffer';
 
 export const STATUS_COLUMN = 30;
 export function stringOfItem(item: Item): string {
@@ -14,24 +15,22 @@ export function stringOfItem(item: Item): string {
   }
 }
 
-function renderState(buf: ScreenBuffer, state: State) {
+function renderState(buf: TextBuffer, state: State) {
   buf.moveTo(STATUS_COLUMN, 1);
-  buf.put({ attr: { color: 'green' } }, 'time:');
-  buf.put({}, '' + state.time);
+  buf.green().put('time:').put('' + state.time);
 
   let row = 2;
   resources.forEach((res, i) => {
     if (state.inv.res[res] > 0) {
       buf.moveTo(STATUS_COLUMN, row);
-      buf.put({ attr: { color: 'blue' } }, `${res}: `);
-      buf.put({}, '' + state.inv.res[res]);
+      buf.blue().put(`${res}: `).put('' + state.inv.res[res]);
       row++;
     }
   });
   row++;
   state.inv.items.forEach((item, i) => {
     buf.moveTo(STATUS_COLUMN, row);
-    buf.put({ attr: { color: 'red' } }, `* ${stringOfItem(item)}`);
+    buf.red().put(`* ${stringOfItem(item)}`);
     row++;
   });
 }
@@ -45,7 +44,7 @@ function renderStateForFrame(frame: UiStackFrame): boolean {
   }
 }
 
-function renderToBuffer(buf: ScreenBuffer, state: State): void {
+function renderToBuffer(buf: TextBuffer, state: State): void {
   const frame = state.uiStack[0];
   switch (frame.t) {
     case 'menu': renderMenu(buf, state, frame); break;
@@ -74,12 +73,11 @@ function showCursorOfState(state: State): boolean {
 }
 
 export function render(term: Terminal, state: State): void {
-  const buf = new ScreenBuffer({ width: WIDTH, height: HEIGHT, dst: term });
-  buf.fill({ char: ' ' });
+  const buf = new TextBuffer(WIDTH, HEIGHT, term);
+  buf.fill(' ');
   renderLog(buf, state.log);
-  buf.moveTo(0, 0);
+  buf.home();
   renderToBuffer(buf, state);
-  buf.draw({ delta: true });
-  term.hideCursor(!showCursorOfState(state));
-  term.moveTo((buf as any).cx + 1, (buf as any).cy + 1);
+  buf.draw();
+  buf.setCursorVisibility(!showCursorOfState(state));
 }

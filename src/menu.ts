@@ -5,6 +5,7 @@ import { EditFrame } from './edit-letter';
 import { State, canWriteLetter, hasInboxItems, hasItems } from './state';
 import { mod } from './util';
 import { getCustomBindings } from './keys';
+import { TextBuffer } from './buffer';
 
 export type Menu =
   | { t: 'main' }
@@ -94,15 +95,15 @@ function getMenuTitle(frame: MenuFrame): string {
   }
 }
 
-export function renderMenu(buf: ScreenBuffer, state: State, frame: MenuFrame): void {
-  buf.put({ attr: { color: 'red', bold: true } }, getMenuTitle(frame));
+export function renderMenu(buf: TextBuffer, state: State, frame: MenuFrame): void {
+  buf.red().bold().put(getMenuTitle(frame));
   const items = menuItemsOfFrame(state, frame);
 
   items.forEach((item, ix) => {
     const itemStr = item.name;
     const selected = frame.ix == ix;
     buf.moveTo(0, ix + 2);
-    buf.put({ attr: { inverse: selected } }, itemStr);
+    buf.inverse(selected).put(itemStr);
   });
 
   const customBindingsRow = Math.max(items.length + 3, 10);
@@ -112,8 +113,7 @@ export function renderMenu(buf: ScreenBuffer, state: State, frame: MenuFrame): v
   keys.forEach((key, ix) => {
     const action = bindings[key].name;
     buf.moveTo(0, customBindingsRow + ix);
-    buf.put({ attr: { color: 'blue' } }, `(${key})`);
-    buf.put({}, ` ${action}`);
+    buf.blue().put(`(${key})`).put(` ${action}`);
   });
 }
 

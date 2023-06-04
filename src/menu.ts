@@ -58,7 +58,7 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
         if (item.t == 'letter') {
           menuItems.push({
             name: `letter ("${item.body.substring(0, 10)}")`,
-            action: { t: 'editLetterBody', id: item.id, body: item.body /* XXX remove body? back to editLetter? */ }
+            action: { t: 'editLetter', id: item.id }
           });
         }
       });

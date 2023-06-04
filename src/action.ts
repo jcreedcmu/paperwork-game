@@ -14,7 +14,6 @@ export type MenuAction =
   | { t: 'purchase' }
   | { t: 'enterInventoryMenu' }
   | { t: 'enterInboxMenu' }
-  | { t: 'editLetterBody', id: number, body: string }
   | { t: 'editLetter', id: number }
   | { t: 'newLetter' }
   | { t: 'sendLetter', id: number }
@@ -38,27 +37,6 @@ export type Action =
   | { t: 'backOf', action: Action }
   ;
 
-export function _stringOfMenuAction(action: MenuAction): string {
-  switch (action.t) {
-    case 'sleep': return 'sleep';
-    case 'collect': return 'collect';
-    case 'purchase': return 'purchase freedom';
-    case 'exit': return 'exit';
-    case 'recycle': return 'recycle bottles';
-    case 'enterInventoryMenu': return 'inventory...';
-    case 'enterInboxMenu': return 'inbox...';
-    case 'editLetterBody': return `letter ("${action.body.substring(0, 10)}")`;
-    case 'newLetter': return 'new letter';
-    case 'sendLetter': return 'send';
-    case 'editLetter': return 'edit';
-    case 'back': return '<-';
-    case 'displayDoc': return stringOfDoc(action.doc);
-    case 'backOf': return _stringOfMenuAction(action.action);
-    case 'debug': return 'debug';
-    case 'addMoney': return 'add money';
-    case 'removeMoney': return 'remove money';
-  }
-}
 
 function goBack(state: State): void {
   state.uiStack.shift();
@@ -137,9 +115,6 @@ export function doAction(state: State, action: Action): void {
         goBack(state);
       }
     } break;
-    case 'editLetterBody':
-      doAction(state, { t: 'editLetter', id: action.id });
-      break;
     case 'sendLetter':
       const letter = findLetter(state, action.id);
       addFuture(state, 3, resolveLetter(state, letter));

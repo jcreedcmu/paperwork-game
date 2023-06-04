@@ -20,7 +20,6 @@ export type MenuAction =
   | { t: 'back' }
   | { t: 'displayDoc', doc: Document }
   | { t: 'debug' }
-  | { t: 'backOf', action: MenuAction } // dead code?
   | { t: 'addMoney', id: number }
   | { t: 'removeMoney', id: number }
   ;
@@ -34,7 +33,6 @@ export type Action =
   | { t: 'addInbox', item: Item }
   | { t: 'menuUiAction', action: MenuUiAction }
   | { t: 'editUiAction', action: EditUiAction }
-  | { t: 'backOf', action: Action }
   ;
 
 
@@ -156,10 +154,6 @@ export function doAction(state: State, action: Action): void {
       if (state.uiStack.length > 1) {
         goBack(state);
       }
-    } break;
-    case 'backOf': {
-      doAction(state, action.action);
-      goBack(state);
     } break;
     case 'addMoney': {
       if (state.inv.res.cash > 0) {

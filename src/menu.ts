@@ -56,8 +56,12 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
       const menuItems: MenuItem[] = [];
       state.inv.items.forEach((item, ix) => {
         if (item.t == 'letter') {
+          let name = `letter ("${item.body.substring(0, 10)}")`;
+          if (item.money > 0) {
+            name = `(\$${item.money}) ` + name;
+          }
           menuItems.push({
-            name: `letter ("${item.body.substring(0, 10)}")`,
+            name,
             action: { t: 'editLetter', id: item.id }
           });
         }

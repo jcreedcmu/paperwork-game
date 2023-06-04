@@ -63,7 +63,6 @@ export function getCustomBindings(state: State, frame: MenuFrame): Record<string
     case 'main': return {};
     case 'inventory': return customBindingsOfItem(getSelectedItem(state, frame));
     case 'inbox': return customBindingsOfItem(getSelectedInboxItem(state, frame)?.item);
-    case 'letter': return {};
   }
 }
 

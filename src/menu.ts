@@ -6,13 +6,11 @@ import { State, canWriteLetter, hasInboxItems, hasItems } from './state';
 import { mod } from './util';
 import { getCustomBindings } from './keys';
 
-export type LetterMenu = { t: 'letter', id: number };
-
 export type Menu =
   | { t: 'main' }
   | { t: 'inventory' }
   | { t: 'inbox' }
-  | LetterMenu;
+  ;
 
 export type DisplayFrame = { t: 'display', which: Document };
 export type MenuFrame = { t: 'menu', which: Menu, ix: number };
@@ -73,13 +71,6 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuAction[] {
       menuItems.push({ t: 'back' });
       return menuItems;
     }
-
-    case 'letter':
-      return [
-        { t: 'editLetter', id: frame.which.id },
-        { t: 'backOf', action: { t: 'sendLetter', id: frame.which.id } },
-        { t: 'back' },
-      ];
   }
 }
 
@@ -87,7 +78,6 @@ function getMenuTitle(frame: MenuFrame): string {
   switch (frame.which.t) {
     case 'main': return 'MAIN MENU';
     case 'inventory': return 'INVENTORY MENU';
-    case 'letter': return 'LETTER MENU';
     case 'inbox': return 'INBOX MENU';
   }
 }

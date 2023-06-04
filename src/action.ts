@@ -125,9 +125,12 @@ export function doAction(state: State, action: Action): void {
         const newId = state.idCounter++;
         const id = state.idCounter++;
         state.inv.items.push({ t: 'letter', id, body: text });
+        goBack(state);
+        state.uiStack.unshift({ t: 'menu', which: { t: 'inventory' }, ix: state.inv.items.length - 1 });
       }
       else {
         findLetter(state, id).body = text;
+        goBack(state);
       }
     } break;
     case 'editLetterBody':

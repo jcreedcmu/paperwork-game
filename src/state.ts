@@ -11,7 +11,7 @@ export const collectResources: Resource[] = ['bottle', 'paper', 'pencil'];
 // kept track of. They don't have any notion of identity.
 type Resource = (typeof resources)[number];
 
-export type LetterItem = { t: 'letter', id: number, body: string };
+export type LetterItem = { t: 'letter', id: number, body: string, money: number };
 export type DocItem = { t: 'doc', id: number, doc: Document };
 
 // An item, on the other hand, does has a distinct identity, and does

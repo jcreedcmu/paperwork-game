@@ -45,6 +45,8 @@ function customBindingsOfItem(item: Item | undefined): Record<string, MenuAction
     case 'letter': return {
       'e': { t: 'editLetter', id: item.id },
       's': { t: 'sendLetter', id: item.id },
+      '+': { t: 'addMoney', id: item.id },
+      '-': { t: 'removeMoney', id: item.id },
     };
     case 'doc': return {};
   }

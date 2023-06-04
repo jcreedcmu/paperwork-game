@@ -21,7 +21,9 @@ export type MenuAction =
   | { t: 'back' }
   | { t: 'displayDoc', doc: Document }
   | { t: 'debug' }
-  | { t: 'backOf', action: MenuAction }
+  | { t: 'backOf', action: MenuAction } // dead code?
+  | { t: 'addMoney', id: number }
+  | { t: 'removeMoney', id: number }
   ;
 
 export type Action =
@@ -53,6 +55,8 @@ export function stringOfMenuAction(action: MenuAction): string {
     case 'displayDoc': return stringOfDoc(action.doc);
     case 'backOf': return stringOfMenuAction(action.action);
     case 'debug': return 'debug';
+    case 'addMoney': return 'add money';
+    case 'removeMoney': return 'remove money';
   }
 }
 
@@ -124,7 +128,7 @@ export function doAction(state: State, action: Action): void {
         state.inv.res.pencil--;
         const newId = state.idCounter++;
         const id = state.idCounter++;
-        state.inv.items.push({ t: 'letter', id, body: text });
+        state.inv.items.push({ t: 'letter', id, body: text, money: 0 });
         goBack(state);
         state.uiStack.unshift({ t: 'menu', which: { t: 'inventory' }, ix: state.inv.items.length - 1 });
       }
@@ -181,6 +185,20 @@ export function doAction(state: State, action: Action): void {
     case 'backOf': {
       doAction(state, action.action);
       goBack(state);
+    } break;
+    case 'addMoney': {
+      if (state.inv.res.cash > 0) {
+        const letter = findLetter(state, action.id);
+        state.inv.res.cash--;
+        letter.money++;
+      }
+    } break;
+    case 'removeMoney': {
+      const letter = findLetter(state, action.id);
+      if (letter.money > 0) {
+        state.inv.res.cash++;
+        letter.money--;
+      }
     } break;
     default: unreachable(action);
   }

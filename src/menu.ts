@@ -76,7 +76,7 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuAction[] {
     case 'letter':
       return [
         { t: 'editLetter', id: frame.which.id },
-        { t: 'sendLetter', id: frame.which.id },
+        { t: 'backOf', action: { t: 'sendLetter', id: frame.which.id } },
         { t: 'back' },
       ];
   }

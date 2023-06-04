@@ -40,7 +40,7 @@ export function doEditUiAction(state: State, frame: EditFrame, action: EditUiAct
     case 'end': frame.cursorPos = frame.text.length; break;
     case 'kill': frame.text = frame.text.substr(0, frame.cursorPos); break;
     case 'submit': {
-      doAction(state, { t: 'setLetterText', id: frame.id, text: frame.text });
+      doAction(state, { t: 'backOf', action: { t: 'setLetterText', id: frame.id, text: frame.text } });
     } break;
     case 'insert': {
       if (action.key.length == 1) {

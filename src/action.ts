@@ -21,6 +21,7 @@ export type MenuAction =
   | { t: 'back' }
   | { t: 'displayDoc', doc: Document }
   | { t: 'debug' }
+  | { t: 'backOf', action: MenuAction }
   ;
 
 export type Action =
@@ -32,6 +33,7 @@ export type Action =
   | { t: 'addInbox', item: Item }
   | { t: 'menuUiAction', action: MenuUiAction }
   | { t: 'editUiAction', action: EditUiAction }
+  | { t: 'backOf', action: Action }
   ;
 
 export function stringOfMenuAction(action: MenuAction): string {
@@ -49,6 +51,7 @@ export function stringOfMenuAction(action: MenuAction): string {
     case 'editLetter': return 'edit';
     case 'back': return '<-';
     case 'displayDoc': return stringOfDoc(action.doc);
+    case 'backOf': return stringOfMenuAction(action.action);
     case 'debug': return 'debug';
   }
 }
@@ -126,7 +129,6 @@ export function doAction(state: State, action: Action): void {
       else {
         findLetter(state, id).body = text;
       }
-      goBack(state);
     } break;
     case 'enterLetterMenu':
       state.uiStack.unshift({ t: 'menu', which: { t: 'letter', id: action.id }, ix: 0 });
@@ -135,7 +137,6 @@ export function doAction(state: State, action: Action): void {
       const letter = findLetter(state, action.id);
       addFuture(state, 3, resolveLetter(state, letter));
       state.inv.items = state.inv.items.filter(x => x.id != action.id);
-      goBack(state);
       break;
     case 'bigMoney':
       logger(state, 'got big money');
@@ -173,6 +174,10 @@ export function doAction(state: State, action: Action): void {
       if (state.uiStack.length > 1) {
         goBack(state);
       }
+    } break;
+    case 'backOf': {
+      doAction(state, action.action);
+      goBack(state);
     } break;
     default: unreachable(action);
   }

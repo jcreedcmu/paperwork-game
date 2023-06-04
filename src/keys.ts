@@ -1,8 +1,9 @@
 import { Action, MenuAction } from './action';
 import { logger } from './logger';
 import { editUiAction } from './edit-letter';
-import { Menu, MenuFrame, MenuUiAction, UiStackFrame } from './menu';
+import { Menu, MenuFrame, MenuItem, MenuUiAction, UiStackFrame } from './menu';
 import { InboxItem, Item, State } from './state';
+import { mapval } from './util';
 
 export type DefaultAction =
   | { t: 'const', action: Action }
@@ -38,15 +39,15 @@ const basicMenuBindings: Record<string, Action> = {
   LEFT: { t: 'maybeBack' },
 };
 
-function customBindingsOfItem(item: Item | undefined): Record<string, MenuAction> {
+function customBindingsOfItem(item: Item | undefined): Record<string, MenuItem> {
   if (item == undefined)
     return {};
   switch (item.t) {
     case 'letter': return {
-      'e': { t: 'editLetter', id: item.id },
-      's': { t: 'sendLetter', id: item.id },
-      '+': { t: 'addMoney', id: item.id },
-      '-': { t: 'removeMoney', id: item.id },
+      'e': { name: 'edit', action: { t: 'editLetter', id: item.id } },
+      's': { name: 'send', action: { t: 'sendLetter', id: item.id } },
+      '+': { name: 'add money', action: { t: 'addMoney', id: item.id } },
+      '-': { name: 'remove money', action: { t: 'removeMoney', id: item.id } },
     };
     case 'doc': return {};
   }
@@ -60,7 +61,7 @@ function getSelectedInboxItem(state: State, frame: MenuFrame): InboxItem | undef
   return state.inv.inbox[frame.ix];
 }
 
-export function getCustomBindings(state: State, frame: MenuFrame): Record<string, MenuAction> {
+export function getCustomBindings(state: State, frame: MenuFrame): Record<string, MenuItem> {
   switch (frame.which.t) {
     case 'main': return {};
     case 'inventory': return customBindingsOfItem(getSelectedItem(state, frame));
@@ -69,7 +70,7 @@ export function getCustomBindings(state: State, frame: MenuFrame): Record<string
 }
 
 function menuKeyMap(state: State, frame: MenuFrame): KeyMap {
-  const customBindings: Record<string, MenuAction> = getCustomBindings(state, frame);
+  const customBindings: Record<string, Action> = mapval(getCustomBindings(state, frame), b => b.action);
   return { bind: { ...basicMenuBindings, ...customBindings } };
 }
 

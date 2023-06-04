@@ -190,7 +190,7 @@ export function fbuf(sz: Point, getPixel: (x: number, y: number) => Color): Buff
   return { c, d };
 }
 
-export function mapval<T, U>(f: (y: T) => U, x: { [k: string]: T }): { [k: string]: U } {
+export function mapval<T, U>(x: { [k: string]: T }, f: (y: T) => U): { [k: string]: U } {
   const rv: { [k: string]: U } = {};
   for (const k of (Object.keys(x))) {
     rv[k] = f(x[k]);

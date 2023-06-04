@@ -1,6 +1,6 @@
 import { ScreenBuffer } from 'terminal-kit';
-import { Action, MenuAction, doAction, stringOfMenuAction } from './action';
-import { Document } from './doc';
+import { Action, MenuAction, doAction } from './action';
+import { Document, stringOfDoc } from './doc';
 import { EditFrame } from './edit-letter';
 import { State, canWriteLetter, hasInboxItems, hasItems } from './state';
 import { mod } from './util';
@@ -22,53 +22,58 @@ export type UiStackFrame =
   | EditFrame
   | DisplayFrame;
 
-export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuAction[] {
+export type MenuItem = { name: string, action: Action };
+
+export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
   switch (frame.which.t) {
     case 'main': {
-      const menuItems: MenuAction[] = [
+      const menuItems: MenuItem[] = [
         // { t: 'debug' },
-        { t: 'sleep' },
-        { t: 'collect' },
+        { name: 'sleep', action: { t: 'sleep' } },
+        { name: 'collect', action: { t: 'collect' } },
       ];
 
       if (state.inv.res.bottle > 0) {
-        menuItems.push({ t: 'recycle' });
+        menuItems.push({ name: 'recycle', action: { t: 'recycle' } });
       }
       if (state.inv.res.cash >= FREEDOM_PRICE) {
-        menuItems.push({ t: 'purchase' });
+        menuItems.push({ name: 'purchase freedom', action: { t: 'purchase' } });
       }
       if (canWriteLetter(state)) {
-        menuItems.push({ t: 'newLetter' });
+        menuItems.push({ name: 'new letter', action: { t: 'newLetter' } });
       }
       if (hasItems(state)) {
-        menuItems.push({ t: 'enterInventoryMenu' });
+        menuItems.push({ name: 'inventory...', action: { t: 'enterInventoryMenu' } });
       }
       if (hasInboxItems(state)) {
-        menuItems.push({ t: 'enterInboxMenu' });
+        menuItems.push({ name: 'inbox...', action: { t: 'enterInboxMenu' } });
       }
-      menuItems.push({ t: 'exit' });
+      menuItems.push({ name: 'exit', action: { t: 'exit' } });
       return menuItems;
     }
 
     case 'inventory': {
-      const menuItems: MenuAction[] = [];
+      const menuItems: MenuItem[] = [];
       state.inv.items.forEach((item, ix) => {
         if (item.t == 'letter') {
-          menuItems.push({ t: 'editLetterBody', id: item.id, body: item.body });
+          menuItems.push({
+            name: `letter ("${item.body.substring(0, 10)}")`,
+            action: { t: 'editLetterBody', id: item.id, body: item.body /* XXX remove body? back to editLetter? */ }
+          });
         }
       });
-      menuItems.push({ t: 'back' });
+      menuItems.push({ name: '<-', action: { t: 'back' } });
       return menuItems;
     }
 
     case 'inbox': {
-      const menuItems: MenuAction[] = [];
+      const menuItems: MenuItem[] = [];
       state.inv.inbox.forEach((ibit, ix) => {
         if (ibit.item.t == 'doc') {
-          menuItems.push({ t: 'displayDoc', doc: ibit.item.doc });
+          menuItems.push({ name: stringOfDoc(ibit.item.doc), action: { t: 'displayDoc', doc: ibit.item.doc } });
         }
       });
-      menuItems.push({ t: 'back' });
+      menuItems.push({ name: '<-', action: { t: 'back' } });
       return menuItems;
     }
   }
@@ -87,7 +92,7 @@ export function renderMenu(buf: ScreenBuffer, state: State, frame: MenuFrame): v
   const items = menuItemsOfFrame(state, frame);
 
   items.forEach((item, ix) => {
-    const itemStr = stringOfMenuAction(item);
+    const itemStr = item.name;
     const selected = frame.ix == ix;
     buf.moveTo(0, ix + 2);
     buf.put({ attr: { inverse: selected } }, itemStr);
@@ -98,7 +103,7 @@ export function renderMenu(buf: ScreenBuffer, state: State, frame: MenuFrame): v
   const bindings = getCustomBindings(state, frame);
   const keys = Object.keys(bindings).sort();
   keys.forEach((key, ix) => {
-    const action = stringOfMenuAction(bindings[key]);
+    const action = bindings[key].name;
     buf.moveTo(0, customBindingsRow + ix);
     buf.put({ attr: { color: 'blue' } }, `(${key})`);
     buf.put({}, ` ${action}`);
@@ -120,7 +125,7 @@ function menuInc(state: State, frame: MenuFrame, delta: number): void {
 
 function menuSelect(state: State, frame: MenuFrame): void {
   const items = menuItemsOfFrame(state, frame);
-  doAction(state, items[frame.ix]);
+  doAction(state, items[frame.ix].action);
 }
 
 export function doMenuUiAction(state: State, frame: MenuFrame, action: MenuUiAction): void {

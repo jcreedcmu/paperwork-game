@@ -38,7 +38,7 @@ export type Action =
   | { t: 'backOf', action: Action }
   ;
 
-export function stringOfMenuAction(action: MenuAction): string {
+export function _stringOfMenuAction(action: MenuAction): string {
   switch (action.t) {
     case 'sleep': return 'sleep';
     case 'collect': return 'collect';
@@ -53,7 +53,7 @@ export function stringOfMenuAction(action: MenuAction): string {
     case 'editLetter': return 'edit';
     case 'back': return '<-';
     case 'displayDoc': return stringOfDoc(action.doc);
-    case 'backOf': return stringOfMenuAction(action.action);
+    case 'backOf': return _stringOfMenuAction(action.action);
     case 'debug': return 'debug';
     case 'addMoney': return 'add money';
     case 'removeMoney': return 'remove money';

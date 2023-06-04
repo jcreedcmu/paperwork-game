@@ -50,6 +50,7 @@ function customBindingsOfItem(item: Item | undefined): Record<string, MenuItem> 
       '-': { name: 'remove money', action: { t: 'removeMoney', id: item.id } },
     };
     case 'doc': return {};
+    case 'form': return {};
   }
 }
 
@@ -89,6 +90,16 @@ const editKeyMap: KeyMap = {
   def: { t: 'selfInsert' },
 };
 
+// XXX put actual editing in here
+const editFormKeyMap: KeyMap = {
+  skip: 0,
+  bind: {
+    ENTER: { t: 'back' },
+    LEFT: { t: 'back' },
+    ESCAPE: { t: 'back' },
+  },
+};
+
 const displayKeyMap: KeyMap = {
   skip: 0,
   bind: {},
@@ -108,6 +119,7 @@ function keyMapOfFrame(state: State, frame: UiStackFrame): KeyMap {
     case 'menu': return menuKeyMap(state, frame);
     case 'edit': return editKeyMap;
     case 'display': return displayKeyMap;
+    case 'editForm': return editFormKeyMap;
   }
 }
 

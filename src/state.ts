@@ -1,5 +1,6 @@
 import { Action } from "./action";
 import { Document } from "./doc";
+import { Form, FormItem } from "./form";
 import { LogLine } from "./logger";
 import { UiStackFrame } from "./menu";
 
@@ -18,7 +19,9 @@ export type DocItem = { t: 'doc', id: number, doc: Document };
 // not 'stack'.
 export type Item =
   | LetterItem
-  | DocItem;
+  | DocItem
+  | FormItem
+  ;
 
 export type InboxItem = { unread: boolean, item: Item };
 

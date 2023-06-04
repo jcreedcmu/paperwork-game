@@ -6,6 +6,7 @@ import { State, canWriteLetter, hasInboxItems, hasItems } from './state';
 import { mod } from './util';
 import { getCustomBindings } from './keys';
 import { TextBuffer } from './buffer';
+import { EditFormFrame, stringOfForm } from './form';
 
 export type Menu =
   | { t: 'main' }
@@ -21,7 +22,8 @@ export type UiStackFrame =
   | DebugFrame
   | MenuFrame
   | EditFrame
-  | DisplayFrame;
+  | DisplayFrame
+  | EditFormFrame;
 
 export type MenuItem = { name: string, action: Action };
 
@@ -79,6 +81,10 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
         if (ibit.item.t == 'doc') {
           const unreadMarker = ibit.unread ? '* ' : '  ';
           menuItems.push({ name: unreadMarker + stringOfDoc(ibit.item.doc), action: { t: 'displayDoc', doc: ibit.item.doc, ibix: ix } });
+        }
+        if (ibit.item.t == 'form') {
+          const unreadMarker = ibit.unread ? '* ' : '  ';
+          menuItems.push({ name: unreadMarker + stringOfForm(ibit.item.form), action: { t: 'editForm', id: ibit.item.id, form: ibit.item.form, ibix: ix } });
         }
       });
       menuItems.push({ name: '<-', action: { t: 'back' } });

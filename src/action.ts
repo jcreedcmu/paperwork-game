@@ -1,6 +1,7 @@
 import { quit, win } from '.';
 import { Document, stringOfDoc } from './doc';
 import { EditUiAction, doEditUiAction, makeEditFrame } from './edit-letter';
+import { Form, findForm, makeEditFormFrame } from './form';
 import { logger } from './logger';
 import { MenuUiAction, doMenuUiAction } from './menu';
 import { Item, LetterItem, State, collectResources, findLetter } from './state';
@@ -19,6 +20,7 @@ export type MenuAction =
   | { t: 'sendLetter', id: number }
   | { t: 'back' }
   | { t: 'displayDoc', doc: Document, ibix: number }
+  | { t: 'editForm', form: Form, ibix: number, id: number }
   | { t: 'debug' }
   | { t: 'addMoney', id: number }
   | { t: 'removeMoney', id: number }
@@ -40,23 +42,34 @@ function goBack(state: State): void {
   state.uiStack.shift();
 }
 
-function addInboxAction(state: State, doc: Document): Action {
+function addInboxDoc(state: State, doc: Document): Action {
   // XXX the fact that state is changing during action creation is
   // bad. should really have a compound action that increments the id
   // counter during action reducer.
   return { t: 'addInbox', item: { t: 'doc', doc, id: state.idCounter++ } };
 }
 
+function addInboxForm(state: State, form: Form): Action {
+  // XXX the fact that state is changing during action creation is
+  // bad. should really have a compound action that increments the id
+  // counter during action reducer.
+  return { t: 'addInbox', item: { t: 'form', form, id: state.idCounter++ } };
+}
+
+const letterPatterns: [RegExp | string, (state: State, letter: LetterItem) => Action][] = [
+  [(/catalog/i), (state, letter) => addInboxDoc(state, { t: 'store-catalog' })],
+  ['money', (state, letter) => ({ t: 'bigMoney' })],
+  [(/sto-001/i), (state, letter) => addInboxForm(state, { t: 'STO-001' })],
+  ['', (state, letter) => addInboxDoc(state, { t: 'brochure', inResponseTo: letter.body })],
+];
+
 function resolveLetter(state: State, letter: LetterItem): Action {
-  if (letter.body.match(/catalog/i)) {
-    return addInboxAction(state, { t: 'store-catalog' });
+  for (const [pattern, action] of letterPatterns) {
+    if (letter.body.match(pattern)) {
+      return action(state, letter);
+    }
   }
-  else if (letter.body.match('money')) {
-    return { t: 'bigMoney' };
-  }
-  else {
-    return addInboxAction(state, { t: 'brochure', inResponseTo: letter.body });
-  }
+  return { t: 'none' };
 }
 
 function addFuture(state: State, delta_time: number, action: Action): void {
@@ -129,6 +142,7 @@ export function doAction(state: State, action: Action): void {
       state.uiStack.unshift({ t: 'menu', which: { t: 'inbox' }, ix: 0 });
       break;
     case 'displayDoc':
+      // XXX should split out this unread handling in a wrapper action
       state.inv.inbox[action.ibix].unread = false;
       state.uiStack.unshift({ t: 'display', which: action.doc });
       break;
@@ -169,6 +183,11 @@ export function doAction(state: State, action: Action): void {
         state.inv.res.cash++;
         letter.money--;
       }
+    } break;
+    case 'editForm': {
+      // XXX should split out this unread handling in a wrapper action
+      state.inv.inbox[action.ibix].unread = false;
+      state.uiStack.unshift(makeEditFormFrame(action.id, findForm(state, action.id)));
     } break;
     default: unreachable(action);
   }

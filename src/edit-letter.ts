@@ -1,8 +1,7 @@
-import { ScreenBuffer } from 'terminal-kit';
 import { Action, doAction } from './action';
+import { TextBuffer } from './buffer';
 import { State } from './state';
 import { unreachable } from './util';
-import { TextBuffer } from './buffer';
 
 export type EditFrame = { t: 'edit', id: number | undefined, text: string, cursorPos: number };
 

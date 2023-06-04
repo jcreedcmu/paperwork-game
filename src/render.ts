@@ -1,17 +1,19 @@
-import { ScreenBuffer, Terminal } from 'terminal-kit';
+import { Terminal } from 'terminal-kit';
+import { TextBuffer } from './buffer';
 import { renderDisplay, stringOfDoc } from './doc';
 import { renderEditPane } from './edit-letter';
+import { renderEditFormPane, showCursorInForm, stringOfForm } from './form';
 import { renderLog } from './logger';
 import { UiStackFrame, renderMenu } from './menu';
 import { Item, State, resources } from './state';
 import { unreachable } from './util';
-import { TextBuffer } from './buffer';
 
 export const STATUS_COLUMN = 30;
 export function stringOfItem(item: Item): string {
   switch (item.t) {
     case 'letter': return item.body;
     case 'doc': return stringOfDoc(item.doc);
+    case 'form': return stringOfForm(item.form);
   }
 }
 
@@ -41,6 +43,7 @@ function renderStateForFrame(frame: UiStackFrame): boolean {
     case 'edit': return false;
     case 'display': return false;
     case 'debug': return false;
+    case 'editForm': return false;
   }
 }
 
@@ -51,6 +54,7 @@ function renderToBuffer(buf: TextBuffer, state: State): void {
     case 'debug': /* unimplemented */ break;
     case 'edit': renderEditPane(buf, state, frame); break;
     case 'display': renderDisplay(buf, state, frame); break;
+    case 'editForm': renderEditFormPane(buf, state, frame); break;
     default:
       unreachable(frame);
   }
@@ -69,6 +73,7 @@ function showCursorOfState(state: State): boolean {
     case 'edit': return true;
     case 'menu': return false;
     case 'display': return false;
+    case 'editForm': return showCursorInForm(frame);
   }
 }
 

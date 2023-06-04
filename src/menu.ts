@@ -56,7 +56,7 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuAction[] {
       const menuItems: MenuAction[] = [];
       state.inv.items.forEach((item, ix) => {
         if (item.t == 'letter') {
-          menuItems.push({ t: 'enterLetterMenu', id: item.id, body: item.body });
+          menuItems.push({ t: 'editLetterBody', id: item.id, body: item.body });
         }
       });
       menuItems.push({ t: 'back' });

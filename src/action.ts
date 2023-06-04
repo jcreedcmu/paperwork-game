@@ -14,9 +14,9 @@ export type MenuAction =
   | { t: 'purchase' }
   | { t: 'enterInventoryMenu' }
   | { t: 'enterInboxMenu' }
-  | { t: 'enterLetterMenu', id: number, body: string }
-  | { t: 'newLetter' }
+  | { t: 'editLetterBody', id: number, body: string }
   | { t: 'editLetter', id: number }
+  | { t: 'newLetter' }
   | { t: 'sendLetter', id: number }
   | { t: 'back' }
   | { t: 'displayDoc', doc: Document }
@@ -45,7 +45,7 @@ export function stringOfMenuAction(action: MenuAction): string {
     case 'recycle': return 'recycle bottles';
     case 'enterInventoryMenu': return 'inventory...';
     case 'enterInboxMenu': return 'inbox...';
-    case 'enterLetterMenu': return `letter ("${action.body.substring(0, 10)}")`;
+    case 'editLetterBody': return `letter ("${action.body.substring(0, 10)}")`;
     case 'newLetter': return 'new letter';
     case 'sendLetter': return 'send';
     case 'editLetter': return 'edit';
@@ -130,8 +130,8 @@ export function doAction(state: State, action: Action): void {
         findLetter(state, id).body = text;
       }
     } break;
-    case 'enterLetterMenu':
-      state.uiStack.unshift({ t: 'menu', which: { t: 'letter', id: action.id }, ix: 0 });
+    case 'editLetterBody':
+      doAction(state, { t: 'editLetter', id: action.id });
       break;
     case 'sendLetter':
       const letter = findLetter(state, action.id);

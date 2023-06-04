@@ -1,8 +1,8 @@
-import { Action } from './action';
+import { Action, MenuAction } from './action';
 import { logger } from './logger';
 import { editUiAction } from './edit-letter';
-import { UiStackFrame, menuUiAction } from './menu';
-import { State } from './state';
+import { Menu, MenuFrame, UiStackFrame, menuUiAction } from './menu';
+import { InboxItem, Item, State } from './state';
 
 export type DefaultAction =
   | { t: 'const', action: Action }
@@ -26,15 +26,47 @@ export type KeyMap = {
 
 const debugKeyMap: KeyMap = { bind: {} };
 
-const menuKeyMap: KeyMap = {
-  bind: {
-    UP: menuUiAction({ t: 'menuPrev' }),
-    DOWN: menuUiAction({ t: 'menuNext' }),
-    ENTER: menuUiAction({ t: 'menuSelect' }),
-    RIGHT: menuUiAction({ t: 'menuSelect' }),
-    LEFT: { t: 'maybeBack' },
-  }
+const basicMenuBindings: Record<string, Action> = {
+  UP: menuUiAction({ t: 'menuPrev' }),
+  DOWN: menuUiAction({ t: 'menuNext' }),
+  ENTER: menuUiAction({ t: 'menuSelect' }),
+  RIGHT: menuUiAction({ t: 'menuSelect' }),
+  LEFT: { t: 'maybeBack' },
 };
+
+function customBindingsOfItem(item: Item | undefined): Record<string, MenuAction> {
+  if (item == undefined)
+    return {};
+  switch (item.t) {
+    case 'letter': return {
+      'e': { t: 'editLetter', id: item.id },
+      's': { t: 'sendLetter', id: item.id },
+    };
+    case 'doc': return {};
+  }
+}
+
+function getSelectedItem(state: State, frame: MenuFrame): Item | undefined {
+  return state.inv.items[frame.ix];
+}
+
+function getSelectedInboxItem(state: State, frame: MenuFrame): InboxItem | undefined {
+  return state.inv.inbox[frame.ix];
+}
+
+function getCustomBindings(state: State, frame: MenuFrame): Record<string, MenuAction> {
+  switch (frame.which.t) {
+    case 'main': return {};
+    case 'inventory': return customBindingsOfItem(getSelectedItem(state, frame));
+    case 'inbox': return customBindingsOfItem(getSelectedInboxItem(state, frame)?.item);
+    case 'letter': return {};
+  }
+}
+
+function menuKeyMap(state: State, frame: MenuFrame): KeyMap {
+  const customBindings: Record<string, MenuAction> = getCustomBindings(state, frame);
+  return { bind: { ...basicMenuBindings, ...customBindings } };
+}
 
 const editKeyMap: KeyMap = {
   skip: 0,
@@ -64,10 +96,10 @@ const defaultKeyMap: KeyMap = {
   }
 };
 
-function keyMapOfFrame(frame: UiStackFrame): KeyMap {
+function keyMapOfFrame(state: State, frame: UiStackFrame): KeyMap {
   switch (frame.t) {
     case 'debug': return debugKeyMap;
-    case 'menu': return menuKeyMap;
+    case 'menu': return menuKeyMap(state, frame);
     case 'edit': return editKeyMap;
     case 'display': return displayKeyMap;
   }
@@ -81,7 +113,7 @@ export function actionOfDefaultBinding(state: State, key: string, def: DefaultAc
 }
 
 export function actionOfKey(state: State, key: string): Action {
-  const keymaps = state.uiStack.map(keyMapOfFrame);
+  const keymaps = state.uiStack.map(frame => keyMapOfFrame(state, frame));
   keymaps.push(defaultKeyMap);
   logger(state, key);
 

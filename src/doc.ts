@@ -1,8 +1,6 @@
-import { ScreenBuffer, Terminal } from 'terminal-kit';
-import { DisplayFrame } from './menu';
-import { Action } from './action';
-import { State } from './state';
 import { TextBuffer } from './buffer';
+import { DisplayFrame } from './menu';
+import { State } from './state';
 
 export type Document =
   | { t: 'brochure', inResponseTo: string }

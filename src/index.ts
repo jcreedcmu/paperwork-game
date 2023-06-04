@@ -1,8 +1,9 @@
 import { Terminal, terminal } from 'terminal-kit';
 import { doAction, resolveFutures } from './action';
 import { actionOfKey } from './keys';
-import { render } from './render';
+import { HEIGHT, WIDTH, render } from './render';
 import { initState } from './state';
+import { TextBuffer } from './buffer';
 
 export const term: Terminal = terminal;
 
@@ -30,17 +31,19 @@ declare module "terminal-kit" {
 }
 
 async function go() {
-  const state = initState();
-  term.clear();
-  render(term, state);
-
-  term.hideCursor(true);
   term.grabInput(true);
+  term.clear();
+
+  const state = initState();
+  const buf = new TextBuffer(WIDTH, HEIGHT, term);
+
+  render(buf, state);
+
   term.on('key', (key: string) => {
     const action = actionOfKey(state, key);
     doAction(state, action);
     resolveFutures(state);
-    render(term, state);
+    render(buf, state);
   });
 }
 

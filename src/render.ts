@@ -1,4 +1,3 @@
-import { Terminal } from 'terminal-kit';
 import { TextBuffer } from './buffer';
 import { renderDisplay, stringOfDoc } from './doc';
 import { renderEditPane } from './edit-letter';
@@ -77,8 +76,7 @@ function showCursorOfState(state: State): boolean {
   }
 }
 
-export function render(term: Terminal, state: State): void {
-  const buf = new TextBuffer(WIDTH, HEIGHT, term);
+export function render(buf: TextBuffer, state: State): void {
   buf.fill(' ');
   renderLog(buf, state.log);
   buf.home();

@@ -4,6 +4,7 @@ import { Document } from './doc';
 import { EditFrame } from './edit-letter';
 import { State, canWriteLetter, hasInboxItems, hasItems } from './state';
 import { mod } from './util';
+import { getCustomBindings } from './keys';
 
 export type LetterMenu = { t: 'letter', id: number };
 
@@ -101,6 +102,17 @@ export function renderMenu(buf: ScreenBuffer, state: State, frame: MenuFrame): v
     buf.moveTo(0, ix + 2);
     buf.put({ attr: { inverse: selected } }, itemStr);
   });
+
+  const customBindingsRow = Math.max(items.length + 3, 10);
+
+  const bindings = getCustomBindings(state, frame);
+  const keys = Object.keys(bindings).sort();
+  keys.forEach((key, ix) => {
+    const action = stringOfMenuAction(bindings[key]);
+    buf.moveTo(0, customBindingsRow + ix);
+    buf.put({ attr: { color: 'blue' } }, `(${key})`);
+    buf.put({}, ` ${action}`);
+  });
 }
 
 const FREEDOM_PRICE = 100;
@@ -110,10 +122,6 @@ export type MenuUiAction =
   | { t: 'menuPrev' }
   | { t: 'menuSelect' }
   ;
-
-export function menuUiAction(action: MenuUiAction): Action {
-  return { t: 'menuUiAction', action }
-}
 
 function menuInc(state: State, frame: MenuFrame, delta: number): void {
   const menuLength = menuItemsOfFrame(state, frame).length;

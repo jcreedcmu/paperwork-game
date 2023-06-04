@@ -1,7 +1,7 @@
 import { Action, MenuAction } from './action';
 import { logger } from './logger';
 import { editUiAction } from './edit-letter';
-import { Menu, MenuFrame, UiStackFrame, menuUiAction } from './menu';
+import { Menu, MenuFrame, MenuUiAction, UiStackFrame } from './menu';
 import { InboxItem, Item, State } from './state';
 
 export type DefaultAction =
@@ -25,6 +25,10 @@ export type KeyMap = {
 };
 
 const debugKeyMap: KeyMap = { bind: {} };
+
+function menuUiAction(action: MenuUiAction): Action {
+  return { t: 'menuUiAction', action }
+}
 
 const basicMenuBindings: Record<string, Action> = {
   UP: menuUiAction({ t: 'menuPrev' }),
@@ -54,7 +58,7 @@ function getSelectedInboxItem(state: State, frame: MenuFrame): InboxItem | undef
   return state.inv.inbox[frame.ix];
 }
 
-function getCustomBindings(state: State, frame: MenuFrame): Record<string, MenuAction> {
+export function getCustomBindings(state: State, frame: MenuFrame): Record<string, MenuAction> {
   switch (frame.which.t) {
     case 'main': return {};
     case 'inventory': return customBindingsOfItem(getSelectedItem(state, frame));

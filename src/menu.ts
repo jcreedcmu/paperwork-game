@@ -6,7 +6,7 @@ import { State, canWriteLetter, hasInboxItems, hasItems } from './state';
 import { mod } from './util';
 import { getCustomBindings } from './keys';
 import { TextBuffer } from './buffer';
-import { EditFormFrame, stringOfForm } from './form';
+import { FormEditFrame, stringOfForm } from './form';
 
 export type Menu =
   | { t: 'main' }
@@ -23,7 +23,7 @@ export type UiStackFrame =
   | MenuFrame
   | EditFrame
   | DisplayFrame
-  | EditFormFrame;
+  | FormEditFrame;
 
 export type MenuItem = { name: string, action: Action };
 

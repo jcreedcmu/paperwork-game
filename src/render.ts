@@ -1,7 +1,7 @@
 import { TextBuffer } from './buffer';
 import { renderDisplay, stringOfDoc } from './doc';
 import { renderEditPane } from './edit-letter';
-import { renderEditFormPane, showCursorInForm, stringOfForm } from './form';
+import { renderFormEditPane, showCursorInForm, stringOfForm } from './form';
 import { renderLog } from './logger';
 import { UiStackFrame, renderMenu } from './menu';
 import { Item, State, resources } from './state';
@@ -53,7 +53,7 @@ function renderToBuffer(buf: TextBuffer, state: State): void {
     case 'debug': /* unimplemented */ break;
     case 'edit': renderEditPane(buf, state, frame); break;
     case 'display': renderDisplay(buf, state, frame); break;
-    case 'editForm': renderEditFormPane(buf, state, frame); break;
+    case 'editForm': renderFormEditPane(buf, state, frame); break;
     default:
       unreachable(frame);
   }

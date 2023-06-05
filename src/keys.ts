@@ -4,10 +4,11 @@ import { editUiAction } from './edit-letter';
 import { Menu, MenuFrame, MenuItem, MenuUiAction, UiStackFrame } from './menu';
 import { InboxItem, Item, State } from './state';
 import { mapval } from './util';
+import { formEditUiAction } from './form';
 
 export type DefaultAction =
   | { t: 'const', action: Action }
-  | { t: 'selfInsert' }
+  | { t: 'selfInsert', k: (x: string) => Action }
   ;
 
 export type KeyMap = {
@@ -87,17 +88,23 @@ const editKeyMap: KeyMap = {
     ENTER: editUiAction({ t: 'submit' }),
     ESCAPE: { t: 'back' },
   },
-  def: { t: 'selfInsert' },
+  def: { t: 'selfInsert', k: key => editUiAction({ t: 'insert', key }) },
 };
 
-// XXX put actual editing in here
 const editFormKeyMap: KeyMap = {
   skip: 0,
   bind: {
-    ENTER: { t: 'back' },
-    LEFT: { t: 'back' },
+    LEFT: formEditUiAction({ t: 'left' }),
+    RIGHT: formEditUiAction({ t: 'right' }),
+    CTRL_A: formEditUiAction({ t: 'home' }),
+    CTRL_E: formEditUiAction({ t: 'end' }),
+    CTRL_K: formEditUiAction({ t: 'kill' }),
+    BACKSPACE: formEditUiAction({ t: 'deleteLeft' }),
+    ENTER: formEditUiAction({ t: 'submit' }),
+    TAB: formEditUiAction({ t: 'nextField' }),
     ESCAPE: { t: 'back' },
   },
+  def: { t: 'selfInsert', k: key => formEditUiAction({ t: 'insert', key }) },
 };
 
 const displayKeyMap: KeyMap = {
@@ -126,7 +133,7 @@ function keyMapOfFrame(state: State, frame: UiStackFrame): KeyMap {
 export function actionOfDefaultBinding(state: State, key: string, def: DefaultAction): Action {
   switch (def.t) {
     case 'const': return def.action;
-    case 'selfInsert': return editUiAction({ t: 'insert', key });
+    case 'selfInsert': return def.k(key);
   }
 }
 

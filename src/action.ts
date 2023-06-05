@@ -1,7 +1,7 @@
 import { quit, win } from '.';
 import { Document, stringOfDoc } from './doc';
 import { EditUiAction, doEditUiAction, makeEditFrame } from './edit-letter';
-import { Form, findForm, makeEditFormFrame } from './form';
+import { Form, FormEditUiAction, doFormEditUiAction, findForm, makeFormEditFrame } from './form';
 import { logger } from './logger';
 import { MenuUiAction, doMenuUiAction } from './menu';
 import { Item, LetterItem, State, collectResources, findLetter } from './state';
@@ -35,6 +35,7 @@ export type Action =
   | { t: 'addInbox', item: Item }
   | { t: 'menuUiAction', action: MenuUiAction }
   | { t: 'editUiAction', action: EditUiAction }
+  | { t: 'formEditUiAction', action: FormEditUiAction }
   ;
 
 
@@ -53,7 +54,7 @@ function addInboxForm(state: State, form: Form): Action {
   // XXX the fact that state is changing during action creation is
   // bad. should really have a compound action that increments the id
   // counter during action reducer.
-  return { t: 'addInbox', item: { t: 'form', form, id: state.idCounter++ } };
+  return { t: 'addInbox', item: { t: 'form', form, id: state.idCounter++, formData: [] } };
 }
 
 const letterPatterns: [RegExp | string, (state: State, letter: LetterItem) => Action][] = [
@@ -154,16 +155,23 @@ export function doAction(state: State, action: Action): void {
     case 'menuUiAction': {
       const frame = state.uiStack[0];
       if (frame.t != 'menu') {
-        throw new Error('Trying to reduce menuNext action when not in a menu');
+        throw new Error('Trying to reduce menuUiAction when not in a menu');
       }
       doMenuUiAction(state, frame, action.action);
     } break;
     case 'editUiAction': {
       const frame = state.uiStack[0];
       if (frame.t != 'edit') {
-        throw new Error('Trying to reduce editNext action when not in a edit');
+        throw new Error('Trying to reduce editUiAction when not in a edit');
       }
       doEditUiAction(state, frame, action.action);
+    } break;
+    case 'formEditUiAction': {
+      const frame = state.uiStack[0];
+      if (frame.t != 'editForm') {
+        throw new Error('Trying to reduce formEditUiAction when not in a form');
+      }
+      doFormEditUiAction(state, frame, action.action);
     } break;
     case 'maybeBack': {
       if (state.uiStack.length > 1) {
@@ -187,7 +195,7 @@ export function doAction(state: State, action: Action): void {
     case 'editForm': {
       // XXX should split out this unread handling in a wrapper action
       state.inv.inbox[action.ibix].unread = false;
-      state.uiStack.unshift(makeEditFormFrame(action.id, findForm(state, action.id)));
+      state.uiStack.unshift(makeFormEditFrame(action.id, findForm(state, action.id)));
     } break;
     default: unreachable(action);
   }

@@ -4,9 +4,10 @@ import { EditUiAction, doEditUiAction, makeEditFrame } from './edit-letter';
 import { Form, FormEditUiAction, doFormEditUiAction, findForm, makeFormEditFrame } from './form';
 import { logger } from './logger';
 import { MenuUiAction, doMenuUiAction } from './menu';
-import { Item, LetterItem, State, collectResources, findLetter } from './state';
+import { Item, LetterItem, Location, State, collectResources, findLetter } from './state';
 import { randElt, unreachable } from './util';
 
+// XXX: Is this MenuAction/Action distinction obsolete now?
 export type MenuAction =
   | { t: 'sleep' }
   | { t: 'collect' }
@@ -24,6 +25,7 @@ export type MenuAction =
   | { t: 'debug' }
   | { t: 'addMoney', id: number }
   | { t: 'removeMoney', id: number }
+  | { t: 'pickup', id: number, loc: Location }
   ;
 
 export type Action =
@@ -87,6 +89,12 @@ export function resolveFutures(state: State): void {
   }
 }
 
+export function removeLocation(state: State, loc: Location): Item {
+  switch (loc.t) {
+    case 'items': return state.inv.items.splice(loc.ix, 1)[0];
+    case 'inbox': return state.inv.inbox.splice(loc.ix, 1)[0].item;
+  }
+}
 
 export function doAction(state: State, action: Action): void {
   switch (action.t) {
@@ -196,6 +204,9 @@ export function doAction(state: State, action: Action): void {
       // XXX should split out this unread handling in a wrapper action
       state.inv.inbox[action.ibix].unread = false;
       state.uiStack.unshift(makeFormEditFrame(action.id, findForm(state, action.id)));
+    } break;
+    case 'pickup': {
+      state.inv.hand = removeLocation(state, action.loc);
     } break;
     default: unreachable(action);
   }

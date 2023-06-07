@@ -23,6 +23,10 @@ export type Item =
   | FormItem
   ;
 
+export type Location =
+  | { t: 'items', ix: number }
+  | { t: 'inbox', ix: number };
+
 export type InboxItem = { unread: boolean, item: Item };
 
 export type Future = { time: number, action: Action };
@@ -35,6 +39,7 @@ export type State = {
   time: number,
   selectedIndex: number | undefined,
   inv: {
+    hand: Item | undefined,
     inbox: InboxItem[],
     items: Item[],
     res: Record<Resource, number>
@@ -50,6 +55,7 @@ export function initState(): State {
     idCounter: 0,
     time: 0,
     inv: {
+      hand: undefined,
       inbox: [],
       items: [],
       res: Object.fromEntries(resources.map(x => [x, 0])) as Record<Resource, number>

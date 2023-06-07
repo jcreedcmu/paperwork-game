@@ -24,10 +24,9 @@ export type Item =
   ;
 
 export type Location =
-  | { t: 'items', ix: number }
   | { t: 'inbox', ix: number };
 
-export type InboxItem = { unread: boolean, item: Item };
+export type WrapItem = { unread: boolean, item: Item };
 
 export type Future = { time: number, action: Action };
 
@@ -40,8 +39,7 @@ export type State = {
   selectedIndex: number | undefined,
   inv: {
     hand: Item | undefined,
-    inbox: InboxItem[],
-    items: Item[],
+    inbox: WrapItem[],
     res: Record<Resource, number>
   },
 }
@@ -57,7 +55,6 @@ export function initState(): State {
     inv: {
       hand: undefined,
       inbox: [],
-      items: [],
       res: Object.fromEntries(resources.map(x => [x, 0])) as Record<Resource, number>
     },
   };
@@ -68,31 +65,27 @@ export function showState(state: State) {
 }
 
 export function findLetter(state: State, id: number): LetterItem {
-  const ix = state.inv.items.findIndex(x => x.id == id);
+  const ix = state.inv.inbox.findIndex(x => x.item.id == id);
   if (ix == -1) {
     throw new Error(`no item with id ${id}`);
   }
-  const item = state.inv.items[ix];
-  if (item.t != 'letter') {
+  const wi = state.inv.inbox[ix];
+  if (wi.item.t != 'letter') {
     throw new Error(`item with id ${id} not a letter`);
   }
-  return item;
+  return wi.item;
 }
 
 export function setLetterText(state: State, id: number, text: string): void {
-  const ix = state.inv.items.findIndex(x => x.id == id);
+  const ix = state.inv.inbox.findIndex(x => x.item.id == id);
   if (ix == -1) {
     throw new Error(`no item with id ${id}`);
   }
-  const item = state.inv.items[ix];
-  if (item.t != 'letter') {
+  const wi = state.inv.inbox[ix];
+  if (wi.item.t != 'letter') {
     throw new Error(`item with id ${id} not a letter`);
   }
-  item.body = text;
-}
-
-export function hasItems(state: State): boolean {
-  return state.inv.items.length > 0;
+  wi.item.body = text;
 }
 
 export function hasInboxItems(state: State): boolean {

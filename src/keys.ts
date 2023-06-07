@@ -2,7 +2,7 @@ import { Action, MenuAction } from './action';
 import { logger } from './logger';
 import { editUiAction } from './edit-letter';
 import { Menu, MenuFrame, MenuItem, MenuUiAction, UiStackFrame } from './menu';
-import { InboxItem, Item, State } from './state';
+import { WrapItem, Item, State } from './state';
 import { mapval } from './util';
 import { formEditUiAction } from './form';
 
@@ -43,7 +43,7 @@ const basicMenuBindings: Record<string, Action> = {
 export type Bindings = Record<string, MenuItem>;
 
 
-function customBindingsOfItem(state: State, item: Item | undefined, loc: 'inbox' | 'items', ix: number): Bindings {
+function customBindingsOfItem(state: State, item: Item | undefined, ix: number): Bindings {
   if (item == undefined)
     return {};
   switch (item.t) {
@@ -55,7 +55,7 @@ function customBindingsOfItem(state: State, item: Item | undefined, loc: 'inbox'
         '-': { name: 'remove money', action: { t: 'removeMoney', id: item.id } },
       };
       if (state.inv.hand === undefined)
-        bindings[' '] = { name: 'pickup', action: { t: 'pickup', id: item.id, loc: { t: loc, ix } } };
+        bindings[' '] = { name: 'pickup', action: { t: 'pickup', id: item.id, loc: { t: 'inbox', ix } } };
       return bindings;
     }
     case 'doc': return {};
@@ -63,19 +63,14 @@ function customBindingsOfItem(state: State, item: Item | undefined, loc: 'inbox'
   }
 }
 
-function getSelectedItem(state: State, frame: MenuFrame): Item | undefined {
-  return state.inv.items[frame.ix];
-}
-
-function getSelectedInboxItem(state: State, frame: MenuFrame): InboxItem | undefined {
+function getSelectedInboxItem(state: State, frame: MenuFrame): WrapItem | undefined {
   return state.inv.inbox[frame.ix];
 }
 
 export function getCustomBindings(state: State, frame: MenuFrame): Bindings {
   switch (frame.which.t) {
     case 'main': return {};
-    case 'inventory': return customBindingsOfItem(state, getSelectedItem(state, frame), 'items', frame.ix);
-    case 'inbox': return customBindingsOfItem(state, getSelectedInboxItem(state, frame)?.item, 'inbox', frame.ix);
+    case 'inbox': return customBindingsOfItem(state, getSelectedInboxItem(state, frame)?.item, frame.ix);
   }
 }
 

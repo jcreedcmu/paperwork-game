@@ -29,9 +29,9 @@ function renderState(buf: TextBuffer, state: State) {
     }
   });
   row++;
-  state.inv.items.forEach((item, i) => {
+  state.inv.inbox.forEach(wi => {
     buf.moveTo(STATUS_COLUMN, row);
-    buf.red().put(`* ${stringOfItem(item)}`);
+    buf.red().put(`* ${stringOfItem(wi.item)}`);
     row++;
   });
 }

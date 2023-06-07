@@ -14,7 +14,6 @@ export type MenuAction =
   | { t: 'exit' }
   | { t: 'recycle' }
   | { t: 'purchase' }
-  | { t: 'enterInventoryMenu' }
   | { t: 'enterInboxMenu' }
   | { t: 'editLetter', id: number }
   | { t: 'newLetter' }
@@ -91,7 +90,6 @@ export function resolveFutures(state: State): void {
 
 export function removeLocation(state: State, loc: Location): Item {
   switch (loc.t) {
-    case 'items': return state.inv.items.splice(loc.ix, 1)[0];
     case 'inbox': return state.inv.inbox.splice(loc.ix, 1)[0].item;
   }
 }
@@ -111,7 +109,6 @@ export function doAction(state: State, action: Action): void {
       state.inv.res.bottle = 0;
       break;
     case 'purchase': win(); break;
-    case 'enterInventoryMenu': state.uiStack.unshift({ t: 'menu', which: { t: 'inventory' }, ix: 0 }); break;
     case 'back': goBack(state); break;
     case 'newLetter':
       state.uiStack.unshift(makeEditFrame(undefined, ''));
@@ -126,9 +123,9 @@ export function doAction(state: State, action: Action): void {
         state.inv.res.pencil--;
         const newId = state.idCounter++;
         const id = state.idCounter++;
-        state.inv.items.push({ t: 'letter', id, body: text, money: 0 });
+        state.inv.inbox.push({ unread: false, item: { t: 'letter', id, body: text, money: 0 } });
         goBack(state);
-        state.uiStack.unshift({ t: 'menu', which: { t: 'inventory' }, ix: state.inv.items.length - 1 });
+        state.uiStack.unshift({ t: 'menu', which: { t: 'inbox' }, ix: state.inv.inbox.length - 1 });
       }
       else {
         findLetter(state, id).body = text;
@@ -138,7 +135,7 @@ export function doAction(state: State, action: Action): void {
     case 'sendLetter':
       const letter = findLetter(state, action.id);
       addFuture(state, 3, resolveLetter(state, letter));
-      state.inv.items = state.inv.items.filter(x => x.id != action.id);
+      state.inv.inbox = state.inv.inbox.filter(x => x.item.id != action.id);
       break;
     case 'bigMoney':
       logger(state, 'got big money');

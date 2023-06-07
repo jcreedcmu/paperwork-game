@@ -2,7 +2,7 @@ import { ScreenBuffer } from 'terminal-kit';
 import { Action, MenuAction, doAction } from './action';
 import { Document, stringOfDoc } from './doc';
 import { EditFrame } from './edit-letter';
-import { State, canWriteLetter, hasInboxItems, hasItems } from './state';
+import { State, canWriteLetter, hasInboxItems } from './state';
 import { mod } from './util';
 import { getCustomBindings } from './keys';
 import { TextBuffer } from './buffer';
@@ -10,7 +10,6 @@ import { FormEditFrame, stringOfForm } from './form';
 
 export type Menu =
   | { t: 'main' }
-  | { t: 'inventory' }
   | { t: 'inbox' }
   ;
 
@@ -45,9 +44,6 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
       if (canWriteLetter(state)) {
         menuItems.push({ name: 'new letter', action: { t: 'newLetter' } });
       }
-      if (hasItems(state)) {
-        menuItems.push({ name: 'inventory...', action: { t: 'enterInventoryMenu' } });
-      }
       if (hasInboxItems(state)) {
         const unreadCount = state.inv.inbox.filter(x => x.unread).length;
         const unread = unreadCount > 0 ? ` (${unreadCount})` : '';
@@ -56,38 +52,35 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
       menuItems.push({ name: 'exit', action: { t: 'exit' } });
       return menuItems;
     }
-
-    case 'inventory': {
+    case 'inbox': {
       const menuItems: MenuItem[] = [];
-      state.inv.items.forEach((item, ix) => {
+      state.inv.inbox.forEach((ibit, ix) => {
+        const unreadMarker = ibit.unread ? '! ' : '  ';
+        const item = ibit.item;
         if (item.t == 'letter') {
           let name = `letter ("${item.body.substring(0, 10)}")`;
           if (item.money > 0) {
             name = `(\$${item.money}) ` + name;
           }
           menuItems.push({
-            name,
+            name: unreadMarker + name,
             action: { t: 'editLetter', id: item.id }
           });
         }
-      });
-      menuItems.push({ name: '<-', action: { t: 'back' } });
-      return menuItems;
-    }
-
-    case 'inbox': {
-      const menuItems: MenuItem[] = [];
-      state.inv.inbox.forEach((ibit, ix) => {
         if (ibit.item.t == 'doc') {
-          const unreadMarker = ibit.unread ? '* ' : '  ';
-          menuItems.push({ name: unreadMarker + stringOfDoc(ibit.item.doc), action: { t: 'displayDoc', doc: ibit.item.doc, ibix: ix } });
+          menuItems.push({
+            name: unreadMarker + stringOfDoc(ibit.item.doc),
+            action: { t: 'displayDoc', doc: ibit.item.doc, ibix: ix }
+          });
         }
         if (ibit.item.t == 'form') {
-          const unreadMarker = ibit.unread ? '* ' : '  ';
-          menuItems.push({ name: unreadMarker + stringOfForm(ibit.item.form), action: { t: 'editForm', id: ibit.item.id, form: ibit.item.form, ibix: ix } });
+          menuItems.push({
+            name: unreadMarker + stringOfForm(ibit.item.form),
+            action: { t: 'editForm', id: ibit.item.id, form: ibit.item.form, ibix: ix }
+          });
         }
       });
-      menuItems.push({ name: '<-', action: { t: 'back' } });
+      menuItems.push({ name: '  <-', action: { t: 'back' } });
       return menuItems;
     }
   }
@@ -96,7 +89,6 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
 function getMenuTitle(frame: MenuFrame): string {
   switch (frame.which.t) {
     case 'main': return 'MAIN MENU';
-    case 'inventory': return 'INVENTORY MENU';
     case 'inbox': return 'INBOX MENU';
   }
 }

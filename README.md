@@ -138,6 +138,18 @@ paper. Bottles can be put in recycling bin for money.
   file the creation of a limited liability corporation, but an llc
   name is required to open a class D bank account)
 
+- Perhaps other bribery mechanics
+
+- Dates matter? Postmark dates matter? A puzzle where you are required
+  to lie about the current date because by the time the form is
+  received, the date you put down is in principle possible to have
+  been the one you sent it on, but in practice impossible because of
+  transit time?
+
+- Different classes of stamps leading to different transit times?
+
+- Requesting the information of merely what date it is?
+
 - Puzzles arising from forms or envelopes only having limited space
   for writing.
 

@@ -54,8 +54,6 @@ function customBindingsOfItem(state: State, item: Item | undefined, ix: number):
         '+': { name: 'add money', action: { t: 'addMoney', id: item.id } },
         '-': { name: 'remove money', action: { t: 'removeMoney', id: item.id } },
       };
-      if (state.inv.hand === undefined)
-        bindings[' '] = { name: 'pickup', action: { t: 'pickup', id: item.id, loc: { t: 'inbox', ix } } };
       return bindings;
     }
     case 'doc': return {};
@@ -70,7 +68,17 @@ function getSelectedInboxItem(state: State, frame: MenuFrame): WrapItem | undefi
 export function getCustomBindings(state: State, frame: MenuFrame): Bindings {
   switch (frame.which.t) {
     case 'main': return {};
-    case 'inbox': return customBindingsOfItem(state, getSelectedInboxItem(state, frame)?.item, frame.ix);
+    case 'inbox': {
+      const ix = frame.ix;
+      const item = getSelectedInboxItem(state, frame)?.item;
+      const bind = customBindingsOfItem(state, item, ix);
+      if (item !== undefined && state.inv.hand === undefined)
+        bind[' '] = { name: 'pickup', action: { t: 'pickup', id: item.id, loc: { t: 'inbox', ix } } };
+      else if (state.inv.hand !== undefined) {
+        bind[' '] = { name: 'drop', action: { t: 'drop', loc: { t: 'inbox', ix } } };
+      }
+      return bind;
+    }
   }
 }
 

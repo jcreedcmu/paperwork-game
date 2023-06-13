@@ -4,7 +4,7 @@ import { EditUiAction, doEditUiAction, makeEditFrame } from './edit-letter';
 import { Form, FormEditUiAction, doFormEditUiAction, findForm, makeFormEditFrame } from './form';
 import { logger } from './logger';
 import { MenuUiAction, doMenuUiAction } from './menu';
-import { Item, LetterItem, Location, State, collectResources, findLetter } from './state';
+import { Item, LetterItem, Location, State, collectResources, findItem, findLetter } from './state';
 import { randElt, unreachable } from './util';
 
 // XXX: Is this MenuAction/Action distinction obsolete now?
@@ -25,6 +25,7 @@ export type MenuAction =
   | { t: 'addMoney', id: number }
   | { t: 'removeMoney', id: number }
   | { t: 'pickup', id: number, loc: Location }
+  | { t: 'drop', loc: Location }
   ;
 
 export type Action =
@@ -91,6 +92,16 @@ export function resolveFutures(state: State): void {
 export function removeLocation(state: State, loc: Location): Item {
   switch (loc.t) {
     case 'inbox': return state.inv.inbox.splice(loc.ix, 1)[0].item;
+  }
+}
+
+export function insertIntoLocation(state: State, item: Item, loc: Location): void {
+  switch (loc.t) {
+    case 'inbox': {
+      state.inv.inbox.splice(loc.ix, 0, { unread: false, item });
+    } break;
+    default:
+      unreachable(loc.t);
   }
 }
 
@@ -204,6 +215,14 @@ export function doAction(state: State, action: Action): void {
     } break;
     case 'pickup': {
       state.inv.hand = removeLocation(state, action.loc);
+    } break;
+    case 'drop': {
+      const handItem = state.inv.hand;
+      if (handItem === undefined) {
+        throw new Error('tried to drop empty hand');
+      }
+      state.inv.hand = undefined;
+      insertIntoLocation(state, handItem, action.loc);
     } break;
     default: unreachable(action);
   }

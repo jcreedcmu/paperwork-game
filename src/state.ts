@@ -65,15 +65,19 @@ export function showState(state: State) {
 }
 
 export function findLetter(state: State, id: number): LetterItem {
+  const item = findItem(state, id);
+  if (item.t != 'letter') {
+    throw new Error(`item with id ${id} not a letter`);
+  }
+  return item;
+}
+
+export function findItem(state: State, id: number): Item {
   const ix = state.inv.inbox.findIndex(x => x.item.id == id);
   if (ix == -1) {
     throw new Error(`no item with id ${id}`);
   }
-  const wi = state.inv.inbox[ix];
-  if (wi.item.t != 'letter') {
-    throw new Error(`item with id ${id} not a letter`);
-  }
-  return wi.item;
+  return state.inv.inbox[ix].item;
 }
 
 export function setLetterText(state: State, id: number, text: string): void {

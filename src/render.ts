@@ -34,6 +34,13 @@ function renderState(buf: TextBuffer, state: State) {
     buf.red().put(`* ${stringOfItem(wi.item)}`);
     row++;
   });
+
+  if (state.inv.hand !== undefined) {
+    row++;
+    buf.moveTo(STATUS_COLUMN, row);
+    buf.blue().put(`> ${stringOfItem(state.inv.hand)}`);
+    row++;
+  }
 }
 
 function renderStateForFrame(frame: UiStackFrame): boolean {

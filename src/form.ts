@@ -11,7 +11,7 @@ export type FormEditUiAction =
   | { t: 'deleteLeft' }
   | { t: 'home' }
   | { t: 'end' }
-  | { t: 'submit' }
+  | { t: 'save' }
   | { t: 'kill' }
   | { t: 'insert', key: string }
   | { t: 'nextField' }
@@ -99,7 +99,7 @@ export function renderFormEditPane(buf: TextBuffer, state: State, frame: FormEdi
   });
   const button = getSelectedButton(frame);
   buf.moveTo(0, ROW_OFFSET + layout.length + 1);
-  buf.green().inverse(button == 0).put('SUBMIT');
+  buf.green().inverse(button == 0).put('SAVE');
   if (button === undefined) {
     buf.moveTo(layout[frame.curFieldIx].label.length + 2 + frame.cursorPos, ROW_OFFSET + frame.curFieldIx);
   }
@@ -133,7 +133,7 @@ export function doFormEditUiAction(state: State, frame: FormEditFrame, action: F
     case 'home': frame.cursorPos = 0; break;
     case 'end': frame.cursorPos = text.length; break;
     case 'kill': setText(text.substr(0, frame.cursorPos)); break;
-    case 'submit': {
+    case 'save': {
       if (frame.id === undefined) {
         throw new Error(`didn't expect id in form submission to be undefined`);
       }
@@ -160,7 +160,7 @@ export function doFormEditUiAction(state: State, frame: FormEditFrame, action: F
     case 'enter': {
       const but = getSelectedButton(frame);
       if (but == 0) {
-        doFormEditUiAction(state, frame, { t: 'submit' });
+        doFormEditUiAction(state, frame, { t: 'save' });
       }
       else {
         doFormEditUiAction(state, frame, { t: 'nextField' });

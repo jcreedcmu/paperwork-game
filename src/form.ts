@@ -16,6 +16,7 @@ export type FormEditUiAction =
   | { t: 'insert', key: string }
   | { t: 'nextField' }
   | { t: 'prevField' }
+  | { t: 'enter' }
   ;
 
 export function formEditUiAction(action: FormEditUiAction): Action {
@@ -83,7 +84,7 @@ export function findForm(state: State, id: number): FormItem {
   return item;
 }
 
-export function buttonSelected(frame: FormEditFrame): number | undefined {
+export function getSelectedButton(frame: FormEditFrame): number | undefined {
   const layout = getLayoutOfForm(frame.formItem.form);
   return frame.curFieldIx >= layout.length ? frame.curFieldIx - layout.length : undefined;
 }
@@ -96,7 +97,7 @@ export function renderFormEditPane(buf: TextBuffer, state: State, frame: FormEdi
     buf.moveTo(0, ROW_OFFSET + ix);
     buf.blue().put(fe.label).put(': ' + (frame.formItem.formData[ix] ?? ''));
   });
-  const button = buttonSelected(frame);
+  const button = getSelectedButton(frame);
   buf.moveTo(0, ROW_OFFSET + layout.length + 1);
   buf.green().inverse(button == 0).put('SUBMIT');
   if (button === undefined) {
@@ -105,7 +106,7 @@ export function renderFormEditPane(buf: TextBuffer, state: State, frame: FormEdi
 }
 
 export function showCursorInForm(frame: FormEditFrame): boolean {
-  return buttonSelected(frame) === undefined;
+  return getSelectedButton(frame) === undefined;
 }
 
 export function doFormEditUiAction(state: State, frame: FormEditFrame, action: FormEditUiAction): void {
@@ -149,6 +150,15 @@ export function doFormEditUiAction(state: State, frame: FormEditFrame, action: F
     case 'prevField': {
       frame.curFieldIx = mod(frame.curFieldIx - 1, layout.length + 1);
       frame.cursorPos = 0;
+    } break;
+    case 'enter': {
+      const but = getSelectedButton(frame);
+      if (but == 0) {
+        doFormEditUiAction(state, frame, { t: 'submit' });
+      }
+      else {
+        doFormEditUiAction(state, frame, { t: 'nextField' });
+      }
     } break;
     default: unreachable(action);
   }

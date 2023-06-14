@@ -41,7 +41,7 @@ export type Action =
   ;
 
 
-function goBack(state: State): void {
+export function goBack(state: State): void {
   state.uiStack.shift();
 }
 

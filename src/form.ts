@@ -1,6 +1,6 @@
-import { Action, doAction } from "./action";
+import { Action, doAction, goBack } from "./action";
 import { TextBuffer } from "./buffer";
-import { State } from "./state";
+import { State, findItem } from "./state";
 import { mod, unreachable } from "./util";
 
 export type FormEditUiAction =
@@ -134,8 +134,14 @@ export function doFormEditUiAction(state: State, frame: FormEditFrame, action: F
     case 'end': frame.cursorPos = text.length; break;
     case 'kill': setText(text.substr(0, frame.cursorPos)); break;
     case 'submit': {
-      // XXX?
-      //      doAction(state, { t: 'setLetterText', id: frame.id, text: text });
+      if (frame.id === undefined) {
+        throw new Error(`didn't expect id in form submission to be undefined`);
+      }
+      const item = findItem(state, frame.id);
+      if (item.t !== 'form')
+        throw new Error(`didn't expect non-form item`);
+      // XXX? shouldn't edit stuff in place... item.formData = frame.formItem
+      goBack(state);
     } break;
     case 'insert': {
       if (action.key.length == 1) {

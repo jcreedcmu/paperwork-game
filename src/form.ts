@@ -30,6 +30,7 @@ export type FormLayout = FormLayoutEntry[];
 
 export type Form =
   | { t: 'STO-001' }
+  | { t: 'ENV-001' }
 
 export type FormItem = { t: 'form', id: number, form: Form, formData: string[] };
 
@@ -40,12 +41,18 @@ export function getLayoutOfForm(form: Form): FormLayout {
       field('paper (qty)'),
       field('radio (qty)'),
     ];
+    case 'ENV-001': return [
+      field('pencils (qty)'),
+      field('paper (qty)'),
+      field('radio (qty)'),
+    ];
   }
 }
 
 export function stringOfForm(form: Form): string {
   switch (form.t) {
     case 'STO-001': return 'STO-001';
+    case 'ENV-001': return 'STO-001';
   }
 }
 

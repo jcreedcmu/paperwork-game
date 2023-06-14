@@ -112,7 +112,7 @@ const editFormKeyMap: KeyMap = {
     CTRL_E: formEditUiAction({ t: 'end' }),
     CTRL_K: formEditUiAction({ t: 'kill' }),
     BACKSPACE: formEditUiAction({ t: 'deleteLeft' }),
-    ENTER: formEditUiAction({ t: 'submit' }),
+    ENTER: formEditUiAction({ t: 'nextField' }),
     TAB: formEditUiAction({ t: 'nextField' }),
     ESCAPE: { t: 'back' },
   },

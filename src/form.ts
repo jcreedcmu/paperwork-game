@@ -80,6 +80,11 @@ export function findForm(state: State, id: number): FormItem {
   return item;
 }
 
+export function buttonSelected(frame: FormEditFrame): number | undefined {
+  const layout = getLayoutOfForm(frame.formItem.form);
+  return frame.curFieldIx >= layout.length ? frame.curFieldIx - layout.length : undefined;
+}
+
 export function renderFormEditPane(buf: TextBuffer, state: State, frame: FormEditFrame): void {
   buf.red().put('EDIT FORM ').put(frame.formItem.form.t).newLine().put('\n');
   const layout = getLayoutOfForm(frame.formItem.form);
@@ -88,11 +93,16 @@ export function renderFormEditPane(buf: TextBuffer, state: State, frame: FormEdi
     buf.moveTo(0, ROW_OFFSET + ix);
     buf.blue().put(fe.label).put(': ' + (frame.formItem.formData[ix] ?? ''));
   });
-  buf.moveTo(layout[frame.curFieldIx].label.length + 2 + frame.cursorPos, ROW_OFFSET + frame.curFieldIx);
+  const button = buttonSelected(frame);
+  buf.moveTo(0, ROW_OFFSET + layout.length + 1);
+  buf.green().inverse(button == 0).put('SUBMIT');
+  if (button === undefined) {
+    buf.moveTo(layout[frame.curFieldIx].label.length + 2 + frame.cursorPos, ROW_OFFSET + frame.curFieldIx);
+  }
 }
 
 export function showCursorInForm(frame: FormEditFrame): boolean {
-  return true;
+  return buttonSelected(frame) === undefined;
 }
 
 export function doFormEditUiAction(state: State, frame: FormEditFrame, action: FormEditUiAction): void {
@@ -128,7 +138,7 @@ export function doFormEditUiAction(state: State, frame: FormEditFrame, action: F
       }
     } break;
     case 'nextField': {
-      frame.curFieldIx = mod(frame.curFieldIx + 1, layout.length);
+      frame.curFieldIx = mod(frame.curFieldIx + 1, layout.length + 1);
       frame.cursorPos = 0;
     } break;
     default: unreachable(action);

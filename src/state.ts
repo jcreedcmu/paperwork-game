@@ -14,6 +14,7 @@ type Resource = (typeof resources)[number];
 
 export type LetterItem = { t: 'letter', id: number, body: string, money: number };
 export type DocItem = { t: 'doc', id: number, doc: Document };
+export type EnvelopeItem = { t: 'envelope', id: number, size: number, contents: Item[] };
 
 // An item, on the other hand, does has a distinct identity, and does
 // not 'stack'.
@@ -21,6 +22,7 @@ export type Item =
   | LetterItem
   | DocItem
   | FormItem
+  | EnvelopeItem
   ;
 
 export type Location =

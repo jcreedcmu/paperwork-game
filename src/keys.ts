@@ -58,6 +58,7 @@ function customBindingsOfItem(state: State, item: Item | undefined, ix: number):
     }
     case 'doc': return {};
     case 'form': return {};
+    case 'envelope': return {};
   }
 }
 

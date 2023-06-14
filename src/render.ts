@@ -4,7 +4,7 @@ import { renderEditPane } from './edit-letter';
 import { renderFormEditPane, showCursorInForm, stringOfForm } from './form';
 import { renderLog } from './logger';
 import { UiStackFrame, renderMenu } from './menu';
-import { Item, State, resources } from './state';
+import { EnvelopeItem, Item, State, resources } from './state';
 import { unreachable } from './util';
 
 export const STATUS_COLUMN = 30;
@@ -13,7 +13,13 @@ export function stringOfItem(item: Item): string {
     case 'letter': return item.body;
     case 'doc': return stringOfDoc(item.doc);
     case 'form': return stringOfForm(item.form);
+    case 'envelope': return stringOfEnvelope(item);
   }
+}
+
+function stringOfEnvelope(item: EnvelopeItem): string {
+  const contents = item.contents.length > 0 ? `${item.contents.length} items` : 'empty';
+  return `Envelope (${contents})`;
 }
 
 function renderState(buf: TextBuffer, state: State) {

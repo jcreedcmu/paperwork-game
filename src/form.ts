@@ -4,6 +4,8 @@ import { State } from "./state";
 import { mod, unreachable } from "./util";
 
 export type FormEditUiAction =
+  | { t: 'up' }
+  | { t: 'down' }
   | { t: 'left' }
   | { t: 'right' }
   | { t: 'deleteLeft' }
@@ -13,6 +15,7 @@ export type FormEditUiAction =
   | { t: 'kill' }
   | { t: 'insert', key: string }
   | { t: 'nextField' }
+  | { t: 'prevField' }
   ;
 
 export function formEditUiAction(action: FormEditUiAction): Action {
@@ -116,6 +119,8 @@ export function doFormEditUiAction(state: State, frame: FormEditFrame, action: F
   }
 
   switch (action.t) {
+    case 'up': doFormEditUiAction(state, frame, { t: 'prevField' }); break;
+    case 'down': doFormEditUiAction(state, frame, { t: 'nextField' }); break;
     case 'left': frame.cursorPos = Math.max(0, frame.cursorPos - 1); break;
     case 'right': frame.cursorPos = Math.min(text.length, frame.cursorPos + 1); break;
     case 'deleteLeft': {
@@ -139,6 +144,10 @@ export function doFormEditUiAction(state: State, frame: FormEditFrame, action: F
     } break;
     case 'nextField': {
       frame.curFieldIx = mod(frame.curFieldIx + 1, layout.length + 1);
+      frame.cursorPos = 0;
+    } break;
+    case 'prevField': {
+      frame.curFieldIx = mod(frame.curFieldIx - 1, layout.length + 1);
       frame.cursorPos = 0;
     } break;
     default: unreachable(action);

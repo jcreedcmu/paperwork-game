@@ -106,6 +106,8 @@ const editKeyMap: KeyMap = {
 const editFormKeyMap: KeyMap = {
   skip: 0,
   bind: {
+    UP: formEditUiAction({ t: 'up' }),
+    DOWN: formEditUiAction({ t: 'down' }),
     LEFT: formEditUiAction({ t: 'left' }),
     RIGHT: formEditUiAction({ t: 'right' }),
     CTRL_A: formEditUiAction({ t: 'home' }),

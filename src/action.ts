@@ -63,6 +63,7 @@ const letterPatterns: [RegExp | string, (state: State, letter: LetterItem) => Ac
   [(/catalog/i), (state, letter) => addInboxDoc(state, { t: 'store-catalog' })],
   ['money', (state, letter) => ({ t: 'bigMoney' })],
   [(/sto-001/i), (state, letter) => addInboxForm(state, { t: 'STO-001' })],
+  [(/env-001/i), (state, letter) => addInboxForm(state, { t: 'ENV-001' })],
   ['', (state, letter) => addInboxDoc(state, { t: 'brochure', inResponseTo: letter.body })],
 ];
 

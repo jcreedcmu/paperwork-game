@@ -1,7 +1,7 @@
 import { Action, doAction, goBack } from "./action";
 import { TextBuffer } from "./buffer";
 import { State, findItem } from "./state";
-import { mod, unreachable } from "./util";
+import { mod, unreachable, clone } from "./util";
 
 export type FormEditUiAction =
   | { t: 'up' }
@@ -63,13 +63,23 @@ export function stringOfForm(form: Form): string {
 export type FormEditFrame = {
   t: 'editForm',
   id: number | undefined,
-  formItem: FormItem,
+  layout: FormLayout,
+  form: Form,
+  formData: string[],
   curFieldIx: number,
   cursorPos: number,
 };
 
 export function makeFormEditFrame(id: number | undefined, formItem: FormItem): FormEditFrame {
-  return { t: 'editForm', id, formItem, curFieldIx: 0, cursorPos: 0 }
+  return {
+    t: 'editForm',
+    id,
+    layout: getLayoutOfForm(formItem.form),
+    formData: clone(formItem.formData),
+    form: formItem.form,
+    curFieldIx: 0,
+    cursorPos: 0
+  }
 }
 
 export function findForm(state: State, id: number): FormItem {
@@ -85,17 +95,17 @@ export function findForm(state: State, id: number): FormItem {
 }
 
 export function getSelectedButton(frame: FormEditFrame): number | undefined {
-  const layout = getLayoutOfForm(frame.formItem.form);
+  const layout = frame.layout;
   return frame.curFieldIx >= layout.length ? frame.curFieldIx - layout.length : undefined;
 }
 
 export function renderFormEditPane(buf: TextBuffer, state: State, frame: FormEditFrame): void {
-  buf.red().put('EDIT FORM ').put(frame.formItem.form.t).newLine().put('\n');
-  const layout = getLayoutOfForm(frame.formItem.form);
+  buf.red().put('EDIT FORM ').put(frame.form.t).newLine().put('\n');
+  const layout = frame.layout;
   const ROW_OFFSET = 2;
   layout.forEach((fe, ix) => {
     buf.moveTo(0, ROW_OFFSET + ix);
-    buf.blue().put(fe.label).put(': ' + (frame.formItem.formData[ix] ?? ''));
+    buf.blue().put(fe.label).put(': ' + (frame.formData[ix] ?? ''));
   });
   const button = getSelectedButton(frame);
   buf.moveTo(0, ROW_OFFSET + layout.length + 1);
@@ -110,13 +120,11 @@ export function showCursorInForm(frame: FormEditFrame): boolean {
 }
 
 export function doFormEditUiAction(state: State, frame: FormEditFrame, action: FormEditUiAction): void {
-  const item = frame.formItem;
+  const layout = frame.layout;
 
-  const layout = getLayoutOfForm(item.form);
-
-  const text = item.formData[frame.curFieldIx] ?? '';
+  const text = frame.formData[frame.curFieldIx] ?? '';
   function setText(x: string) {
-    item.formData[frame.curFieldIx] = x;
+    frame.formData[frame.curFieldIx] = x;
   }
 
   switch (action.t) {
@@ -140,7 +148,7 @@ export function doFormEditUiAction(state: State, frame: FormEditFrame, action: F
       const item = findItem(state, frame.id);
       if (item.t !== 'form')
         throw new Error(`didn't expect non-form item`);
-      // XXX? shouldn't edit stuff in place... item.formData = frame.formItem
+      item.formData = frame.formData;
       goBack(state);
     } break;
     case 'insert': {

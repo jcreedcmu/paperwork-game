@@ -3,10 +3,11 @@ import { Action, MenuAction, doAction } from './action';
 import { Document, stringOfDoc } from './doc';
 import { EditFrame } from './edit-letter';
 import { State, canWriteLetter, hasInboxItems } from './state';
-import { mod } from './util';
+import { mod, unreachable } from './util';
 import { getCustomBindings } from './keys';
 import { TextBuffer } from './buffer';
 import { FormEditFrame, stringOfForm } from './form';
+import { stringOfEnvelope } from './render';
 
 export type Menu =
   | { t: 'main' }
@@ -57,27 +58,38 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
       state.inv.inbox.forEach((ibit, ix) => {
         const unreadMarker = ibit.unread ? '! ' : '  ';
         const item = ibit.item;
-        if (item.t == 'letter') {
-          let name = `letter ("${item.body.substring(0, 10)}")`;
-          if (item.money > 0) {
-            name = `(\$${item.money}) ` + name;
-          }
-          menuItems.push({
-            name: unreadMarker + name,
-            action: { t: 'editLetter', id: item.id }
-          });
-        }
-        if (ibit.item.t == 'doc') {
-          menuItems.push({
-            name: unreadMarker + stringOfDoc(ibit.item.doc),
-            action: { t: 'displayDoc', doc: ibit.item.doc, ibix: ix }
-          });
-        }
-        if (ibit.item.t == 'form') {
-          menuItems.push({
-            name: unreadMarker + stringOfForm(ibit.item.form),
-            action: { t: 'editForm', id: ibit.item.id, form: ibit.item.form, ibix: ix }
-          });
+
+        // XXX: harmonize unreadMarker handling better
+        switch (item.t) {
+          case 'letter':
+            let name = `letter ("${item.body.substring(0, 10)}")`;
+            if (item.money > 0) {
+              name = `(\$${item.money}) ` + name;
+            }
+            menuItems.push({
+              name: unreadMarker + name,
+              action: { t: 'editLetter', id: item.id }
+            });
+            break;
+          case 'doc':
+            menuItems.push({
+              name: unreadMarker + stringOfDoc(item.doc),
+              action: { t: 'displayDoc', doc: item.doc, ibix: ix }
+            });
+            break;
+          case 'form':
+            menuItems.push({
+              name: unreadMarker + stringOfForm(item.form),
+              action: { t: 'editForm', id: ibit.item.id, form: item.form, ibix: ix }
+            });
+            break;
+          case 'envelope':
+            menuItems.push({
+              name: unreadMarker + stringOfEnvelope(item),
+              action: { t: 'none' } // XXX should go to envelope-editing menu
+            });
+            break;
+          default: unreachable(item);
         }
       });
       menuItems.push({ name: '  <-', action: { t: 'back' } });

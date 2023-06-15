@@ -17,7 +17,7 @@ export function stringOfItem(item: Item): string {
   }
 }
 
-function stringOfEnvelope(item: EnvelopeItem): string {
+export function stringOfEnvelope(item: EnvelopeItem): string {
   const contents = item.contents.length > 0 ? `${item.contents.length} items` : 'empty';
   return `Envelope (${contents})`;
 }

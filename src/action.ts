@@ -1,7 +1,7 @@
 import { quit, win } from '.';
 import { Document, stringOfDoc } from './doc';
 import { EditUiAction, doEditUiAction, makeEditFrame } from './edit-letter';
-import { Form, FormEditUiAction, doFormEditUiAction, findForm, makeFormEditFrame } from './form';
+import { Form, FormEditUiAction, doFormEditUiAction, findForm, makeFormEditFrame, resolveForm } from './form';
 import { logger } from './logger';
 import { MenuUiAction, doMenuUiAction } from './menu';
 import { Item, LetterItem, Location, State, collectResources, findItem, findLetter } from './state';
@@ -17,7 +17,7 @@ export type MenuAction =
   | { t: 'enterInboxMenu' }
   | { t: 'editLetter', id: number }
   | { t: 'newLetter' }
-  | { t: 'sendLetter', id: number }
+  | { t: 'send', id: number }
   | { t: 'back' }
   | { t: 'displayDoc', doc: Document, ibix: number }
   | { t: 'editForm', form: Form, ibix: number, id: number }
@@ -26,6 +26,7 @@ export type MenuAction =
   | { t: 'removeMoney', id: number }
   | { t: 'pickup', id: number, loc: Location }
   | { t: 'drop', loc: Location }
+  | { t: 'addEnvelope' } // FIXME (#9) replace with addItems
   ;
 
 export type Action =
@@ -46,14 +47,14 @@ export function goBack(state: State): void {
 }
 
 function addInboxDoc(state: State, doc: Document): Action {
-  // XXX the fact that state is changing during action creation is
+  // FIXME (#8): the fact that state is changing during action creation is
   // bad. should really have a compound action that increments the id
   // counter during action reducer.
   return { t: 'addInbox', item: { t: 'doc', doc, id: state.idCounter++ } };
 }
 
 function addInboxForm(state: State, form: Form): Action {
-  // XXX the fact that state is changing during action creation is
+  // FIXME (#8): the fact that state is changing during action creation is
   // bad. should really have a compound action that increments the id
   // counter during action reducer.
   return { t: 'addInbox', item: { t: 'form', form, id: state.idCounter++, formData: [] } };
@@ -67,13 +68,19 @@ const letterPatterns: [RegExp | string, (state: State, letter: LetterItem) => Ac
   ['', (state, letter) => addInboxDoc(state, { t: 'brochure', inResponseTo: letter.body })],
 ];
 
-function resolveLetter(state: State, letter: LetterItem): Action {
-  for (const [pattern, action] of letterPatterns) {
-    if (letter.body.match(pattern)) {
-      return action(state, letter);
-    }
+function resolveSentItem(state: State, item: Item): Action {
+  switch (item.t) {
+    case 'letter':
+      for (const [pattern, action] of letterPatterns) {
+        if (item.body.match(pattern)) {
+          return action(state, item);
+        }
+      }
+      return { t: 'none' };
+    case 'doc': return { t: 'none' };
+    case 'form': return resolveForm(state, item);
+    case 'envelope': return { t: 'none' };
   }
-  return { t: 'none' };
 }
 
 function addFuture(state: State, delta_time: number, action: Action): void {
@@ -144,9 +151,9 @@ export function doAction(state: State, action: Action): void {
         goBack(state);
       }
     } break;
-    case 'sendLetter':
-      const letter = findLetter(state, action.id);
-      addFuture(state, 3, resolveLetter(state, letter));
+    case 'send':
+      const item = findItem(state, action.id);
+      addFuture(state, 3, resolveSentItem(state, item));
       state.inv.inbox = state.inv.inbox.filter(x => x.item.id != action.id);
       break;
     case 'bigMoney':
@@ -225,6 +232,11 @@ export function doAction(state: State, action: Action): void {
       state.inv.hand = undefined;
       insertIntoLocation(state, handItem, action.loc);
     } break;
+    case 'addEnvelope': {
+      const id = state.idCounter++;
+      state.inv.inbox.push({ unread: false, item: { t: 'envelope', contents: [], size: 3, id } });
+      break;
+    }
     default: unreachable(action);
   }
 }

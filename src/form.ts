@@ -177,3 +177,10 @@ export function doFormEditUiAction(state: State, frame: FormEditFrame, action: F
     default: unreachable(action);
   }
 }
+
+export function resolveForm(state: State, item: FormItem): Action {
+  switch (item.form.t) {
+    case 'STO-001': return { t: 'none' };
+    case 'ENV-001': return { t: 'addEnvelope' };
+  }
+}

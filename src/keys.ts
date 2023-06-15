@@ -50,14 +50,19 @@ function customBindingsOfItem(state: State, item: Item | undefined, ix: number):
     case 'letter': {
       const bindings: Bindings = {
         'e': { name: 'edit', action: { t: 'editLetter', id: item.id } },
-        's': { name: 'send', action: { t: 'sendLetter', id: item.id } },
+        's': { name: 'send', action: { t: 'send', id: item.id } },
         '+': { name: 'add money', action: { t: 'addMoney', id: item.id } },
         '-': { name: 'remove money', action: { t: 'removeMoney', id: item.id } },
       };
       return bindings;
     }
     case 'doc': return {};
-    case 'form': return {};
+    case 'form': {
+      const bindings: Bindings = {
+        's': { name: 'send', action: { t: 'send', id: item.id } },
+      };
+      return bindings;
+    }
     case 'envelope': return {};
   }
 }

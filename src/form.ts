@@ -46,9 +46,7 @@ export function getLayoutOfForm(form: Form): FormLayout {
       field('radio (qty)'),
     ];
     case 'ENV-001': return [
-      field('pencils (qty)'),
-      field('paper (qty)'),
-      field('radio (qty)'),
+      field('envelopes (qty)'),
     ];
   }
 }
@@ -56,7 +54,7 @@ export function getLayoutOfForm(form: Form): FormLayout {
 export function stringOfForm(form: Form): string {
   switch (form.t) {
     case 'STO-001': return 'STO-001';
-    case 'ENV-001': return 'STO-001';
+    case 'ENV-001': return 'ENV-001';
   }
 }
 

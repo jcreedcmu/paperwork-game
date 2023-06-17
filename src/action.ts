@@ -8,7 +8,7 @@ import { Item, LetterItem, Location, State, SubItem, WrapSubItem, collectResourc
 import { randElt, unreachable } from './util';
 
 // XXX: Is this MenuAction/Action distinction obsolete now?
-export type MenuAction =
+export type Action =
   | { t: 'sleep' }
   | { t: 'collect' }
   | { t: 'exit' }
@@ -26,10 +26,6 @@ export type MenuAction =
   | { t: 'removeMoney', id: number }
   | { t: 'pickup', id: number, loc: Location }
   | { t: 'drop', loc: Location }
-  ;
-
-export type Action =
-  | MenuAction
   | { t: 'none' }
   | { t: 'maybeBack' }
   | { t: 'setLetterText', id: number | undefined, text: string }
@@ -39,7 +35,6 @@ export type Action =
   | { t: 'formEditUiAction', action: FormEditUiAction }
   | { t: 'addItems', items: WrapSubItem[] }
   ;
-
 
 export function goBack(state: State): void {
   state.uiStack.shift();

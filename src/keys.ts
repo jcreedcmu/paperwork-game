@@ -1,4 +1,4 @@
-import { Action, MenuAction } from './action';
+import { Action } from './action';
 import { logger } from './logger';
 import { editUiAction } from './edit-letter';
 import { Menu, MenuFrame, MenuItem, MenuUiAction, UiStackFrame } from './menu';

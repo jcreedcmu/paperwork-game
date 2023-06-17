@@ -1,5 +1,5 @@
 import { ScreenBuffer } from 'terminal-kit';
-import { Action, MenuAction, doAction } from './action';
+import { Action, doAction } from './action';
 import { Document, stringOfDoc } from './doc';
 import { EditFrame } from './edit-letter';
 import { State, canWriteLetter, findItem, hasInboxItems } from './state';

@@ -32,6 +32,7 @@ export type Location =
 
 export type WrapItemId = { unread: boolean, id: number };
 export type WrapItem = { unread: boolean, item: Item };
+export type WrapSubItem = { unread: boolean, item: SubItem };
 
 export type Future = { time: number, action: Action };
 

@@ -1,10 +1,10 @@
 import { quit, win } from '.';
-import { Document, stringOfDoc } from './doc';
+import { Document } from './doc';
 import { EditUiAction, doEditUiAction, makeEditFrame } from './edit-letter';
 import { Form, FormEditUiAction, doFormEditUiAction, findFormItem, makeFormEditFrame, resolveForm } from './form';
 import { logger } from './logger';
 import { MenuUiAction, doMenuUiAction } from './menu';
-import { Item, LetterItem, Location, State, SubItem, collectResources, createItem, findItem, findLetter, setItem } from './state';
+import { Item, LetterItem, Location, State, SubItem, WrapSubItem, collectResources, createItem, findItem, findLetter, setItem } from './state';
 import { randElt, unreachable } from './util';
 
 // XXX: Is this MenuAction/Action distinction obsolete now?
@@ -26,7 +26,7 @@ export type MenuAction =
   | { t: 'removeMoney', id: number }
   | { t: 'pickup', id: number, loc: Location }
   | { t: 'drop', loc: Location }
-  | { t: 'addEnvelope' } // FIXME (#9) replace with addItems
+  | { t: 'addEnvelope' }
   ;
 
 export type Action =
@@ -39,6 +39,7 @@ export type Action =
   | { t: 'menuUiAction', action: MenuUiAction }
   | { t: 'editUiAction', action: EditUiAction }
   | { t: 'formEditUiAction', action: FormEditUiAction }
+  | { t: 'addItems', items: WrapSubItem[] }
   ;
 
 
@@ -162,6 +163,17 @@ export function doAction(state: State, action: Action): void {
       const id = createItem(state, action.item);
       state.inv.inbox.push({ unread: true, id });
       break;
+    case 'addEnvelope': {
+      const id = createItem(state, { t: 'envelope', contents: [], size: 3 });
+      state.inv.inbox.push({ unread: false, id });
+      break;
+    }
+    case 'addItems': {
+      action.items.forEach(wi => {
+        const id = createItem(state, wi.item);
+        state.inv.inbox.push({ unread: wi.unread, id });
+      });
+    } break;
     case 'enterInboxMenu':
       state.uiStack.unshift({ t: 'menu', which: { t: 'inbox' }, ix: 0 });
       break;
@@ -233,11 +245,6 @@ export function doAction(state: State, action: Action): void {
       state.inv.hand = undefined;
       insertIntoLocation(state, handItem, action.loc);
     } break;
-    case 'addEnvelope': {
-      const id = createItem(state, { t: 'envelope', contents: [], size: 3 });
-      state.inv.inbox.push({ unread: false, id });
-      break;
-    }
     default: unreachable(action);
   }
 }

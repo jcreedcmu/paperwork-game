@@ -12,18 +12,20 @@ export const collectResources: Resource[] = ['bottle', 'paper', 'pencil'];
 // kept track of. They don't have any notion of identity.
 type Resource = (typeof resources)[number];
 
-export type LetterItem = { t: 'letter', id: number, body: string, money: number };
-export type DocItem = { t: 'doc', id: number, doc: Document };
-export type EnvelopeItem = { t: 'envelope', id: number, size: number, contents: Item[] };
+export type LetterItem = { t: 'letter', body: string, money: number };
+export type DocItem = { t: 'doc', doc: Document };
+export type EnvelopeItem = { t: 'envelope', size: number, contents: Item[] };
 
 // An item, on the other hand, does has a distinct identity, and does
 // not 'stack'.
-export type Item =
+export type SubItem =
   | LetterItem
   | DocItem
   | FormItem
   | EnvelopeItem
   ;
+
+export type Item = { id: number } & SubItem;
 
 export type Location =
   | { t: 'inbox', ix: number };

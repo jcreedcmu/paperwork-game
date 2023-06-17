@@ -36,7 +36,7 @@ export type Form =
   | { t: 'STO-001' }
   | { t: 'ENV-001' }
 
-export type FormItem = { t: 'form', id: number, form: Form, formData: string[] };
+export type FormItem = { t: 'form', form: Form, formData: string[] };
 
 export function getLayoutOfForm(form: Form): FormLayout {
   switch (form.t) {

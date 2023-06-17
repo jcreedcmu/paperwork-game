@@ -1,17 +1,10 @@
+import { Resource, getResource, resources } from "./resource";
 import { Action } from "./action";
 import { Document } from "./doc";
 import { Form, FormItem } from "./form";
 import { LogLine } from "./logger";
 import { UiStackFrame } from "./menu";
 import { unreachable } from "./util";
-
-export const resources = ['cash', 'bottle', 'paper', 'pencil'] as const;
-export const collectResources: Resource[] = ['bottle', 'paper', 'pencil'];
-
-// A resource is just a thing that you can have some number of --- and
-// the number of them that you have is the only information that is
-// kept track of. They don't have any notion of identity.
-type Resource = (typeof resources)[number];
 
 export type LetterItem = { t: 'letter', body: string, money: number };
 export type DocItem = { t: 'doc', doc: Document };
@@ -50,7 +43,7 @@ export type State = {
   inv: {
     hand: number | undefined,
     inbox_: WrapItemId[],
-    res: Record<Resource, number>
+    res_: Record<Resource, number>
   },
 }
 
@@ -67,7 +60,7 @@ export function initState(): State {
     inv: {
       hand: undefined,
       inbox_: [],
-      res: Object.fromEntries(resources.map(x => [x, 0])) as Record<Resource, number>
+      res_: Object.fromEntries(resources.map(x => [x, 0])) as Record<Resource, number>
     },
   };
 }
@@ -95,7 +88,7 @@ export function setLetterText(state: State, id: number, text: string): void {
 
 
 export function canWriteLetter(state: State): boolean {
-  return state.inv.res.paper > 0 && state.inv.res.pencil > 0;
+  return getResource(state, 'paper') > 0 && getResource(state, 'pencil') > 0;
 }
 
 // Everything to do with state.items_, state.itemLocs_ should be below

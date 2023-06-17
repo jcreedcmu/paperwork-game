@@ -4,7 +4,8 @@ import { EditUiAction, doEditUiAction, makeEditFrame } from './edit-letter';
 import { Form, FormEditUiAction, doFormEditUiAction, findFormItem, makeFormEditFrame, resolveForm } from './form';
 import { logger } from './logger';
 import { MenuUiAction, doMenuUiAction } from './menu';
-import { Item, LetterItem, Location, State, WrapSubItem, appendToInbox, collectResources, createItem, deleteAtLocation, findItem, findLetter, getLocation, insertIntoLocation, removeLocation, setInboxUnread, setItem } from './state';
+import { Item, LetterItem, Location, State, WrapSubItem, appendToInbox, createItem, deleteAtLocation, findItem, findLetter, getLocation, insertIntoLocation, removeLocation, setInboxUnread, setItem } from './state';
+import { adjustResource, collectResources, getResource, setResource } from "./resource";
 import { randElt, unreachable } from './util';
 
 // XXX: Is this MenuAction/Action distinction obsolete now?
@@ -92,12 +93,12 @@ export function doAction(state: State, action: Action): void {
       state.time++;
       break;
     case 'collect': {
-      state.inv.res[randElt(collectResources)]++;
+      adjustResource(state, randElt(collectResources), 1);
       state.time++;
     } break;
     case 'recycle':
-      state.inv.res.cash += state.inv.res.bottle;
-      state.inv.res.bottle = 0;
+      adjustResource(state, 'cash', getResource(state, 'bottle'));
+      setResource(state, 'bottle', 0);
       break;
     case 'purchase': win(); break;
     case 'back': goBack(state); break;
@@ -110,8 +111,8 @@ export function doAction(state: State, action: Action): void {
     case 'setLetterText': {
       const { id, text } = action;
       if (id == undefined) {
-        state.inv.res.paper--;
-        state.inv.res.pencil--;
+        adjustResource(state, 'paper', -1);
+        adjustResource(state, 'pencil', -1);
         const id = createItem(state, { t: 'letter', body: text, money: 0 });
         const ix = appendToInbox(state, { unread: false, id });
         goBack(state);
@@ -135,7 +136,7 @@ export function doAction(state: State, action: Action): void {
       break;
     case 'bigMoney':
       logger(state, 'got big money');
-      state.inv.res.cash += 50;
+      adjustResource(state, 'cash', 50);
       break;
     case 'addItems': {
       action.items.forEach(wi => {
@@ -183,9 +184,9 @@ export function doAction(state: State, action: Action): void {
       }
     } break;
     case 'addMoney': {
-      if (state.inv.res.cash > 0) {
+      if (getResource(state, 'cash') > 0) {
         const letter = findLetter(state, action.id);
-        state.inv.res.cash--;
+        adjustResource(state, 'cash', -1);
         letter.money++;
         setItem(state, letter);
       }
@@ -193,7 +194,7 @@ export function doAction(state: State, action: Action): void {
     case 'removeMoney': {
       const letter = findLetter(state, action.id);
       if (letter.money > 0) {
-        state.inv.res.cash++;
+        adjustResource(state, 'cash', 1);
         letter.money--;
         setItem(state, letter);
       }

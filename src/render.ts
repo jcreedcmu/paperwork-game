@@ -4,7 +4,8 @@ import { renderEditPane } from './edit-letter';
 import { renderFormEditPane, showCursorInForm, stringOfForm } from './form';
 import { renderLog } from './logger';
 import { UiStackFrame, renderMenu } from './menu';
-import { EnvelopeItem, Item, State, findItem, getInbox, resources } from './state';
+import { EnvelopeItem, Item, State, findItem, getInbox } from './state';
+import { getResource, resources } from "./resource";
 import { unreachable } from './util';
 
 export const STATUS_COLUMN = 30;
@@ -28,9 +29,10 @@ function renderState(buf: TextBuffer, state: State) {
 
   let row = 2;
   resources.forEach((res, i) => {
-    if (state.inv.res[res] > 0) {
+    const resVal = getResource(state, res);
+    if (resVal > 0) {
       buf.moveTo(STATUS_COLUMN, row);
-      buf.blue().put(`${res}: `).put('' + state.inv.res[res]);
+      buf.blue().put(`${res}: `).put('' + resVal);
       row++;
     }
   });

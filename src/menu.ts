@@ -8,6 +8,7 @@ import { getCustomBindings } from './keys';
 import { TextBuffer } from './buffer';
 import { FormEditFrame, stringOfForm } from './form';
 import { stringOfEnvelope } from './render';
+import { getResource } from './resource';
 
 export type Menu =
   | { t: 'main' }
@@ -36,10 +37,10 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
         { name: 'collect', action: { t: 'collect' } },
       ];
 
-      if (state.inv.res.bottle > 0) {
+      if (getResource(state, 'bottle') > 0) {
         menuItems.push({ name: 'recycle', action: { t: 'recycle' } });
       }
-      if (state.inv.res.cash >= FREEDOM_PRICE) {
+      if (getResource(state, 'cash') >= FREEDOM_PRICE) {
         menuItems.push({ name: 'purchase freedom', action: { t: 'purchase' } });
       }
       if (canWriteLetter(state)) {

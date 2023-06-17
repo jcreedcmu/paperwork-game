@@ -2,7 +2,7 @@ import { ScreenBuffer } from 'terminal-kit';
 import { Action, doAction } from './action';
 import { Document, stringOfDoc } from './doc';
 import { EditFrame } from './edit-letter';
-import { State, canWriteLetter, findItem, hasInboxItems } from './state';
+import { State, canWriteLetter, findItem, getInbox, hasInboxItems } from './state';
 import { mod, unreachable } from './util';
 import { getCustomBindings } from './keys';
 import { TextBuffer } from './buffer';
@@ -46,7 +46,7 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
         menuItems.push({ name: 'new letter', action: { t: 'newLetter' } });
       }
       if (hasInboxItems(state)) {
-        const unreadCount = state.inv.inbox.filter(x => x.unread).length;
+        const unreadCount = getInbox(state).filter(x => x.unread).length;
         const unread = unreadCount > 0 ? ` (${unreadCount})` : '';
         menuItems.push({ name: `inbox${unread}...`, action: { t: 'enterInboxMenu' } });
       }
@@ -55,7 +55,7 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
     }
     case 'inbox': {
       const menuItems: MenuItem[] = [];
-      state.inv.inbox.forEach((ibit, ix) => {
+      getInbox(state).forEach((ibit, ix) => {
         const unreadMarker = ibit.unread ? '! ' : '  ';
         const item = findItem(state, ibit.id);
 

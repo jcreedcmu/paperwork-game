@@ -4,7 +4,7 @@ import { EditUiAction, doEditUiAction, makeEditFrame } from './edit-letter';
 import { Form, FormEditUiAction, doFormEditUiAction, findFormItem, makeFormEditFrame, resolveForm } from './form';
 import { logger } from './logger';
 import { MenuUiAction, doMenuUiAction } from './menu';
-import { Item, LetterItem, Location, State, SubItem, WrapSubItem, collectResources, createItem, findItem, findLetter, setItem } from './state';
+import { Item, LetterItem, Location, State, WrapSubItem, appendToInbox, collectResources, createItem, deleteAtLocation, findItem, findLetter, getLocation, insertIntoLocation, removeLocation, setInboxUnread, setItem } from './state';
 import { randElt, unreachable } from './util';
 
 // XXX: Is this MenuAction/Action distinction obsolete now?
@@ -85,24 +85,6 @@ export function resolveFutures(state: State): void {
   }
 }
 
-export function removeLocation(state: State, loc: Location): number {
-  switch (loc.t) {
-    case 'inbox': {
-      return state.inv.inbox.splice(loc.ix, 1)[0].id;
-    }
-  }
-}
-
-export function insertIntoLocation(state: State, id: number, loc: Location): void {
-  switch (loc.t) {
-    case 'inbox': {
-      state.inv.inbox.splice(loc.ix, 0, { unread: false, id });
-    } break;
-    default:
-      unreachable(loc.t);
-  }
-}
-
 export function doAction(state: State, action: Action): void {
   switch (action.t) {
     case 'exit': quit(); break;
@@ -131,9 +113,9 @@ export function doAction(state: State, action: Action): void {
         state.inv.res.paper--;
         state.inv.res.pencil--;
         const id = createItem(state, { t: 'letter', body: text, money: 0 });
-        state.inv.inbox.push({ unread: false, id });
+        const ix = appendToInbox(state, { unread: false, id });
         goBack(state);
-        state.uiStack.unshift({ t: 'menu', which: { t: 'inbox' }, ix: state.inv.inbox.length - 1 });
+        state.uiStack.unshift({ t: 'menu', which: { t: 'inbox' }, ix });
       }
       else {
         const item = findLetter(state, id);
@@ -145,8 +127,11 @@ export function doAction(state: State, action: Action): void {
     case 'send':
       const item = findItem(state, action.id);
       addFuture(state, 3, resolveSentItem(state, item));
-      // GC item list eventually?
-      state.inv.inbox = state.inv.inbox.filter(x => x.id != action.id);
+      const loc = getLocation(state, action.id);
+      if (loc === undefined) {
+        throw new Error(`sent element has no location`);
+      }
+      deleteAtLocation(state, loc);
       break;
     case 'bigMoney':
       logger(state, 'got big money');
@@ -155,7 +140,7 @@ export function doAction(state: State, action: Action): void {
     case 'addItems': {
       action.items.forEach(wi => {
         const id = createItem(state, wi.item);
-        state.inv.inbox.push({ unread: wi.unread, id });
+        appendToInbox(state, { unread: wi.unread, id });
       });
     } break;
     case 'enterInboxMenu':
@@ -163,7 +148,7 @@ export function doAction(state: State, action: Action): void {
       break;
     case 'displayDoc':
       // XXX should split out this unread handling in a wrapper action
-      state.inv.inbox[action.ibix].unread = false;
+      setInboxUnread(state, action.ibix, false);
       state.uiStack.unshift({ t: 'display', which: action.doc });
       break;
     case 'debug':
@@ -215,7 +200,7 @@ export function doAction(state: State, action: Action): void {
     } break;
     case 'editForm': {
       // XXX should split out this unread handling in a wrapper action
-      state.inv.inbox[action.ibix].unread = false;
+      setInboxUnread(state, action.ibix, false);
       state.uiStack.unshift(makeFormEditFrame(action.id, findFormItem(state, action.id)));
     } break;
     case 'pickup': {

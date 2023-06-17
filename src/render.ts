@@ -4,7 +4,7 @@ import { renderEditPane } from './edit-letter';
 import { renderFormEditPane, showCursorInForm, stringOfForm } from './form';
 import { renderLog } from './logger';
 import { UiStackFrame, renderMenu } from './menu';
-import { EnvelopeItem, Item, State, findItem, resources } from './state';
+import { EnvelopeItem, Item, State, findItem, getInbox, resources } from './state';
 import { unreachable } from './util';
 
 export const STATUS_COLUMN = 30;
@@ -35,7 +35,7 @@ function renderState(buf: TextBuffer, state: State) {
     }
   });
   row++;
-  state.inv.inbox.forEach(wi => {
+  getInbox(state).forEach(wi => {
     buf.moveTo(STATUS_COLUMN, row);
     const item = findItem(state, wi.id);
     buf.red().put(`* ${stringOfItem(item)}`);

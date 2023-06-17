@@ -26,7 +26,6 @@ export type MenuAction =
   | { t: 'removeMoney', id: number }
   | { t: 'pickup', id: number, loc: Location }
   | { t: 'drop', loc: Location }
-  | { t: 'addEnvelope' }
   ;
 
 export type Action =
@@ -35,7 +34,6 @@ export type Action =
   | { t: 'maybeBack' }
   | { t: 'setLetterText', id: number | undefined, text: string }
   | { t: 'bigMoney' }
-  | { t: 'addInbox', item: SubItem }
   | { t: 'menuUiAction', action: MenuUiAction }
   | { t: 'editUiAction', action: EditUiAction }
   | { t: 'formEditUiAction', action: FormEditUiAction }
@@ -48,11 +46,11 @@ export function goBack(state: State): void {
 }
 
 function addInboxDoc(state: State, doc: Document): Action {
-  return { t: 'addInbox', item: { t: 'doc', doc } };
+  return { t: 'addItems', items: [{ unread: true, item: { t: 'doc', doc } }] };
 }
 
 function addInboxForm(state: State, form: Form): Action {
-  return { t: 'addInbox', item: { t: 'form', form, formData: [] } };
+  return { t: 'addItems', items: [{ unread: true, item: { t: 'form', form, formData: [] } }] };
 }
 
 const letterPatterns: [RegExp | string, (state: State, letter: LetterItem) => Action][] = [
@@ -159,15 +157,6 @@ export function doAction(state: State, action: Action): void {
       logger(state, 'got big money');
       state.inv.res.cash += 50;
       break;
-    case 'addInbox':
-      const id = createItem(state, action.item);
-      state.inv.inbox.push({ unread: true, id });
-      break;
-    case 'addEnvelope': {
-      const id = createItem(state, { t: 'envelope', contents: [], size: 3 });
-      state.inv.inbox.push({ unread: false, id });
-      break;
-    }
     case 'addItems': {
       action.items.forEach(wi => {
         const id = createItem(state, wi.item);

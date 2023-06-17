@@ -2,7 +2,7 @@ import { Action, MenuAction } from './action';
 import { logger } from './logger';
 import { editUiAction } from './edit-letter';
 import { Menu, MenuFrame, MenuItem, MenuUiAction, UiStackFrame } from './menu';
-import { WrapItem, Item, State } from './state';
+import { WrapItem, Item, State, WrapItemId, findItem } from './state';
 import { mapval } from './util';
 import { formEditUiAction } from './form';
 
@@ -68,7 +68,10 @@ function customBindingsOfItem(state: State, item: Item | undefined, ix: number):
 }
 
 function getSelectedInboxItem(state: State, frame: MenuFrame): WrapItem | undefined {
-  return state.inv.inbox[frame.ix];
+  const wi: WrapItemId | undefined = state.inv.inbox[frame.ix];
+  if (wi === undefined)
+    return wi;
+  return { unread: wi.unread, item: findItem(state, wi.id) };
 }
 
 export function getCustomBindings(state: State, frame: MenuFrame): Bindings {

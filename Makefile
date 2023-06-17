@@ -4,6 +4,6 @@ build:
 	[ -d "node_modules" ] || npm install
 	npx tsc
 run:
-	node out/index.js
+	node --enable_source_maps out/index.js
 count:
 	ag -g 'ts$$' --ignore='tests' | xargs wc -l

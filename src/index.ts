@@ -15,6 +15,7 @@ export function quit() {
 
 export function win() {
   term.clear();
+  term.reset();
   term.green('you win!\n');
   process.exit(0);
 }
@@ -40,10 +41,17 @@ async function go() {
   render(buf, state);
 
   term.on('key', (key: string) => {
-    const action = actionOfKey(state, key);
-    doAction(state, action);
-    resolveFutures(state);
-    render(buf, state);
+    try {
+      const action = actionOfKey(state, key);
+      doAction(state, action);
+      resolveFutures(state);
+      render(buf, state);
+    }
+    catch (e) {
+      term.clear();
+      term.reset();
+      throw e;
+    }
   });
 }
 

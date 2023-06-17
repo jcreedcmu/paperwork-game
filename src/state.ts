@@ -30,11 +30,27 @@ export type Item = { id: number } & SubItem;
 export type Location =
   | { t: 'inbox', ix: number };
 
+export type WrapItemId = { unread: boolean, id: number };
 export type WrapItem = { unread: boolean, item: Item };
 
 export type Future = { time: number, action: Action };
 
+export function findItem(state: State, id: number): Item {
+  if (state.items[id] === undefined) {
+    let msg = `can't find item with id ${id}`;
+    msg += '\n\nstate.items: ' + JSON.stringify(state.items, null, 2);
+    throw new Error(msg);
+  }
+  return { id: id, ...state.items[id] };
+}
+
+export function setItem(state: State, item: Item): void {
+  const { id, ...rest } = item;
+  state.items[id] = rest;
+}
+
 export type State = {
+  items: Record<number, SubItem>,
   log: LogLine[],
   futures: Future[],
   uiStack: UiStackFrame[],
@@ -43,13 +59,14 @@ export type State = {
   selectedIndex: number | undefined,
   inv: {
     hand: Item | undefined,
-    inbox: WrapItem[],
+    inbox: WrapItemId[],
     res: Record<Resource, number>
   },
 }
 
 export function initState(): State {
   return {
+    items: {},
     log: [],
     futures: [],
     uiStack: [{ t: 'menu', which: { t: 'main' }, ix: 0 }],
@@ -68,7 +85,7 @@ export function showState(state: State) {
   console.log(JSON.stringify(state));
 }
 
-export function findLetter(state: State, id: number): LetterItem {
+export function findLetter(state: State, id: number): LetterItem & { id: number } {
   const item = findItem(state, id);
   if (item.t != 'letter') {
     throw new Error(`item with id ${id} not a letter`);
@@ -76,24 +93,13 @@ export function findLetter(state: State, id: number): LetterItem {
   return item;
 }
 
-export function findItem(state: State, id: number): Item {
-  const ix = state.inv.inbox.findIndex(x => x.item.id == id);
-  if (ix == -1) {
-    throw new Error(`no item with id ${id}`);
-  }
-  return state.inv.inbox[ix].item;
-}
-
 export function setLetterText(state: State, id: number, text: string): void {
-  const ix = state.inv.inbox.findIndex(x => x.item.id == id);
-  if (ix == -1) {
-    throw new Error(`no item with id ${id}`);
-  }
-  const wi = state.inv.inbox[ix];
-  if (wi.item.t != 'letter') {
+  const oldItem = findItem(state, id);
+  if (oldItem.t != 'letter') {
     throw new Error(`item with id ${id} not a letter`);
   }
-  wi.item.body = text;
+  oldItem.body = text;
+  setItem(state, oldItem);
 }
 
 export function hasInboxItems(state: State): boolean {
@@ -102,4 +108,10 @@ export function hasInboxItems(state: State): boolean {
 
 export function canWriteLetter(state: State): boolean {
   return state.inv.res.paper > 0 && state.inv.res.pencil > 0;
+}
+
+export function createItem(state: State, item: SubItem): number {
+  const id = state.idCounter++;
+  state.items[id] = item;
+  return id;
 }

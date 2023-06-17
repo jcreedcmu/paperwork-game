@@ -1,6 +1,6 @@
 import { Action, doAction, goBack } from "./action";
 import { TextBuffer } from "./buffer";
-import { State, findItem } from "./state";
+import { State, findItem, setItem } from "./state";
 import { mod, unreachable, clone } from "./util";
 
 export type FormEditUiAction =
@@ -82,12 +82,8 @@ export function makeFormEditFrame(id: number | undefined, formItem: FormItem): F
   }
 }
 
-export function findForm(state: State, id: number): FormItem {
-  const ix = state.inv.inbox.findIndex(x => x.item.id == id);
-  if (ix == -1) {
-    throw new Error(`no form in inbox with id ${id}`);
-  }
-  const item = state.inv.inbox[ix].item;
+export function findFormItem(state: State, id: number): FormItem & { id: number } {
+  const item = findItem(state, id);
   if (item.t != 'form') {
     throw new Error(`item with id ${id} not a form`);
   }
@@ -145,10 +141,9 @@ export function doFormEditUiAction(state: State, frame: FormEditFrame, action: F
       if (frame.id === undefined) {
         throw new Error(`didn't expect id in form submission to be undefined`);
       }
-      const item = findItem(state, frame.id);
-      if (item.t !== 'form')
-        throw new Error(`didn't expect non-form item`);
+      const item = findFormItem(state, frame.id);
       item.formData = frame.formData;
+      setItem(state, item);
       goBack(state);
     } break;
     case 'insert': {

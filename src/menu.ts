@@ -2,7 +2,7 @@ import { ScreenBuffer } from 'terminal-kit';
 import { Action, MenuAction, doAction } from './action';
 import { Document, stringOfDoc } from './doc';
 import { EditFrame } from './edit-letter';
-import { State, canWriteLetter, hasInboxItems } from './state';
+import { State, canWriteLetter, findItem, hasInboxItems } from './state';
 import { mod, unreachable } from './util';
 import { getCustomBindings } from './keys';
 import { TextBuffer } from './buffer';
@@ -57,7 +57,7 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
       const menuItems: MenuItem[] = [];
       state.inv.inbox.forEach((ibit, ix) => {
         const unreadMarker = ibit.unread ? '! ' : '  ';
-        const item = ibit.item;
+        const item = findItem(state, ibit.id);
 
         // XXX: harmonize unreadMarker handling better
         switch (item.t) {
@@ -80,7 +80,7 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
           case 'form':
             menuItems.push({
               name: unreadMarker + stringOfForm(item.form),
-              action: { t: 'editForm', id: ibit.item.id, form: item.form, ibix: ix }
+              action: { t: 'editForm', id: ibit.id, form: item.form, ibix: ix }
             });
             break;
           case 'envelope':

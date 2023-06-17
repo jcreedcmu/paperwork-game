@@ -45,7 +45,7 @@ function renderState(buf: TextBuffer, state: State) {
   if (state.inv.hand !== undefined) {
     row++;
     buf.moveTo(STATUS_COLUMN, row);
-    buf.blue().put(`> ${stringOfItem(state.inv.hand)}`);
+    buf.blue().put(`holding: ${stringOfItem(findItem(state, state.inv.hand))}`);
     row++;
   }
 }

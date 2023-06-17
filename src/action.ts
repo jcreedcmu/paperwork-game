@@ -85,18 +85,18 @@ export function resolveFutures(state: State): void {
   }
 }
 
-export function removeLocation(state: State, loc: Location): Item {
+export function removeLocation(state: State, loc: Location): number {
   switch (loc.t) {
     case 'inbox': {
-      return findItem(state, state.inv.inbox.splice(loc.ix, 1)[0].id);
+      return state.inv.inbox.splice(loc.ix, 1)[0].id;
     }
   }
 }
 
-export function insertIntoLocation(state: State, item: Item, loc: Location): void {
+export function insertIntoLocation(state: State, id: number, loc: Location): void {
   switch (loc.t) {
     case 'inbox': {
-      state.inv.inbox.splice(loc.ix, 0, { unread: false, id: item.id });
+      state.inv.inbox.splice(loc.ix, 0, { unread: false, id });
     } break;
     default:
       unreachable(loc.t);
@@ -222,12 +222,12 @@ export function doAction(state: State, action: Action): void {
       state.inv.hand = removeLocation(state, action.loc);
     } break;
     case 'drop': {
-      const handItem = state.inv.hand;
-      if (handItem === undefined) {
+      const hand = state.inv.hand;
+      if (hand === undefined) {
         throw new Error('tried to drop empty hand');
       }
       state.inv.hand = undefined;
-      insertIntoLocation(state, handItem, action.loc);
+      insertIntoLocation(state, hand, action.loc);
     } break;
     default: unreachable(action);
   }

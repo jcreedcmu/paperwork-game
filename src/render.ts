@@ -4,7 +4,7 @@ import { renderEditPane } from './edit-letter';
 import { renderFormEditPane, showCursorInForm, stringOfForm } from './form';
 import { renderLog } from './logger';
 import { UiStackFrame, renderMenu } from './menu';
-import { EnvelopeItem, Item, State, findItem, getInbox } from './state';
+import { EnvelopeItem, Item, StackItem, State, findItem, getInbox } from './state';
 import { getResource, resources } from "./resource";
 import { unreachable } from './util';
 
@@ -15,7 +15,12 @@ export function stringOfItem(item: Item): string {
     case 'doc': return stringOfDoc(item.doc);
     case 'form': return stringOfForm(item.form);
     case 'envelope': return stringOfEnvelope(item);
+    case 'stack': return stringOfStack(item);
   }
+}
+
+export function stringOfStack(item: StackItem): string {
+  return `${item.res} (${item.quantity})`;
 }
 
 export function stringOfEnvelope(item: EnvelopeItem): string {

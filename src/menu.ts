@@ -7,7 +7,7 @@ import { mod, unreachable } from './util';
 import { getCustomBindings } from './keys';
 import { TextBuffer } from './buffer';
 import { FormEditFrame, stringOfForm } from './form';
-import { stringOfEnvelope } from './render';
+import { stringOfEnvelope, stringOfStack } from './render';
 import { getResource } from './resource';
 
 export type Menu =
@@ -88,6 +88,12 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
             menuItems.push({
               name: unreadMarker + stringOfEnvelope(item),
               action: { t: 'none' } // XXX should go to envelope-editing menu
+            });
+            break;
+          case 'stack':
+            menuItems.push({
+              name: unreadMarker + stringOfStack(item),
+              action: { t: 'pickup', id: ibit.id, loc: { t: 'inbox', ix } }
             });
             break;
           default: unreachable(item);

@@ -64,6 +64,10 @@ function customBindingsOfItem(state: State, item: Item | undefined, ix: number):
       return bindings;
     }
     case 'envelope': return {};
+    case 'stack': return {
+      '1': { name: 'take one', action: { t: 'none' } }, // XXX implement
+      '2': { name: 'take half', action: { t: 'none' } }, // XXX implement
+    };
   }
 }
 

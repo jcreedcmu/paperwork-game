@@ -25,7 +25,7 @@ export type Action =
   | { t: 'debug' }
   | { t: 'addMoney', id: number }
   | { t: 'removeMoney', id: number }
-  | { t: 'pickup', id: number, loc: Location }
+  | { t: 'pickup', id: number, loc: Location } // XXX does this really need id?
   | { t: 'drop', loc: Location }
   | { t: 'none' }
   | { t: 'maybeBack' }
@@ -66,9 +66,12 @@ function resolveSentItem(state: State, item: Item): Action {
         }
       }
       return { t: 'none' };
-    case 'doc': return { t: 'none' };
     case 'form': return resolveForm(state, item);
+
+    // shouldn't be able to send any of these
+    case 'doc': return { t: 'none' };
     case 'envelope': return { t: 'none' };
+    case 'stack': return { t: 'none' };
   }
 }
 

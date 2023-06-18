@@ -176,7 +176,7 @@ export function resolveForm(state: State, item: FormItem): Action {
     case 'STO-001': return { t: 'none' };
     case 'ENV-001': return {
       t: 'addItems', items: [
-        { unread: false, item: { t: 'envelope', contents: [], size: 3 } }
+        { unread: false, item: { t: 'stack', quantity: 3, res: 'envelope' } }
       ]
     };
   }

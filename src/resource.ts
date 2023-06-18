@@ -1,6 +1,6 @@
 import { State } from './state';
 
-export const resources = ['cash', 'bottle', 'paper', 'pencil'] as const;
+export const resources = ['cash', 'bottle', 'paper', 'pencil', 'envelope'] as const;
 export const collectResources: Resource[] = ['bottle', 'paper', 'pencil'];
 
 // A resource is just a thing that you can have some number of --- and

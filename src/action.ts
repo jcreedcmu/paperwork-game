@@ -8,7 +8,6 @@ import { Item, LetterItem, Location, State, WrapSubItem, appendToInbox, createIt
 import { adjustResource, collectResources, getResource, setResource } from "./resource";
 import { randElt, unreachable } from './util';
 
-// XXX: Is this MenuAction/Action distinction obsolete now?
 export type Action =
   | { t: 'sleep' }
   | { t: 'collect' }
@@ -25,7 +24,7 @@ export type Action =
   | { t: 'debug' }
   | { t: 'addMoney', id: number }
   | { t: 'removeMoney', id: number }
-  | { t: 'pickup', id: number, loc: Location } // XXX does this really need id?
+  | { t: 'pickup', id: number, loc: Location } // FIXME(#15): does this really need id?
   | { t: 'drop', loc: Location }
   | { t: 'none' }
   | { t: 'maybeBack' }
@@ -151,7 +150,7 @@ export function doAction(state: State, action: Action): void {
       state.uiStack.unshift({ t: 'menu', which: { t: 'inbox' }, ix: 0 });
       break;
     case 'displayDoc':
-      // XXX should split out this unread handling in a wrapper action
+      // FIXME(#16): should split out this unread handling in a wrapper action
       setInboxUnread(state, action.ibix, false);
       state.uiStack.unshift({ t: 'display', which: action.doc });
       break;
@@ -203,7 +202,7 @@ export function doAction(state: State, action: Action): void {
       }
     } break;
     case 'editForm': {
-      // XXX should split out this unread handling in a wrapper action
+      // FIXME(#16): should split out this unread handling in a wrapper action
       setInboxUnread(state, action.ibix, false);
       state.uiStack.unshift(makeFormEditFrame(action.id, findFormItem(state, action.id)));
     } break;

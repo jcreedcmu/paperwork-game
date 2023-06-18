@@ -65,8 +65,8 @@ function customBindingsOfItem(state: State, item: Item | undefined, ix: number):
     }
     case 'envelope': return {};
     case 'stack': return {
-      '1': { name: 'take one', action: { t: 'none' } }, // XXX implement
-      '2': { name: 'take half', action: { t: 'none' } }, // XXX implement
+      '1': { name: 'take one', action: { t: 'none' } }, // FIXME(#19) Implement stack operations
+      '2': { name: 'take half', action: { t: 'none' } }, // FIXME(#19) Implement stack operations
     };
   }
 }

@@ -60,7 +60,7 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
         const unreadMarker = ibit.unread ? '! ' : '  ';
         const item = findItem(state, ibit.id);
 
-        // XXX: harmonize unreadMarker handling better
+        // FIXME(#17): Improve unread marker handling in inbox item rendering
         switch (item.t) {
           case 'letter':
             let name = `letter ("${item.body.substring(0, 10)}")`;
@@ -87,7 +87,7 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
           case 'envelope':
             menuItems.push({
               name: unreadMarker + stringOfEnvelope(item),
-              action: { t: 'none' } // XXX should go to envelope-editing menu
+              action: { t: 'none' } // FIXME(#18): Implement envelope content editing menu
             });
             break;
           case 'stack':

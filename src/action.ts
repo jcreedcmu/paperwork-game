@@ -25,7 +25,7 @@ export type Action =
   | { t: 'debug' }
   | { t: 'addMoney', id: number }
   | { t: 'removeMoney', id: number }
-  | { t: 'pickup', id: number, loc: Location } // FIXME(#15): does this really need id?
+  | { t: 'pickup', loc: Location } // FIXME(#15): does this really need id?
   | { t: 'pickupPart', amount: StackDivision, loc: Location, softFail?: boolean }
   | { t: 'drop', loc: Location }
   | { t: 'none' }

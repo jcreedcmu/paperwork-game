@@ -90,7 +90,7 @@ export function getCustomBindings(state: State, frame: MenuFrame): Bindings {
       const item = getSelectedInboxItem(state, frame)?.item;
       const bind = customBindingsOfItem(state, item, ix);
       if (item !== undefined && state.inv.hand === undefined)
-        bind[' '] = { name: 'pickup', action: { t: 'pickup', id: item.id, loc: { t: 'inbox', ix } } };
+        bind[' '] = { name: 'pickup', action: { t: 'pickup', loc: { t: 'inbox', ix } } };
       else if (state.inv.hand !== undefined) {
         bind[' '] = { name: 'drop', action: { t: 'drop', loc: { t: 'inbox', ix } } };
       }

@@ -174,10 +174,17 @@ export function doFormEditUiAction(state: State, frame: FormEditFrame, action: F
 export function resolveForm(state: State, item: FormItem): Action {
   switch (item.form.t) {
     case 'STO-001': return { t: 'none' };
-    case 'ENV-001': return {
-      t: 'addItems', items: [
-        { unread: false, item: { t: 'stack', quantity: 3, res: 'envelope' } }
-      ]
-    };
+    case 'ENV-001': {
+      const [quantityStr] = item.formData;
+      const quantity = parseInt(quantityStr);
+      if (isNaN(quantity)) {
+        return { t: 'none' }; // FIXME(#20): Implement error response form
+      }
+      return {
+        t: 'addItems', items: [
+          { unread: false, item: { t: 'stack', quantity, res: 'envelope' } }
+        ]
+      };
+    }
   }
 }

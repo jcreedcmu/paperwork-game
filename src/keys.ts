@@ -170,7 +170,7 @@ export function actionOfDefaultBinding(state: State, key: string, def: DefaultAc
 export function actionOfKey(state: State, key: string): Action {
   const keymaps = state.uiStack.map(frame => keyMapOfFrame(state, frame));
   keymaps.push(defaultKeyMap);
-  // logger(state, key);
+  logger(state, key);
 
   let skip = -1;
   for (const keymap of keymaps) {

@@ -93,7 +93,7 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
           case 'stack':
             menuItems.push({
               name: unreadMarker + stringOfStack(item),
-              action: { t: 'pickup', id: ibit.id, loc: { t: 'inbox', ix } }
+              action: { t: 'pickupPart', amount: 'one', softFail: true, loc: { t: 'inbox', ix } }
             });
             break;
           default: unreachable(item);

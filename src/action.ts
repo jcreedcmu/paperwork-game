@@ -26,7 +26,7 @@ export type Action =
   | { t: 'addMoney', id: number }
   | { t: 'removeMoney', id: number }
   | { t: 'pickup', id: number, loc: Location } // FIXME(#15): does this really need id?
-  | { t: 'pickupPart', amount: StackDivision, loc: Location }
+  | { t: 'pickupPart', amount: StackDivision, loc: Location, softFail?: boolean }
   | { t: 'drop', loc: Location }
   | { t: 'none' }
   | { t: 'maybeBack' }
@@ -214,8 +214,12 @@ export function doAction(state: State, action: Action): void {
       state.inv.hand = removeLocation(state, action.loc);
     } break;
     case 'pickupPart': {
-      if (state.inv.hand !== undefined)
-        throw new Error('tried to pick up with full hand');
+      if (state.inv.hand !== undefined) {
+        if (action.softFail)
+          return;
+        else
+          throw new Error('tried to pickupPart with full hand');
+      }
       const res = divideStack(state, action.loc, action.amount);
       if (res !== undefined) {
         state.inv.hand = res;

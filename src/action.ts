@@ -7,6 +7,7 @@ import { MenuUiAction, doMenuUiAction } from './menu';
 import { Item, LetterItem, Location, State, WrapSubItem, appendToInbox, createItem, deleteAtLocation, findItem, findLetter, getLocation, insertIntoLocation, removeLocation, setInboxUnread, setItem } from './state';
 import { adjustResource, collectResources, getResource, setResource } from "./resource";
 import { randElt, unreachable } from './util';
+import { StackDivision, divideStack } from './stack';
 
 export type Action =
   | { t: 'sleep' }
@@ -25,6 +26,7 @@ export type Action =
   | { t: 'addMoney', id: number }
   | { t: 'removeMoney', id: number }
   | { t: 'pickup', id: number, loc: Location } // FIXME(#15): does this really need id?
+  | { t: 'pickupPart', amount: StackDivision, loc: Location }
   | { t: 'drop', loc: Location }
   | { t: 'none' }
   | { t: 'maybeBack' }
@@ -207,7 +209,17 @@ export function doAction(state: State, action: Action): void {
       state.uiStack.unshift(makeFormEditFrame(action.id, findFormItem(state, action.id)));
     } break;
     case 'pickup': {
+      if (state.inv.hand !== undefined)
+        throw new Error('tried to pick up with full hand');
       state.inv.hand = removeLocation(state, action.loc);
+    } break;
+    case 'pickupPart': {
+      if (state.inv.hand !== undefined)
+        throw new Error('tried to pick up with full hand');
+      const res = divideStack(state, action.loc, action.amount);
+      if (res !== undefined) {
+        state.inv.hand = res;
+      }
     } break;
     case 'drop': {
       const hand = state.inv.hand;

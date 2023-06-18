@@ -71,6 +71,13 @@ export function showState(state: State) {
   console.log(JSON.stringify(state));
 }
 
+export function requireStack(item: Item): StackItem & { id: number } {
+  if (item.t != 'stack') {
+    throw new Error(`item with id ${item.id} not a stack`);
+  }
+  return item;
+}
+
 export function findLetter(state: State, id: number): LetterItem & { id: number } {
   const item = findItem(state, id);
   if (item.t != 'letter') {
@@ -109,7 +116,7 @@ export function setItem(state: State, item: Item): void {
   state.items_[id] = rest;
 }
 
-export function createItem(state: State, item: SubItem): number {
+export function createItem(state: State, item: SubItem): ItemId {
   const id = state.idCounter++;
   state.items_[id] = item;
   state.itemLocs_[id] = undefined;
@@ -169,8 +176,22 @@ export function appendToInbox(state: State, item: WrapItemId): number {
   return ix;
 }
 
+export function getItemAtLocation(state: State, location: Location): Item {
+  switch (location.t) {
+    case 'inbox':
+      return findItem(state, state.inv.inbox_[location.ix].id);
+  }
+}
+
 export function getLocation(state: State, itemId: ItemId): Location | undefined {
   return state.itemLocs_[itemId];
+}
+
+export function getLocationDefined(state: State, itemId: ItemId): Location {
+  const loc = getLocation(state, itemId);
+  if (loc === undefined)
+    throw new Error(`expected ${itemId} to have a location`);
+  return loc;
 }
 
 export function setInboxUnread(state: State, index: number, unread: boolean): void {

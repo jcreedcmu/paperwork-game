@@ -2,7 +2,7 @@ import { ScreenBuffer } from 'terminal-kit';
 import { Action, doAction } from './action';
 import { Document, stringOfDoc } from './doc';
 import { EditFrame } from './edit-letter';
-import { State, canWriteLetter, findItem, getInbox, hasInboxItems } from './state';
+import { Item, ItemId, State, WrapItemId, canWriteLetter, findItem, getInbox, hasInboxItems } from './state';
 import { mod, unreachable } from './util';
 import { getCustomBindings } from './keys';
 import { TextBuffer } from './buffer';
@@ -27,6 +27,45 @@ export type UiStackFrame =
   | FormEditFrame;
 
 export type MenuItem = { name: string, action: Action };
+
+function getInboxMenuItem(item: Item, inboxIndex: number): MenuItem {
+  switch (item.t) {
+    case 'letter':
+      let name = `letter ("${item.body.substring(0, 10)}")`;
+      if (item.money > 0) {
+        name = `(\$${item.money}) ` + name;
+      }
+      return {
+        name,
+        action: { t: 'editLetter', id: item.id }
+      };
+      break;
+    case 'doc':
+      return {
+        name: stringOfDoc(item.doc),
+        action: { t: 'markUnread', ibix: inboxIndex, k: { t: 'displayDoc', doc: item.doc } }
+      };
+      break;
+    case 'form':
+      return {
+        name: stringOfForm(item.form),
+        action: { t: 'markUnread', ibix: inboxIndex, k: { t: 'editForm', id: item.id, form: item.form } }
+      };
+      break;
+    case 'envelope':
+      return {
+        name: stringOfEnvelope(item),
+        action: { t: 'none' } // FIXME(#18): Implement envelope content editing menu
+      };
+      break;
+    case 'stack':
+      return {
+        name: stringOfStack(item),
+        action: { t: 'pickupPart', amount: 'one', softFail: true, loc: { t: 'inbox', ix: inboxIndex } }
+      };
+      break;
+  }
+}
 
 export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
   switch (frame.which.t) {
@@ -58,46 +97,9 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
       const menuItems: MenuItem[] = [];
       getInbox(state).forEach((ibit, ix) => {
         const unreadMarker = ibit.unread ? '! ' : '  ';
-        const item = findItem(state, ibit.id);
-
-        // FIXME(#17): Improve unread marker handling in inbox item rendering
-        switch (item.t) {
-          case 'letter':
-            let name = `letter ("${item.body.substring(0, 10)}")`;
-            if (item.money > 0) {
-              name = `(\$${item.money}) ` + name;
-            }
-            menuItems.push({
-              name: unreadMarker + name,
-              action: { t: 'editLetter', id: item.id }
-            });
-            break;
-          case 'doc':
-            menuItems.push({
-              name: unreadMarker + stringOfDoc(item.doc),
-              action: { t: 'markUnread', ibix: ix, k: { t: 'displayDoc', doc: item.doc } }
-            });
-            break;
-          case 'form':
-            menuItems.push({
-              name: unreadMarker + stringOfForm(item.form),
-              action: { t: 'markUnread', ibix: ix, k: { t: 'editForm', id: ibit.id, form: item.form } }
-            });
-            break;
-          case 'envelope':
-            menuItems.push({
-              name: unreadMarker + stringOfEnvelope(item),
-              action: { t: 'none' } // FIXME(#18): Implement envelope content editing menu
-            });
-            break;
-          case 'stack':
-            menuItems.push({
-              name: unreadMarker + stringOfStack(item),
-              action: { t: 'pickupPart', amount: 'one', softFail: true, loc: { t: 'inbox', ix } }
-            });
-            break;
-          default: unreachable(item);
-        }
+        const menuItem = getInboxMenuItem(findItem(state, ibit.id), ix);
+        menuItem.name = unreadMarker + menuItem.name;
+        menuItems.push(menuItem);
       });
       menuItems.push({ name: '  <-', action: { t: 'back' } });
       return menuItems;

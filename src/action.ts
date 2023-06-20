@@ -20,8 +20,8 @@ export type Action =
   | { t: 'newLetter' }
   | { t: 'send', id: number }
   | { t: 'back' }
-  | { t: 'displayDoc', doc: Document, ibix: number }
-  | { t: 'editForm', form: Form, ibix: number, id: number }
+  | { t: 'displayDoc', doc: Document }
+  | { t: 'editForm', form: Form, id: number }
   | { t: 'debug' }
   | { t: 'addMoney', id: number }
   | { t: 'removeMoney', id: number }
@@ -36,6 +36,7 @@ export type Action =
   | { t: 'editUiAction', action: EditUiAction }
   | { t: 'formEditUiAction', action: FormEditUiAction }
   | { t: 'addItems', items: WrapSubItem[] }
+  | { t: 'markUnread', ibix: number, k: Action }
   ;
 
 export function goBack(state: State): void {
@@ -152,8 +153,6 @@ export function doAction(state: State, action: Action): void {
       state.uiStack.unshift({ t: 'menu', which: { t: 'inbox' }, ix: 0 });
       break;
     case 'displayDoc':
-      // FIXME(#16): should split out this unread handling in a wrapper action
-      setInboxUnread(state, action.ibix, false);
       state.uiStack.unshift({ t: 'display', which: action.doc });
       break;
     case 'debug':
@@ -204,8 +203,6 @@ export function doAction(state: State, action: Action): void {
       }
     } break;
     case 'editForm': {
-      // FIXME(#16): should split out this unread handling in a wrapper action
-      setInboxUnread(state, action.ibix, false);
       state.uiStack.unshift(makeFormEditFrame(action.id, findFormItem(state, action.id)));
     } break;
     case 'pickup': {
@@ -232,6 +229,10 @@ export function doAction(state: State, action: Action): void {
       }
       state.inv.hand = undefined;
       insertIntoLocation(state, hand, action.loc);
+    } break;
+    case 'markUnread': {
+      setInboxUnread(state, action.ibix, false);
+      doAction(state, action.k);
     } break;
     default: unreachable(action);
   }

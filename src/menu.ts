@@ -75,13 +75,13 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
           case 'doc':
             menuItems.push({
               name: unreadMarker + stringOfDoc(item.doc),
-              action: { t: 'displayDoc', doc: item.doc, ibix: ix }
+              action: { t: 'markUnread', ibix: ix, k: { t: 'displayDoc', doc: item.doc } }
             });
             break;
           case 'form':
             menuItems.push({
               name: unreadMarker + stringOfForm(item.form),
-              action: { t: 'editForm', id: ibit.id, form: item.form, ibix: ix }
+              action: { t: 'markUnread', ibix: ix, k: { t: 'editForm', id: ibit.id, form: item.form } }
             });
             break;
           case 'envelope':

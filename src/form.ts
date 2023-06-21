@@ -1,4 +1,4 @@
-import { Action, doAction, goBack } from "./action";
+import { Action, addInboxDoc, addInboxForm, doAction, goBack } from "./action";
 import { TextBuffer } from "./buffer";
 import { State, findItem, setItem } from "./state";
 import { mod, unreachable, clone } from "./util";
@@ -18,6 +18,16 @@ export type FormEditUiAction =
   | { t: 'prevField' }
   | { t: 'enter' }
   ;
+
+export type EnvFormError =
+  | { t: 'badQuantity', quantityString: string }
+  ;
+
+export function envFormErrorContent(e: EnvFormError) {
+  switch (e.t) {
+    case 'badQuantity': return `Can't parse '${e.quantityString}' as a quantity.`;
+  }
+}
 
 export function formEditUiAction(action: FormEditUiAction): Action {
   return { t: 'formEditUiAction', action }
@@ -175,10 +185,14 @@ export function resolveForm(state: State, item: FormItem): Action {
   switch (item.form.t) {
     case 'STO-001': return { t: 'none' };
     case 'ENV-001': {
-      const [quantityStr] = item.formData;
-      const quantity = parseInt(quantityStr);
+      const [quantityString] = item.formData;
+      const quantity = parseInt(quantityString);
       if (isNaN(quantity)) {
-        return { t: 'none' }; // FIXME(#20): Implement error response form
+        return addInboxDoc(state, {
+          t: 'error-response', errorResponse: {
+            t: 'envFormError', e: { t: 'badQuantity', quantityString }
+          }
+        });
       }
       return {
         t: 'addItems', items: [

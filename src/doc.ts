@@ -1,15 +1,27 @@
 import { TextBuffer } from './buffer';
+import { EnvFormError, envFormErrorContent } from './form';
 import { DisplayFrame } from './menu';
 import { State } from './state';
 
+export type ErrorResponse =
+  | { t: 'envFormError', e: EnvFormError };
+
+function errorResponseContent(e: ErrorResponse): string {
+  switch (e.t) {
+    case 'envFormError': return envFormErrorContent(e.e);
+  }
+}
+
 export type Document =
   | { t: 'brochure', inResponseTo: string }
+  | { t: 'error-response', errorResponse: ErrorResponse }
   | { t: 'store-catalog' };
 
 export function stringOfDoc(doc: Document): string {
   switch (doc.t) {
     case 'brochure': return 'Brochure';
     case 'store-catalog': return 'Catalog';
+    case 'error-response': return 'Response Letter';
   }
 }
 
@@ -32,6 +44,7 @@ export function contentOfDoc(doc: Document): string {
   switch (doc.t) {
     case 'brochure': return brochureContent(doc.inResponseTo);
     case 'store-catalog': return storeCatalogContent;
+    case 'error-response': return errorResponseContent(doc.errorResponse);
   }
 }
 

@@ -43,11 +43,11 @@ export function goBack(state: State): void {
   state.uiStack.shift();
 }
 
-function addInboxDoc(state: State, doc: Document): Action {
+export function addInboxDoc(state: State, doc: Document): Action {
   return { t: 'addItems', items: [{ unread: true, item: { t: 'doc', doc } }] };
 }
 
-function addInboxForm(state: State, form: Form): Action {
+export function addInboxForm(state: State, form: Form): Action {
   return { t: 'addItems', items: [{ unread: true, item: { t: 'form', form, formData: [] } }] };
 }
 

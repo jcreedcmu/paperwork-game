@@ -2,7 +2,7 @@ import { Action } from './action';
 import { logger } from './logger';
 import { editUiAction } from './edit-letter';
 import { Menu, MenuFrame, MenuItem, MenuUiAction, UiStackFrame } from './menu';
-import { WrapItem, Item, State, WrapItemId, findItem, getInbox, itemCanHoldMoney } from './state';
+import { WrapItem, Item, State, WrapItemId, findItem, getInbox, itemCanHoldMoney, getItemIdFromRigidContainerItem, requireEnvelope, Location } from './state';
 import { mapval } from './util';
 import { formEditUiAction } from './form';
 
@@ -43,7 +43,7 @@ const basicMenuBindings: Record<string, Action> = {
 export type Bindings = Record<string, MenuItem>;
 
 
-function customBindingsOfItem(state: State, item: Item | undefined, ix: number): Bindings {
+function customBindingsOfItem(state: State, item: Item | undefined, loc: Location): Bindings {
   if (item == undefined)
     return {};
   switch (item.t) {
@@ -65,8 +65,8 @@ function customBindingsOfItem(state: State, item: Item | undefined, ix: number):
     case 'stack':
       if (state.inv.hand === undefined)
         return {
-          '1': { name: 'take one', action: { t: 'pickupPart', amount: 'one', loc: { t: 'inbox', ix } } },
-          '2': { name: 'take half', action: { t: 'pickupPart', amount: 'half', loc: { t: 'inbox', ix } } },
+          '1': { name: 'take one', action: { t: 'pickupPart', amount: 'one', loc } },
+          '2': { name: 'take half', action: { t: 'pickupPart', amount: 'half', loc } },
         };
       else
         return {};
@@ -80,28 +80,42 @@ function getSelectedInboxItem(state: State, frame: MenuFrame): WrapItem | undefi
   return { unread: wi.unread, item: findItem(state, wi.id) };
 }
 
+function getBindingsOfSelection(state: State, item: Item | undefined, loc: Location): Bindings {
+  const bind = customBindingsOfItem(state, item, loc);
+  if (item !== undefined && state.inv.hand === undefined)
+    bind[' '] = { name: 'pickup', action: { t: 'pickup', loc } };
+  else if (state.inv.hand !== undefined) {
+    bind[' '] = { name: 'drop', action: { t: 'drop', loc } };
+  }
+  else {
+    bind[' '] = { name: 'none', action: { t: 'none' } }; // XXX should be fixed by #25
+  }
+  if (item !== undefined) {
+    bind['t'] = { name: 'trash', action: { t: 'trash', loc } };
+    if (itemCanHoldMoney(item)) {
+      bind['+'] = { name: 'add money', action: { t: 'addMoney', id: item.id } };
+      bind['-'] = { name: 'remove money', action: { t: 'removeMoney', id: item.id } };
+    }
+  }
+  return bind;
+}
+
 export function getCustomBindings(state: State, frame: MenuFrame): Bindings {
   switch (frame.which.t) {
     case 'main': return {};
     case 'inbox': {
       const ix = frame.ix;
       const item = getSelectedInboxItem(state, frame)?.item;
-      const bind = customBindingsOfItem(state, item, ix);
-      if (item !== undefined && state.inv.hand === undefined)
-        bind[' '] = { name: 'pickup', action: { t: 'pickup', loc: { t: 'inbox', ix } } };
-      else if (state.inv.hand !== undefined) {
-        bind[' '] = { name: 'drop', action: { t: 'drop', loc: { t: 'inbox', ix } } };
-      }
-      if (item !== undefined) {
-        bind['t'] = { name: 'trash', action: { t: 'trash', loc: { t: 'inbox', ix } } };
-        if (itemCanHoldMoney(item)) {
-          bind['+'] = { name: 'add money', action: { t: 'addMoney', id: item.id } };
-          bind['-'] = { name: 'remove money', action: { t: 'removeMoney', id: item.id } };
-        }
-      }
-      return bind;
+      return getBindingsOfSelection(state, item, { t: 'inbox', ix });
     }
-    case 'container': return {}; // XXX stub
+    case 'container': {
+      const ix = frame.ix;
+      const containerId = frame.which.id;
+      const container = requireEnvelope(findItem(state, containerId));
+      const selectedItemId = container.contents[ix];
+      const item = selectedItemId === undefined ? undefined : findItem(state, selectedItemId);
+      return getBindingsOfSelection(state, item, { t: 'rigidContainer', id: containerId, ix });
+    }
   }
 }
 

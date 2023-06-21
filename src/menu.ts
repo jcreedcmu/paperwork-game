@@ -2,7 +2,7 @@ import { ScreenBuffer } from 'terminal-kit';
 import { Action, doAction } from './action';
 import { Document, stringOfDoc } from './doc';
 import { EditFrame } from './edit-letter';
-import { Item, ItemId, State, WrapItemId, canWriteLetter, findItem, getInbox, hasInboxItems, requireEnvelope, requireStack } from './state';
+import { Item, ItemId, State, WrapItemId, canWriteLetter, findItem, getInbox, hasInboxItems, requireEnvelope, requireStack, Location } from './state';
 import { mod, unreachable } from './util';
 import { getCustomBindings } from './keys';
 import { TextBuffer } from './buffer';
@@ -29,7 +29,7 @@ export type UiStackFrame =
 
 export type MenuItem = { name: string, action: Action };
 
-function getInboxMenuItem(item: Item, inboxIndex: number): MenuItem {
+function getItemMenuItem(item: Item, loc: Location): MenuItem {
   switch (item.t) {
     case 'letter':
       let name = `letter ("${item.body.substring(0, 10)}")`;
@@ -42,9 +42,13 @@ function getInboxMenuItem(item: Item, inboxIndex: number): MenuItem {
       };
       break;
     case 'doc':
+      let action: Action = { t: 'displayDoc', doc: item.doc };
+      if (loc.t == 'inbox') {
+        action = { t: 'markUnread', ibix: loc.ix, k: action };
+      }
       return {
         name: stringOfDoc(item.doc),
-        action: { t: 'markUnread', ibix: inboxIndex, k: { t: 'displayDoc', doc: item.doc } }
+        action
       };
       break;
     case 'form': {
@@ -52,10 +56,11 @@ function getInboxMenuItem(item: Item, inboxIndex: number): MenuItem {
       if (item.money > 0) {
         name = `(\$${item.money}) ` + name;
       }
-      return {
-        name,
-        action: { t: 'markUnread', ibix: inboxIndex, k: { t: 'editForm', id: item.id, form: item.form } }
-      };
+      let action: Action = { t: 'editForm', id: item.id, form: item.form };
+      if (loc.t == 'inbox') {
+        action = { t: 'markUnread', ibix: loc.ix, k: action };
+      }
+      return { name, action };
     } break;
     case 'envelope':
       return {
@@ -66,7 +71,7 @@ function getInboxMenuItem(item: Item, inboxIndex: number): MenuItem {
     case 'stack':
       return {
         name: stringOfStack(item),
-        action: { t: 'pickupPart', amount: 'one', softFail: true, loc: { t: 'inbox', ix: inboxIndex } }
+        action: { t: 'pickupPart', amount: 'one', softFail: true, loc }
       };
       break;
   }
@@ -102,7 +107,7 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
       const menuItems: MenuItem[] = [];
       getInbox(state).forEach((ibit, ix) => {
         const unreadMarker = ibit.unread ? '! ' : '  ';
-        const menuItem = getInboxMenuItem(findItem(state, ibit.id), ix);
+        const menuItem = getItemMenuItem(findItem(state, ibit.id), { t: 'inbox', ix });
         menuItem.name = unreadMarker + menuItem.name;
         menuItems.push(menuItem);
       });
@@ -123,11 +128,11 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
           menuItems.push({ name: '---', action });
         }
         else {
-          menuItems.push(getInboxMenuItem(findItem(state, itemId), ix));
+          menuItems.push(getItemMenuItem(findItem(state, itemId), { t: 'rigidContainer', id: item.id, ix }));
         }
 
       }
-      menuItems.push({ name: '  <-', action: { t: 'back' } });
+      menuItems.push({ name: '<-', action: { t: 'back' } });
       return menuItems;
     }
   }

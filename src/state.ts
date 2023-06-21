@@ -175,7 +175,7 @@ function insertIntoRigidContainerItem(state: State, item: Item, ix: number, inse
   }
 }
 
-function getItemIdFromRigidContainerItem(state: State, item: Item, ix: number): ItemId {
+export function getItemIdFromRigidContainerItem(state: State, item: Item, ix: number): ItemId {
   switch (item.t) {
     case 'envelope': {
       if (ix < 0 || ix >= item.size) {

@@ -25,7 +25,7 @@ export type Action =
   | { t: 'debug' }
   | { t: 'addMoney', id: ItemId }
   | { t: 'removeMoney', id: ItemId }
-  | { t: 'pickup', loc: Location } // FIXME(#15): does this really need id?
+  | { t: 'pickup', loc: Location }
   | { t: 'pickupPart', amount: StackDivision, loc: Location, softFail?: boolean }
   | { t: 'drop', loc: Location }
   | { t: 'none' }
@@ -38,6 +38,7 @@ export type Action =
   | { t: 'addItems', items: WrapSubItem[] }
   | { t: 'markUnread', ibix: number, k: Action }
   | { t: 'trash', loc: Location }
+  | { t: 'enterContainerMenu', id: ItemId }
   ;
 
 export function goBack(state: State): void {
@@ -243,6 +244,9 @@ export function doAction(state: State, action: Action): void {
     } break;
     case 'trash':
       deleteAtLocation(state, action.loc);
+      break;
+    case 'enterContainerMenu':
+      state.uiStack.unshift({ t: 'menu', which: { t: 'container', id: action.id }, ix: 0 });
       break;
     default: unreachable(action);
   }

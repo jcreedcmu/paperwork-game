@@ -2,17 +2,18 @@ import { ScreenBuffer } from 'terminal-kit';
 import { Action, doAction } from './action';
 import { Document, stringOfDoc } from './doc';
 import { EditFrame } from './edit-letter';
-import { Item, ItemId, State, WrapItemId, canWriteLetter, findItem, getInbox, hasInboxItems } from './state';
+import { Item, ItemId, State, WrapItemId, canWriteLetter, findItem, getInbox, hasInboxItems, requireEnvelope, requireStack } from './state';
 import { mod, unreachable } from './util';
 import { getCustomBindings } from './keys';
 import { TextBuffer } from './buffer';
 import { FormEditFrame, stringOfForm } from './form';
-import { stringOfEnvelope, stringOfStack } from './render';
+import { stringOfEnvelope, stringOfItem, stringOfStack } from './render';
 import { getResource } from './resource';
 
 export type Menu =
   | { t: 'main' }
   | { t: 'inbox' }
+  | { t: 'container', id: number }
   ;
 
 export type DisplayFrame = { t: 'display', which: Document };
@@ -59,7 +60,7 @@ function getInboxMenuItem(item: Item, inboxIndex: number): MenuItem {
     case 'envelope':
       return {
         name: stringOfEnvelope(item),
-        action: { t: 'none' } // FIXME(#18): Implement envelope content editing menu
+        action: { t: 'enterContainerMenu', id: item.id }
       };
       break;
     case 'stack':
@@ -108,6 +109,27 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
       menuItems.push({ name: '  <-', action: { t: 'back' } });
       return menuItems;
     }
+    case 'container': {
+      const menuItems: MenuItem[] = [];
+
+      const item = requireEnvelope(findItem(state, frame.which.id));
+
+      for (let ix = 0; ix < item.size; ix++) {
+        const itemId = item.contents[ix];
+        if (itemId === undefined) {
+          const action: Action = state.inv.hand === undefined
+            ? { t: 'none' }
+            : { t: 'drop', loc: { t: 'rigidContainer', id: item.id, ix } };
+          menuItems.push({ name: '---', action });
+        }
+        else {
+          menuItems.push(getInboxMenuItem(findItem(state, itemId), ix));
+        }
+
+      }
+      menuItems.push({ name: '  <-', action: { t: 'back' } });
+      return menuItems;
+    }
   }
 }
 
@@ -115,6 +137,7 @@ function getMenuTitle(frame: MenuFrame): string {
   switch (frame.which.t) {
     case 'main': return 'MAIN MENU';
     case 'inbox': return 'INBOX MENU';
+    case 'container': return 'CONTAINER MENU';
   }
 }
 

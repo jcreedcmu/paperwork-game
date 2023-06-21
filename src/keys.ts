@@ -101,6 +101,7 @@ export function getCustomBindings(state: State, frame: MenuFrame): Bindings {
       }
       return bind;
     }
+    case 'container': return {}; // XXX stub
   }
 }
 

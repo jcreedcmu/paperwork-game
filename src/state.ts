@@ -79,6 +79,13 @@ export function requireStack(item: Item): StackItem & { id: number } {
   return item;
 }
 
+export function requireEnvelope(item: Item): EnvelopeItem & { id: number } {
+  if (item.t != 'envelope') {
+    throw new Error(`item with id ${item.id} not an envelope`);
+  }
+  return item;
+}
+
 export function findLetter(state: State, id: number): LetterItem & { id: number } {
   const item = findItem(state, id);
   if (item.t != 'letter') {

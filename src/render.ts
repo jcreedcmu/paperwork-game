@@ -24,7 +24,8 @@ export function stringOfStack(item: StackItem): string {
 }
 
 export function stringOfEnvelope(item: EnvelopeItem): string {
-  const contents = item.contents.length > 0 ? `${item.contents.length} items` : 'empty';
+  const numContents = item.contents.filter(x => x !== undefined).length;
+  const contents = numContents > 0 ? `${numContents} items` : 'empty';
   return `Envelope (${contents})`;
 }
 

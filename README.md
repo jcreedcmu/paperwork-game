@@ -158,6 +158,8 @@ paper. Bottles can be put in recycling bin for money.
   cash, so you have to purchase things with bank accounts you've
   already set up.
 
+- Puzzles about form id allocation into certain ranges
+
 ## Other thoughts
 
 Requests-for-catalog are common, but tiered. There's probably a basic

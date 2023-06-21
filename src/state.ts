@@ -201,3 +201,13 @@ export function setInboxUnread(state: State, index: number, unread: boolean): vo
 export function getInbox(state: State): WrapItemId[] {
   return state.inv.inbox_;
 }
+
+export function itemCanHoldMoney(item: Item): item is (FormItem | LetterItem) & { id: number } {
+  switch (item.t) {
+    case 'letter': return true;
+    case 'doc': return false;
+    case 'form': return true;
+    case 'envelope': return false;
+    case 'stack': return false;
+  }
+}

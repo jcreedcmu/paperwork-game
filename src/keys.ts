@@ -2,7 +2,7 @@ import { Action } from './action';
 import { logger } from './logger';
 import { editUiAction } from './edit-letter';
 import { Menu, MenuFrame, MenuItem, MenuUiAction, UiStackFrame } from './menu';
-import { WrapItem, Item, State, WrapItemId, findItem, getInbox } from './state';
+import { WrapItem, Item, State, WrapItemId, findItem, getInbox, itemCanHoldMoney } from './state';
 import { mapval } from './util';
 import { formEditUiAction } from './form';
 
@@ -51,8 +51,6 @@ function customBindingsOfItem(state: State, item: Item | undefined, ix: number):
       const bindings: Bindings = {
         'e': { name: 'edit', action: { t: 'editLetter', id: item.id } },
         's': { name: 'send', action: { t: 'send', id: item.id } },
-        '+': { name: 'add money', action: { t: 'addMoney', id: item.id } },
-        '-': { name: 'remove money', action: { t: 'removeMoney', id: item.id } },
       };
       return bindings;
     }
@@ -94,7 +92,13 @@ export function getCustomBindings(state: State, frame: MenuFrame): Bindings {
       else if (state.inv.hand !== undefined) {
         bind[' '] = { name: 'drop', action: { t: 'drop', loc: { t: 'inbox', ix } } };
       }
-      bind['t'] = { name: 'trash', action: { t: 'trash', loc: { t: 'inbox', ix } } };
+      if (item !== undefined) {
+        bind['t'] = { name: 'trash', action: { t: 'trash', loc: { t: 'inbox', ix } } };
+        if (itemCanHoldMoney(item)) {
+          bind['+'] = { name: 'add money', action: { t: 'addMoney', id: item.id } };
+          bind['-'] = { name: 'remove money', action: { t: 'removeMoney', id: item.id } };
+        }
+      }
       return bind;
     }
   }

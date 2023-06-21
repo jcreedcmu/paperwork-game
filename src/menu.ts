@@ -46,12 +46,16 @@ function getInboxMenuItem(item: Item, inboxIndex: number): MenuItem {
         action: { t: 'markUnread', ibix: inboxIndex, k: { t: 'displayDoc', doc: item.doc } }
       };
       break;
-    case 'form':
+    case 'form': {
+      let name = stringOfForm(item.form);
+      if (item.money > 0) {
+        name = `(\$${item.money}) ` + name;
+      }
       return {
-        name: stringOfForm(item.form),
+        name,
         action: { t: 'markUnread', ibix: inboxIndex, k: { t: 'editForm', id: item.id, form: item.form } }
       };
-      break;
+    } break;
     case 'envelope':
       return {
         name: stringOfEnvelope(item),

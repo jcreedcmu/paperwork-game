@@ -1,14 +1,17 @@
 import { TextBuffer } from './buffer';
-import { EnvFormError, envFormErrorContent } from './form';
 import { DisplayFrame } from './menu';
 import { State } from './state';
 
 export type ErrorResponse =
-  | { t: 'envFormError', e: EnvFormError };
+  | { t: 'badNumber', s: string }
+  | { t: 'paymentMismatch', enclosed: number, specified: number }
+  | { t: 'paymentWrong', should: number, actual: number };
 
 function errorResponseContent(e: ErrorResponse): string {
   switch (e.t) {
-    case 'envFormError': return envFormErrorContent(e.e);
+    case 'badNumber': return `Can't parse '${e.s}' as a number.`;
+    case 'paymentMismatch': return `Enclosed $${e.enclosed} but specified $${e.specified}.`;
+    case 'paymentWrong': return `Should have paid $${e.should} but actually paid $${e.actual}.`;
   }
 }
 

@@ -1,5 +1,6 @@
 import { Action, addInboxDoc, addInboxForm, doAction, goBack } from "./action";
 import { TextBuffer } from "./buffer";
+import { ErrorResponse } from "./doc";
 import { State, findItem, setItem } from "./state";
 import { mod, unreachable, clone } from "./util";
 
@@ -19,16 +20,6 @@ export type FormEditUiAction =
   | { t: 'enter' }
   ;
 
-export type EnvFormError =
-  | { t: 'badQuantity', quantityString: string }
-  ;
-
-export function envFormErrorContent(e: EnvFormError) {
-  switch (e.t) {
-    case 'badQuantity': return `Can't parse '${e.quantityString}' as a quantity.`;
-  }
-}
-
 export function formEditUiAction(action: FormEditUiAction): Action {
   return { t: 'formEditUiAction', action }
 }
@@ -46,7 +37,7 @@ export type Form =
   | { t: 'STO-001' }
   | { t: 'ENV-001' }
 
-export type FormItem = { t: 'form', form: Form, formData: string[] };
+export type FormItem = { t: 'form', form: Form, formData: string[], money: number };
 
 export function getLayoutOfForm(form: Form): FormLayout {
   switch (form.t) {
@@ -57,6 +48,7 @@ export function getLayoutOfForm(form: Form): FormLayout {
     ];
     case 'ENV-001': return [
       field('envelopes (qty)'),
+      field('payment enclosed ($)'),
     ];
   }
 }
@@ -181,18 +173,30 @@ export function doFormEditUiAction(state: State, frame: FormEditFrame, action: F
   }
 }
 
+function addError(state: State, errorResponse: ErrorResponse): Action {
+  return addInboxDoc(state, { t: 'error-response', errorResponse });
+}
+
 export function resolveForm(state: State, item: FormItem): Action {
   switch (item.form.t) {
     case 'STO-001': return { t: 'none' };
     case 'ENV-001': {
-      const [quantityString] = item.formData;
+      const [quantityString, paymentString] = item.formData;
       const quantity = parseInt(quantityString);
+      const payment = parseInt(paymentString);
       if (isNaN(quantity)) {
-        return addInboxDoc(state, {
-          t: 'error-response', errorResponse: {
-            t: 'envFormError', e: { t: 'badQuantity', quantityString }
-          }
-        });
+        return addError(state, { t: 'badNumber', s: quantityString });
+      }
+      if (isNaN(payment)) {
+        return addError(state, { t: 'badNumber', s: paymentString });
+      }
+      const enclosed = item.money;
+      if (enclosed != payment) {
+        return addError(state, { t: 'paymentMismatch', enclosed, specified: payment });
+      }
+      const paymentDue = quantity * 2;
+      if (enclosed != paymentDue) {
+        return addError(state, { t: 'paymentWrong', should: paymentDue, actual: enclosed });
       }
       return {
         t: 'addItems', items: [

@@ -4,7 +4,7 @@ import { EditUiAction, doEditUiAction, makeEditFrame } from './edit-letter';
 import { Form, FormEditUiAction, doFormEditUiAction, findFormItem, makeFormEditFrame, resolveForm } from './form';
 import { logger } from './logger';
 import { MenuUiAction, doMenuUiAction } from './menu';
-import { Item, ItemId, LetterItem, Location, State, WrapSubItem, appendToInbox, createItem, deleteAtLocation, findItem, findLetter, getLocation, insertIntoLocation, removeLocation, setInboxUnread, setItem } from './state';
+import { Item, ItemId, LetterItem, Location, State, WrapSubItem, appendToInbox, createItem, deleteAtLocation, findItem, findLetter, getLocation, insertIntoLocation, itemCanHoldMoney, removeLocation, setInboxUnread, setItem } from './state';
 import { adjustResource, collectResources, getResource, setResource } from "./resource";
 import { randElt, unreachable } from './util';
 import { StackDivision, divideStack } from './stack';
@@ -49,7 +49,7 @@ export function addInboxDoc(state: State, doc: Document): Action {
 }
 
 export function addInboxForm(state: State, form: Form): Action {
-  return { t: 'addItems', items: [{ unread: true, item: { t: 'form', form, formData: [] } }] };
+  return { t: 'addItems', items: [{ unread: true, item: { t: 'form', form, formData: [], money: 0 } }] };
 }
 
 const letterPatterns: [RegExp | string, (state: State, letter: LetterItem) => Action][] = [
@@ -189,18 +189,24 @@ export function doAction(state: State, action: Action): void {
     } break;
     case 'addMoney': {
       if (getResource(state, 'cash') > 0) {
-        const letter = findLetter(state, action.id);
+        const item = findItem(state, action.id);
+        if (!itemCanHoldMoney(item)) {
+          throw new Error(`item ${item.id} cannot hold money`);
+        }
         adjustResource(state, 'cash', -1);
-        letter.money++;
-        setItem(state, letter);
+        item.money++;
+        setItem(state, item);
       }
     } break;
     case 'removeMoney': {
-      const letter = findLetter(state, action.id);
-      if (letter.money > 0) {
+      const item = findItem(state, action.id);
+      if (!itemCanHoldMoney(item)) {
+        throw new Error(`item ${item.id} cannot hold money`);
+      }
+      if (item.money > 0) {
         adjustResource(state, 'cash', 1);
-        letter.money--;
-        setItem(state, letter);
+        item.money--;
+        setItem(state, item);
       }
     } break;
     case 'editForm': {

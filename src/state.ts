@@ -43,7 +43,7 @@ export type State = {
   time: number,
   selectedIndex: number | undefined,
   inv: {
-    hand: number | undefined,
+    hand: ItemId | undefined,
     inbox_: WrapItemId[],
     res_: Record<Resource, number>
   },

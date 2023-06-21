@@ -4,7 +4,7 @@ import { EditUiAction, doEditUiAction, makeEditFrame } from './edit-letter';
 import { Form, FormEditUiAction, doFormEditUiAction, findFormItem, makeFormEditFrame, resolveForm } from './form';
 import { logger } from './logger';
 import { MenuUiAction, doMenuUiAction } from './menu';
-import { Item, LetterItem, Location, State, WrapSubItem, appendToInbox, createItem, deleteAtLocation, findItem, findLetter, getLocation, insertIntoLocation, removeLocation, setInboxUnread, setItem } from './state';
+import { Item, ItemId, LetterItem, Location, State, WrapSubItem, appendToInbox, createItem, deleteAtLocation, findItem, findLetter, getLocation, insertIntoLocation, removeLocation, setInboxUnread, setItem } from './state';
 import { adjustResource, collectResources, getResource, setResource } from "./resource";
 import { randElt, unreachable } from './util';
 import { StackDivision, divideStack } from './stack';
@@ -16,27 +16,28 @@ export type Action =
   | { t: 'recycle' }
   | { t: 'purchase' }
   | { t: 'enterInboxMenu' }
-  | { t: 'editLetter', id: number }
+  | { t: 'editLetter', id: ItemId }
   | { t: 'newLetter' }
-  | { t: 'send', id: number }
+  | { t: 'send', id: ItemId }
   | { t: 'back' }
   | { t: 'displayDoc', doc: Document }
-  | { t: 'editForm', form: Form, id: number }
+  | { t: 'editForm', form: Form, id: ItemId }
   | { t: 'debug' }
-  | { t: 'addMoney', id: number }
-  | { t: 'removeMoney', id: number }
+  | { t: 'addMoney', id: ItemId }
+  | { t: 'removeMoney', id: ItemId }
   | { t: 'pickup', loc: Location } // FIXME(#15): does this really need id?
   | { t: 'pickupPart', amount: StackDivision, loc: Location, softFail?: boolean }
   | { t: 'drop', loc: Location }
   | { t: 'none' }
   | { t: 'maybeBack' }
-  | { t: 'setLetterText', id: number | undefined, text: string }
+  | { t: 'setLetterText', id: ItemId | undefined, text: string }
   | { t: 'bigMoney' }
   | { t: 'menuUiAction', action: MenuUiAction }
   | { t: 'editUiAction', action: EditUiAction }
   | { t: 'formEditUiAction', action: FormEditUiAction }
   | { t: 'addItems', items: WrapSubItem[] }
   | { t: 'markUnread', ibix: number, k: Action }
+  | { t: 'trash', loc: Location }
   ;
 
 export function goBack(state: State): void {
@@ -234,6 +235,9 @@ export function doAction(state: State, action: Action): void {
       setInboxUnread(state, action.ibix, false);
       doAction(state, action.k);
     } break;
+    case 'trash':
+      deleteAtLocation(state, action.loc);
+      break;
     default: unreachable(action);
   }
 }

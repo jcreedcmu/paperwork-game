@@ -94,6 +94,7 @@ export function getCustomBindings(state: State, frame: MenuFrame): Bindings {
       else if (state.inv.hand !== undefined) {
         bind[' '] = { name: 'drop', action: { t: 'drop', loc: { t: 'inbox', ix } } };
       }
+      bind['t'] = { name: 'trash', action: { t: 'trash', loc: { t: 'inbox', ix } } };
       return bind;
     }
   }

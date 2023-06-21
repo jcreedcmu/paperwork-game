@@ -13,6 +13,7 @@ export function singleItemOfResource(state: State, res: Resource): SubItem | und
   }
 }
 
+// assumes location holds a stack
 export function divideStack(state: State, loc: Location, stackDivision: StackDivision): ItemId | undefined {
   const item = requireStack(getItemAtLocation(state, loc));
   switch (stackDivision) {

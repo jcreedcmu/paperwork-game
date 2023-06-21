@@ -24,7 +24,8 @@ export type SubItem =
 export type Item = { id: number } & SubItem;
 
 export type Location =
-  | { t: 'inbox', ix: number };
+  | { t: 'inbox', ix: number }
+  | { t: 'rigidContainer', id: number, ix: number };
 
 export type WrapItemId = { unread: boolean, id: number };
 export type WrapItem = { unread: boolean, item: Item };
@@ -128,11 +129,26 @@ export function removeItem(state: State, id: ItemId): void {
   delete state.itemLocs_[id];
 }
 
+// Insertion into rigid containers
+
+function removeFromRigidContainerItem(state: State, item: Item, ix: number): ItemId {
+  throw new Error(`Not implemented yet`);
+}
+
+function insertIntoRigidContainerItem(state: State, item: Item, ix: number, insertee: ItemId): void {
+  throw new Error(`Not implemented yet`);
+}
+
+function getItemIdFromRigidContainerItem(state: State, item: Item, ix: number): ItemId {
+  throw new Error(`Not implemented yet`);
+}
+
 // everything to do with state.inv.inbox_ should be below
 
 export function hasInboxItems(state: State): boolean {
   return state.inv.inbox_.length > 0;
 }
+
 
 export function removeLocation(state: State, loc: Location): ItemId {
   switch (loc.t) {
@@ -145,6 +161,9 @@ export function removeLocation(state: State, loc: Location): ItemId {
         state.itemLocs_[item.id] = { t: 'inbox', ix: loc.ix + ix };
       });
       return id;
+    }
+    case 'rigidContainer': {
+      return removeFromRigidContainerItem(state, findItem(state, loc.id), loc.ix);
     }
   }
 }
@@ -164,8 +183,11 @@ export function insertIntoLocation(state: State, id: number, loc: Location): voi
         state.itemLocs_[item.id] = { t: 'inbox', ix: loc.ix + ix };
       });
     } break;
+    case 'rigidContainer': {
+      insertIntoRigidContainerItem(state, findItem(state, loc.id), loc.ix, id);
+    } break;
     default:
-      unreachable(loc.t);
+      unreachable(loc);
   }
 }
 
@@ -176,10 +198,13 @@ export function appendToInbox(state: State, item: WrapItemId): number {
   return ix;
 }
 
+// assumes location has an item
 export function getItemAtLocation(state: State, location: Location): Item {
   switch (location.t) {
     case 'inbox':
       return findItem(state, state.inv.inbox_[location.ix].id);
+    case 'rigidContainer':
+      return findItem(state, getItemIdFromRigidContainerItem(state, findItem(state, location.id), location.ix));
   }
 }
 

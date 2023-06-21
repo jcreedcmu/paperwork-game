@@ -8,7 +8,7 @@ import { unreachable } from "./util";
 
 export type LetterItem = { t: 'letter', body: string, money: number };
 export type DocItem = { t: 'doc', doc: Document };
-export type EnvelopeItem = { t: 'envelope', size: number, contents: Item[] };
+export type EnvelopeItem = { t: 'envelope', size: number, contents: (ItemId | undefined)[] };
 export type StackItem = { t: 'stack', res: Resource, quantity: number };
 
 // An item, on the other hand, does has a distinct identity, and does
@@ -132,15 +132,57 @@ export function removeItem(state: State, id: ItemId): void {
 // Insertion into rigid containers
 
 function removeFromRigidContainerItem(state: State, item: Item, ix: number): ItemId {
-  throw new Error(`Not implemented yet`);
+  switch (item.t) {
+    case 'envelope': {
+      if (ix < 0 || ix >= item.size) {
+        throw new Error(`Index ${ix} out of bounds for rigid container`);
+      }
+      const itemId = item.contents[ix];
+      if (itemId === undefined) {
+        throw new Error(`Tried to remove empty item`);
+      }
+      item.contents[ix] = undefined;
+      setItem(state, item);
+      return itemId;
+    }
+    default:
+      throw new Error(`Tried to remove from nonrigid container`);
+  }
 }
 
 function insertIntoRigidContainerItem(state: State, item: Item, ix: number, insertee: ItemId): void {
-  throw new Error(`Not implemented yet`);
+  switch (item.t) {
+    case 'envelope': {
+      if (ix < 0 || ix >= item.size) {
+        throw new Error(`Index ${ix} out of bounds for rigid container`);
+      }
+      const itemId = item.contents[ix];
+      if (itemId !== undefined) {
+        throw new Error(`Tried to insert over nonempty item`);
+      }
+      item.contents[ix] = insertee;
+      setItem(state, item);
+    } break;
+    default:
+      throw new Error(`Tried to insert into nonrigid container`);
+  }
 }
 
 function getItemIdFromRigidContainerItem(state: State, item: Item, ix: number): ItemId {
-  throw new Error(`Not implemented yet`);
+  switch (item.t) {
+    case 'envelope': {
+      if (ix < 0 || ix >= item.size) {
+        throw new Error(`Index ${ix} out of bounds for rigid container`);
+      }
+      const itemId = item.contents[ix];
+      if (itemId === undefined) {
+        throw new Error(`Tried to get id of empty item`);
+      }
+      return itemId;
+    }
+    default:
+      throw new Error(`Tried to get id from nonrigid container`);
+  }
 }
 
 // everything to do with state.inv.inbox_ should be below

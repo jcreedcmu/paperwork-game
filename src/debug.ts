@@ -2,6 +2,10 @@ import { ScreenBuffer } from 'terminal-kit';
 import { Action } from './action';
 import { TextBuffer } from './buffer';
 
+export const DEBUG = {
+  key: false,
+};
+
 function delay(ms: number): Promise<void> {
   return new Promise((res, rej) => {
     setTimeout(() => { res(); }, ms);

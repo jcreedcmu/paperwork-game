@@ -5,6 +5,7 @@ import { Menu, MenuFrame, MenuItem, MenuUiAction, UiStackFrame } from './menu';
 import { WrapItem, Item, State, WrapItemId, findItem, getInbox, itemCanHoldMoney, getItemIdFromRigidContainerItem, requireEnvelope, Location } from './state';
 import { mapval } from './util';
 import { formEditUiAction } from './form';
+import { DEBUG } from './debug';
 
 export type DefaultAction =
   | { t: 'const', action: Action }
@@ -12,13 +13,6 @@ export type DefaultAction =
   ;
 
 export type KeyMap = {
-  // ignore all succeeding keymaps with precedence ≤ this.
-  // default: -1
-  skip?: number,
-
-  // precedence. default: 0
-  prec?: number,
-
   // actual keybindings
   bind: Record<string, Action>
 
@@ -87,9 +81,6 @@ function getBindingsOfSelection(state: State, item: Item | undefined, loc: Locat
   else if (state.inv.hand !== undefined) {
     bind[' '] = { name: 'drop', action: { t: 'drop', loc } };
   }
-  else {
-    bind[' '] = { name: 'none', action: { t: 'none' } }; // XXX should be fixed by #25
-  }
   if (item !== undefined) {
     bind['t'] = { name: 'trash', action: { t: 'trash', loc } };
     if (itemCanHoldMoney(item)) {
@@ -125,7 +116,6 @@ function menuKeyMap(state: State, frame: MenuFrame): KeyMap {
 }
 
 const editKeyMap: KeyMap = {
-  skip: 0,
   bind: {
     LEFT: editUiAction({ t: 'left' }),
     RIGHT: editUiAction({ t: 'right' }),
@@ -140,7 +130,6 @@ const editKeyMap: KeyMap = {
 };
 
 const editFormKeyMap: KeyMap = {
-  skip: 0,
   bind: {
     UP: formEditUiAction({ t: 'up' }),
     DOWN: formEditUiAction({ t: 'down' }),
@@ -158,13 +147,12 @@ const editFormKeyMap: KeyMap = {
 };
 
 const displayKeyMap: KeyMap = {
-  skip: 0,
   bind: {},
   def: { t: 'const', action: { t: 'back' } },
 };
 
 const defaultKeyMap: KeyMap = {
-  prec: 1e9, bind: {
+  bind: {
     ESCAPE: { t: 'exit' },
     CTRL_C: { t: 'exit' },
   }
@@ -188,22 +176,21 @@ export function actionOfDefaultBinding(state: State, key: string, def: DefaultAc
 }
 
 export function actionOfKey(state: State, key: string): Action {
-  const keymaps = state.uiStack.map(frame => keyMapOfFrame(state, frame));
-  keymaps.push(defaultKeyMap);
-  logger(state, key);
+  const keymap = keyMapOfFrame(state, state.uiStack[0]);
 
-  let skip = -1;
-  for (const keymap of keymaps) {
-    if ((keymap.prec || 0) <= skip)
-      continue;
-    const m = keymap.bind[key];
+  if (DEBUG.key)
+    logger(state, key);
+
+  const m = keymap.bind[key];
+  if (m !== undefined)
+    return m;
+  if (keymap.def !== undefined) {
+    return actionOfDefaultBinding(state, key, keymap.def);
+  }
+  else {
+    const m = defaultKeyMap.bind[key];
     if (m !== undefined)
       return m;
-    if (keymap.def !== undefined) {
-      return actionOfDefaultBinding(state, key, keymap.def);
-    }
-    skip = Math.max(skip, (keymap.skip ?? -1));
   }
-
   return { t: 'none' };
 }

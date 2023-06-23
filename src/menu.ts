@@ -95,7 +95,7 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
       if (canWriteLetter(state)) {
         menuItems.push({ name: 'new letter', action: { t: 'newLetter' } });
       }
-      if (hasInboxItems(state)) {
+      if (hasInboxItems(state) || state.inv.hand !== undefined) {
         const unreadCount = getInbox(state).filter(x => x.unread).length;
         const unread = unreadCount > 0 ? ` (${unreadCount})` : '';
         menuItems.push({ name: `inbox${unread}...`, action: { t: 'enterInboxMenu' } });

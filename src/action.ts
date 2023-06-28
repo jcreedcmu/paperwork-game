@@ -1,13 +1,14 @@
-import { quit, win } from '.';
+import { quit, win } from './basic-term';
 import { Document } from './doc';
 import { EditUiAction, doEditUiAction, makeEditFrame } from './edit-letter';
-import { Form, FormEditUiAction, doFormEditUiAction, findFormItem, makeFormEditFrame, resolveForm } from './form';
+import { Form, FormEditSaveCont, FormEditUiAction, doFormEditUiAction, findFormItem, getLayoutOfForm, makeFormEditFrame, resolveForm } from './form';
 import { logger } from './logger';
 import { MenuUiAction, doMenuUiAction } from './menu';
-import { Item, ItemId, LetterItem, Location, State, WrapSubItem, appendToInbox, createItem, deleteAtLocation, findItem, findLetter, getLocation, insertIntoLocation, itemCanHoldMoney, removeLocation, setInboxUnread, setItem } from './state';
+import { Item, ItemId, LetterItem, Location, State, WrapSubItem, appendToInbox, createItem, deleteAtLocation, findItem, findLetter, getLocation, insertIntoLocation, itemCanHoldMoney, removeLocation, requireEnvelope, setInboxUnread, setItem } from './state';
 import { adjustResource, collectResources, getResource, setResource } from "./resource";
 import { randElt, unreachable } from './util';
 import { StackDivision, divideStack } from './stack';
+import { DEBUG } from './debug';
 
 export type Action =
   | { t: 'sleep' }
@@ -21,7 +22,7 @@ export type Action =
   | { t: 'send', id: ItemId }
   | { t: 'back' }
   | { t: 'displayDoc', doc: Document }
-  | { t: 'editForm', form: Form, id: ItemId }
+  | { t: 'editForm', form: Form, id: ItemId, saveCont: FormEditSaveCont }
   | { t: 'debug' }
   | { t: 'addMoney', id: ItemId }
   | { t: 'removeMoney', id: ItemId }
@@ -95,6 +96,9 @@ export function resolveFutures(state: State): void {
 }
 
 export function doAction(state: State, action: Action): void {
+  if (DEBUG.actions) {
+    logger(state, JSON.stringify(['doAction', state, action]));
+  }
   switch (action.t) {
     case 'exit': quit(); break;
     case 'sleep':
@@ -212,7 +216,23 @@ export function doAction(state: State, action: Action): void {
       }
     } break;
     case 'editForm': {
-      state.uiStack.unshift(makeFormEditFrame(action.id, findFormItem(state, action.id)));
+      switch (action.saveCont.t) {
+        case 'regularForm':
+          state.uiStack.unshift(makeFormEditFrame(action.id, findFormItem(state, action.id)));
+          break;
+        case 'envelope':
+          const item = requireEnvelope(findItem(state, action.id));
+          state.uiStack.unshift({
+            t: 'editForm', id: action.id,
+            layout: getLayoutOfForm({ t: 'Envelope Address' }),
+            curFieldIx: 0,
+            cursorPos: 0,
+            form: { t: 'Envelope Address' },
+            formData: [item.address],
+            saveCont: { t: 'envelope' }
+          });
+          break;
+      }
     } break;
     case 'pickup': {
       if (state.inv.hand !== undefined)

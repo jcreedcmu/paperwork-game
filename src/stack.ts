@@ -8,7 +8,7 @@ export type StackDivision =
 
 export function singleItemOfResource(state: State, res: Resource): SubItem | undefined {
   switch (res) {
-    case 'envelope': return { t: 'envelope', contents: [], size: 3 };
+    case 'envelope': return { t: 'envelope', address: '', contents: [], size: 3 };
     default: return undefined;
   }
 }

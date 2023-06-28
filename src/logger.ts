@@ -2,11 +2,21 @@ import { ScreenBuffer } from 'terminal-kit';
 import { WIDTH } from './render';
 import { State } from './state';
 import { TextBuffer } from './buffer';
-
+import { DEBUG } from './debug';
+import * as fs from 'fs';
 export type LogLine = { time: number, msg: string };
+let outStream: fs.WriteStream;
+if (DEBUG.logToFile) {
+  outStream = fs.createWriteStream('/tmp/log', 'utf8');
+}
 
 export function logger(state: State, msg: string): void {
-  state.log.push({ time: state.time, msg: msg });
+  if (DEBUG.logToFile) {
+    outStream.write(msg + '\n');
+  }
+  else {
+    state.log.push({ time: state.time, msg: msg });
+  }
 }
 
 const LOG_COL = WIDTH - 20;

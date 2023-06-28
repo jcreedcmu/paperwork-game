@@ -4,6 +4,9 @@ import { TextBuffer } from './buffer';
 
 export const DEBUG = {
   key: false,
+  initialItems: false,
+  logToFile: false,
+  actions: false,
 };
 
 function delay(ms: number): Promise<void> {

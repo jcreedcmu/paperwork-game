@@ -1,14 +1,21 @@
-import { Resource, getResource, resources } from "./resource";
 import { Action } from "./action";
 import { Document } from "./doc";
-import { Form, FormItem } from "./form";
+import { FormItem } from "./form";
 import { LogLine } from "./logger";
 import { UiStackFrame } from "./menu";
+import { Resource, getResource, resources } from "./resource";
 import { unreachable } from "./util";
 
 export type LetterItem = { t: 'letter', body: string, money: number };
 export type DocItem = { t: 'doc', doc: Document };
-export type EnvelopeItem = { t: 'envelope', size: number, contents: (ItemId | undefined)[] };
+
+export type EnvelopeItem = {
+  t: 'envelope',
+  address: string,
+  size: number,
+  contents: (ItemId | undefined)[]
+};
+
 export type OtherRigidContainerItem = { t: 'otherRigidContainer', size: number, contents: (ItemId | undefined)[] };
 export type StackItem = { t: 'stack', res: Resource, quantity: number };
 
@@ -92,6 +99,13 @@ export function isRigidContainer(item: SubItem): item is RigidContainerItem {
 
 export function requireRigidContainer(item: Item): RigidContainerItem & { id: number } {
   if (!isRigidContainer(item)) {
+    throw new Error(`item with id ${item.id} not a rigid container`);
+  }
+  return item;
+}
+
+export function requireEnvelope(item: Item): EnvelopeItem & { id: number } {
+  if (item.t !== 'envelope') {
     throw new Error(`item with id ${item.id} not an envelope`);
   }
   return item;

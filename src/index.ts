@@ -1,24 +1,10 @@
-import { Terminal, terminal } from 'terminal-kit';
 import { doAction, resolveFutures } from './action';
+import { term } from './basic-term';
+import { TextBuffer } from './buffer';
+import { DEBUG } from './debug';
 import { actionOfKey } from './keys';
 import { HEIGHT, WIDTH, render } from './render';
 import { initState } from './state';
-import { TextBuffer } from './buffer';
-
-export const term: Terminal = terminal;
-
-export function quit() {
-  term.clear();
-  term.reset();
-  process.exit(0);
-}
-
-export function win() {
-  term.clear();
-  term.reset();
-  term.green('you win!\n');
-  process.exit(0);
-}
 
 declare module "terminal-kit" {
   class ScreenBuffer {
@@ -36,6 +22,18 @@ async function go() {
   term.clear();
 
   const state = initState();
+  if (DEBUG.initialItems) {
+    doAction(state, {
+      t: 'addItems', items: [{
+        unread: false, item: {
+          t: 'envelope',
+          address: '',
+          contents: [],
+          size: 3,
+        }
+      }]
+    });
+  }
   const buf = new TextBuffer(WIDTH, HEIGHT, term);
 
   render(buf, state);

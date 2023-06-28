@@ -56,7 +56,7 @@ function getItemMenuItem(item: Item, loc: Location): MenuItem {
       if (item.money > 0) {
         name = `(\$${item.money}) ` + name;
       }
-      let action: Action = { t: 'editForm', id: item.id, form: item.form };
+      let action: Action = { t: 'editForm', id: item.id, form: item.form, saveCont: { t: 'regularForm' } };
       if (loc.t == 'inbox') {
         action = { t: 'markUnread', ibix: loc.ix, k: action };
       }

@@ -1,7 +1,7 @@
 import { Action, addInboxDoc, addInboxForm, doAction, goBack } from "./action";
 import { TextBuffer } from "./buffer";
 import { ErrorResponse } from "./doc";
-import { State, findItem, setItem } from "./state";
+import { State, findItem, requireEnvelope, requireRigidContainer, setItem } from "./state";
 import { mod, unreachable, clone } from "./util";
 
 export type FormEditUiAction =
@@ -36,6 +36,7 @@ export type FormLayout = FormLayoutEntry[];
 export type Form =
   | { t: 'STO-001' }
   | { t: 'ENV-001' }
+  | { t: 'Envelope Address' }
 
 export type FormItem = { t: 'form', form: Form, formData: string[], money: number };
 
@@ -50,6 +51,9 @@ export function getLayoutOfForm(form: Form): FormLayout {
       field('envelopes (qty)'),
       field('payment enclosed ($)'),
     ];
+    case 'Envelope Address': return [
+      field('address'),
+    ];
   }
 }
 
@@ -57,8 +61,14 @@ export function stringOfForm(form: Form): string {
   switch (form.t) {
     case 'STO-001': return 'STO-001';
     case 'ENV-001': return 'ENV-001';
+    case 'Envelope Address': return 'Envelope Address'; // XXX probably shouldn't arise?
   }
 }
+
+export type FormEditSaveCont =
+  | { t: 'regularForm' }
+  | { t: 'envelope' }
+  ;
 
 export type FormEditFrame = {
   t: 'editForm',
@@ -68,6 +78,7 @@ export type FormEditFrame = {
   formData: string[],
   curFieldIx: number,
   cursorPos: number,
+  saveCont: FormEditSaveCont,
 };
 
 export function makeFormEditFrame(id: number | undefined, formItem: FormItem): FormEditFrame {
@@ -78,7 +89,8 @@ export function makeFormEditFrame(id: number | undefined, formItem: FormItem): F
     formData: clone(formItem.formData),
     form: formItem.form,
     curFieldIx: 0,
-    cursorPos: 0
+    cursorPos: 0,
+    saveCont: { t: 'regularForm' },
   }
 }
 
@@ -141,10 +153,20 @@ export function doFormEditUiAction(state: State, frame: FormEditFrame, action: F
       if (frame.id === undefined) {
         throw new Error(`didn't expect id in form submission to be undefined`);
       }
-      const item = findFormItem(state, frame.id);
-      item.formData = frame.formData;
-      setItem(state, item);
+      switch (frame.saveCont.t) {
+        case 'regularForm': {
+          const item = findFormItem(state, frame.id);
+          item.formData = frame.formData;
+          setItem(state, item);
+        } break;
+        case 'envelope': {
+          const item = requireEnvelope(findItem(state, frame.id));
+          item.address = frame.formData[0];
+          setItem(state, item);
+        } break;
+      }
       goBack(state);
+
     } break;
     case 'insert': {
       if (action.key.length == 1) {
@@ -179,6 +201,7 @@ function addError(state: State, errorResponse: ErrorResponse): Action {
 
 export function resolveForm(state: State, item: FormItem): Action {
   switch (item.form.t) {
+    case 'Envelope Address': throw new Error(`Shouldn't be possible to submit envelope address as form`);
     case 'STO-001': return { t: 'none' };
     case 'ENV-001': {
       const [quantityString, paymentString] = item.formData;

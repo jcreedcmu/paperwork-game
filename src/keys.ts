@@ -1,11 +1,11 @@
 import { Action } from './action';
-import { logger } from './logger';
-import { editUiAction } from './edit-letter';
-import { Menu, MenuFrame, MenuItem, MenuUiAction, UiStackFrame } from './menu';
-import { WrapItem, Item, State, WrapItemId, findItem, getInbox, itemCanHoldMoney, getItemIdFromRigidContainerItem, requireRigidContainer, Location } from './state';
-import { mapval } from './util';
-import { formEditUiAction } from './form';
 import { DEBUG } from './debug';
+import { editUiAction } from './edit-letter';
+import { formEditUiAction } from './form';
+import { logger } from './logger';
+import { MenuFrame, MenuItem, MenuUiAction, UiStackFrame } from './menu';
+import { Item, Location, State, WrapItem, WrapItemId, findItem, getInbox, itemCanHoldMoney, requireRigidContainer } from './state';
+import { mapval } from './util';
 
 export type DefaultAction =
   | { t: 'const', action: Action }
@@ -55,7 +55,16 @@ function customBindingsOfItem(state: State, item: Item | undefined, loc: Locatio
       };
       return bindings;
     }
-    case 'envelope': return {};
+    case 'envelope': return {
+      'a': {
+        name: 'Address', action: {
+          t: 'editForm',
+          form: { t: 'Envelope Address' },
+          id: item.id,
+          saveCont: { t: 'envelope' },
+        }
+      }
+    };
     case 'otherRigidContainer': return {};
     case 'stack':
       if (state.inv.hand === undefined)

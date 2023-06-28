@@ -16,6 +16,7 @@ export function stringOfItem(item: Item): string {
     case 'form': return stringOfForm(item.form);
     case 'envelope': return stringOfEnvelope(item);
     case 'stack': return stringOfStack(item);
+    case 'otherRigidContainer': return 'rigid container';
   }
 }
 

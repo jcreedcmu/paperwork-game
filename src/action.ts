@@ -38,7 +38,7 @@ export type Action =
   | { t: 'addItems', items: WrapSubItem[] }
   | { t: 'markUnread', ibix: number, k: Action }
   | { t: 'trash', loc: Location }
-  | { t: 'enterContainerMenu', id: ItemId }
+  | { t: 'enterRigidContainerMenu', id: ItemId }
   ;
 
 export function goBack(state: State): void {
@@ -71,10 +71,11 @@ function resolveSentItem(state: State, item: Item): Action {
       }
       return { t: 'none' };
     case 'form': return resolveForm(state, item);
+    case 'envelope': return { t: 'none' };
 
     // shouldn't be able to send any of these
     case 'doc': return { t: 'none' };
-    case 'envelope': return { t: 'none' };
+    case 'otherRigidContainer': return { t: 'none' };
     case 'stack': return { t: 'none' };
   }
 }
@@ -245,8 +246,8 @@ export function doAction(state: State, action: Action): void {
     case 'trash':
       deleteAtLocation(state, action.loc);
       break;
-    case 'enterContainerMenu':
-      state.uiStack.unshift({ t: 'menu', which: { t: 'container', id: action.id }, ix: 0 });
+    case 'enterRigidContainerMenu':
+      state.uiStack.unshift({ t: 'menu', which: { t: 'rigidContainer', id: action.id }, ix: 0 });
       break;
     default: unreachable(action);
   }

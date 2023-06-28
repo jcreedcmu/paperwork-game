@@ -2,7 +2,7 @@ import { ScreenBuffer } from 'terminal-kit';
 import { Action, doAction } from './action';
 import { Document, stringOfDoc } from './doc';
 import { EditFrame } from './edit-letter';
-import { Item, ItemId, State, WrapItemId, canWriteLetter, findItem, getInbox, hasInboxItems, requireEnvelope, requireStack, Location } from './state';
+import { Item, ItemId, State, WrapItemId, canWriteLetter, findItem, getInbox, hasInboxItems, requireRigidContainer, requireStack, Location } from './state';
 import { mod, unreachable } from './util';
 import { getCustomBindings } from './keys';
 import { TextBuffer } from './buffer';
@@ -13,7 +13,7 @@ import { getResource } from './resource';
 export type Menu =
   | { t: 'main' }
   | { t: 'inbox' }
-  | { t: 'container', id: number }
+  | { t: 'rigidContainer', id: number }
   ;
 
 export type DisplayFrame = { t: 'display', which: Document };
@@ -65,7 +65,7 @@ function getItemMenuItem(item: Item, loc: Location): MenuItem {
     case 'envelope':
       return {
         name: stringOfEnvelope(item),
-        action: { t: 'enterContainerMenu', id: item.id }
+        action: { t: 'enterRigidContainerMenu', id: item.id }
       };
       break;
     case 'stack':
@@ -74,6 +74,11 @@ function getItemMenuItem(item: Item, loc: Location): MenuItem {
         action: { t: 'pickupPart', amount: 'one', softFail: true, loc }
       };
       break;
+    case 'otherRigidContainer':
+      return {
+        name: 'otherRigidContainer',
+        action: { t: 'none' },
+      }
   }
 }
 
@@ -114,10 +119,10 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
       menuItems.push({ name: '  <-', action: { t: 'back' } });
       return menuItems;
     }
-    case 'container': {
+    case 'rigidContainer': {
       const menuItems: MenuItem[] = [];
 
-      const item = requireEnvelope(findItem(state, frame.which.id));
+      const item = requireRigidContainer(findItem(state, frame.which.id));
 
       for (let ix = 0; ix < item.size; ix++) {
         const itemId = item.contents[ix];
@@ -142,7 +147,7 @@ function getMenuTitle(frame: MenuFrame): string {
   switch (frame.which.t) {
     case 'main': return 'MAIN MENU';
     case 'inbox': return 'INBOX MENU';
-    case 'container': return 'CONTAINER MENU';
+    case 'rigidContainer': return 'CONTAINER MENU';
   }
 }
 

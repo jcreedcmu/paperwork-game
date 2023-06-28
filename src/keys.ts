@@ -2,7 +2,7 @@ import { Action } from './action';
 import { logger } from './logger';
 import { editUiAction } from './edit-letter';
 import { Menu, MenuFrame, MenuItem, MenuUiAction, UiStackFrame } from './menu';
-import { WrapItem, Item, State, WrapItemId, findItem, getInbox, itemCanHoldMoney, getItemIdFromRigidContainerItem, requireEnvelope, Location } from './state';
+import { WrapItem, Item, State, WrapItemId, findItem, getInbox, itemCanHoldMoney, getItemIdFromRigidContainerItem, requireRigidContainer, Location } from './state';
 import { mapval } from './util';
 import { formEditUiAction } from './form';
 import { DEBUG } from './debug';
@@ -56,6 +56,7 @@ function customBindingsOfItem(state: State, item: Item | undefined, loc: Locatio
       return bindings;
     }
     case 'envelope': return {};
+    case 'otherRigidContainer': return {};
     case 'stack':
       if (state.inv.hand === undefined)
         return {
@@ -99,10 +100,10 @@ export function getCustomBindings(state: State, frame: MenuFrame): Bindings {
       const item = getSelectedInboxItem(state, frame)?.item;
       return getBindingsOfSelection(state, item, { t: 'inbox', ix });
     }
-    case 'container': {
+    case 'rigidContainer': {
       const ix = frame.ix;
       const containerId = frame.which.id;
-      const container = requireEnvelope(findItem(state, containerId));
+      const container = requireRigidContainer(findItem(state, containerId));
       const selectedItemId = container.contents[ix];
       const item = selectedItemId === undefined ? undefined : findItem(state, selectedItemId);
       return getBindingsOfSelection(state, item, { t: 'rigidContainer', id: containerId, ix });

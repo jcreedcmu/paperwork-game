@@ -9,6 +9,7 @@ import { unreachable } from "./util";
 export type LetterItem = { t: 'letter', body: string, money: number };
 export type DocItem = { t: 'doc', doc: Document };
 export type EnvelopeItem = { t: 'envelope', size: number, contents: (ItemId | undefined)[] };
+export type OtherRigidContainerItem = { t: 'otherRigidContainer', size: number, contents: (ItemId | undefined)[] };
 export type StackItem = { t: 'stack', res: Resource, quantity: number };
 
 // An item, on the other hand, does has a distinct identity, and does
@@ -17,9 +18,15 @@ export type SubItem =
   | LetterItem
   | DocItem
   | FormItem
-  | EnvelopeItem
+  | RigidContainerItem
   | StackItem
   ;
+
+export type RigidContainerItem =
+  | EnvelopeItem
+  | OtherRigidContainerItem
+  ;
+// potentially other disjuncts here
 
 export type Item = { id: number } & SubItem;
 
@@ -79,8 +86,12 @@ export function requireStack(item: Item): StackItem & { id: number } {
   return item;
 }
 
-export function requireEnvelope(item: Item): EnvelopeItem & { id: number } {
-  if (item.t != 'envelope') {
+export function isRigidContainer(item: SubItem): item is RigidContainerItem {
+  return item.t == 'envelope' || item.t == 'otherRigidContainer';
+}
+
+export function requireRigidContainer(item: Item): RigidContainerItem & { id: number } {
+  if (!isRigidContainer(item)) {
     throw new Error(`item with id ${item.id} not an envelope`);
   }
   return item;
@@ -283,5 +294,6 @@ export function itemCanHoldMoney(item: Item): item is (FormItem | LetterItem) & 
     case 'form': return true;
     case 'envelope': return false;
     case 'stack': return false;
+    case 'otherRigidContainer': return false;
   }
 }

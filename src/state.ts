@@ -174,6 +174,7 @@ function removeFromRigidContainerItem(state: State, item: Item, ix: number): Ite
         throw new Error(`Tried to remove empty item`);
       }
       item.contents[ix] = undefined;
+      state.itemLocs_[itemId] = undefined;
       setItem(state, item);
       return itemId;
     }
@@ -192,6 +193,7 @@ function insertIntoRigidContainerItem(state: State, item: Item, ix: number, inse
       if (itemId !== undefined) {
         throw new Error(`Tried to insert over nonempty item`);
       }
+      state.itemLocs_[insertee] = { t: 'rigidContainer', id: item.id, ix: ix };
       item.contents[ix] = insertee;
       setItem(state, item);
     } break;

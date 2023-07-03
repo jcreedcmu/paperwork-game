@@ -48,6 +48,10 @@ export type WrapSubItem = { unread: boolean, item: SubItem };
 export type Future = { time: number, action: Action };
 
 export type ItemId = number;
+
+export const skills = ['translation', 'cooking', 'notary', 'writing'] as const;
+export type Skill = (typeof skills)[number];
+
 export type State = {
   items_: Record<ItemId, SubItem>,
   itemLocs_: Record<ItemId, Location | undefined>,
@@ -58,6 +62,7 @@ export type State = {
   time: number,
   selectedIndex: number | undefined,
   inv: {
+    skills: Record<Skill, number>, // number is the "level"
     hand: ItemId | undefined,
     inbox_: WrapItemId[],
     res_: Record<Resource, number>
@@ -75,6 +80,7 @@ export function initState(): State {
     idCounter: 0,
     time: 0,
     inv: {
+      skills: Object.fromEntries(skills.map(x => [x, 0])) as Record<Skill, number>,
       hand: undefined,
       inbox_: [],
       res_: Object.fromEntries(resources.map(x => [x, 0])) as Record<Resource, number>

@@ -161,6 +161,11 @@ const displayKeyMap: KeyMap = {
   def: { t: 'const', action: { t: 'back' } },
 };
 
+const skillsKeyMap: KeyMap = {
+  bind: {},
+  def: { t: 'const', action: { t: 'back' } },
+};
+
 const defaultKeyMap: KeyMap = {
   bind: {
     ESCAPE: { t: 'exit' },
@@ -175,6 +180,7 @@ function keyMapOfFrame(state: State, frame: UiStackFrame): KeyMap {
     case 'edit': return editKeyMap;
     case 'display': return displayKeyMap;
     case 'editForm': return editFormKeyMap;
+    case 'skills': return skillsKeyMap;
   }
 }
 

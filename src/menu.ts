@@ -1,14 +1,14 @@
-import { ScreenBuffer } from 'terminal-kit';
-import { Action, doAction } from './action';
+import { Action, doAction, enterInboxMenu, enterRigidContainerMenu, enterSkillsMenu } from './action';
+import { TextBuffer } from './buffer';
 import { Document, stringOfDoc } from './doc';
 import { EditFrame } from './edit-letter';
-import { Item, ItemId, State, WrapItemId, canWriteLetter, findItem, getInbox, hasInboxItems, requireRigidContainer, requireStack, Location } from './state';
-import { mod, unreachable } from './util';
-import { getCustomBindings } from './keys';
-import { TextBuffer } from './buffer';
 import { FormEditFrame, stringOfForm } from './form';
-import { stringOfEnvelope, stringOfItem, stringOfStack } from './render';
+import { getCustomBindings } from './keys';
+import { stringOfEnvelope, stringOfStack } from './render';
 import { getResource } from './resource';
+import { SkillsFrame } from './skills';
+import { Item, Location, State, canWriteLetter, findItem, getInbox, hasInboxItems, requireRigidContainer } from './state';
+import { mod } from './util';
 
 export type Menu =
   | { t: 'main' }
@@ -25,6 +25,7 @@ export type UiStackFrame =
   | MenuFrame
   | EditFrame
   | DisplayFrame
+  | SkillsFrame
   | FormEditFrame;
 
 export type MenuItem = { name: string, action: Action };
@@ -65,7 +66,7 @@ function getItemMenuItem(item: Item, loc: Location): MenuItem {
     case 'envelope':
       return {
         name: stringOfEnvelope(item),
-        action: { t: 'enterRigidContainerMenu', id: item.id }
+        action: enterRigidContainerMenu(item.id)
       };
       break;
     case 'stack':
@@ -103,8 +104,9 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
       if (hasInboxItems(state) || state.inv.hand !== undefined) {
         const unreadCount = getInbox(state).filter(x => x.unread).length;
         const unread = unreadCount > 0 ? ` (${unreadCount})` : '';
-        menuItems.push({ name: `inbox${unread}...`, action: { t: 'enterInboxMenu' } });
+        menuItems.push({ name: `inbox${unread}...`, action: enterInboxMenu() });
       }
+      menuItems.push({ name: 'skills', action: enterSkillsMenu() });
       menuItems.push({ name: 'exit', action: { t: 'exit' } });
       return menuItems;
     }

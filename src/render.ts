@@ -7,6 +7,7 @@ import { UiStackFrame, renderMenu } from './menu';
 import { EnvelopeItem, Item, StackItem, State, findItem, getInbox } from './state';
 import { getResource, resources } from "./resource";
 import { unreachable } from './util';
+import { renderSkills } from './skills';
 
 export const STATUS_COLUMN = 30;
 export function stringOfItem(item: Item): string {
@@ -66,6 +67,7 @@ function renderStateForFrame(frame: UiStackFrame): boolean {
     case 'display': return false;
     case 'debug': return false;
     case 'editForm': return false;
+    case 'skills': return false;
   }
 }
 
@@ -77,6 +79,7 @@ function renderToBuffer(buf: TextBuffer, state: State): void {
     case 'edit': renderEditPane(buf, state, frame); break;
     case 'display': renderDisplay(buf, state, frame); break;
     case 'editForm': renderFormEditPane(buf, state, frame); break;
+    case 'skills': renderSkills(buf, state, frame); break;
     default:
       unreachable(frame);
   }
@@ -96,6 +99,7 @@ function showCursorOfState(state: State): boolean {
     case 'menu': return false;
     case 'display': return false;
     case 'editForm': return showCursorInForm(frame);
+    case 'skills': return false;
   }
 }
 

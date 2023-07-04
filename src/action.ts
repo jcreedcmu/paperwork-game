@@ -3,7 +3,7 @@ import { Document } from './doc';
 import { EditUiAction, doEditUiAction, makeEditFrame } from './edit-letter';
 import { Form, FormEditSaveCont, FormEditUiAction, doFormEditUiAction, findFormItem, getLayoutOfForm, makeFormEditFrame, resolveForm } from './form';
 import { logger } from './logger';
-import { MenuUiAction, doMenuUiAction } from './menu';
+import { MenuFrame, MenuUiAction, UiStackFrame, doMenuUiAction } from './menu';
 import { Item, ItemId, LetterItem, Location, State, WrapSubItem, appendToInbox, createItem, deleteAtLocation, findItem, findLetter, getLocation, insertIntoLocation, itemCanHoldMoney, removeLocation, requireEnvelope, setInboxUnread, setItem } from './state';
 import { adjustResource, collectResources, getResource, setResource } from "./resource";
 import { randElt, unreachable } from './util';
@@ -16,7 +16,6 @@ export type Action =
   | { t: 'exit' }
   | { t: 'recycle' }
   | { t: 'purchase' }
-  | { t: 'enterInboxMenu' }
   | { t: 'editLetter', id: ItemId }
   | { t: 'newLetter' }
   | { t: 'send', id: ItemId }
@@ -39,7 +38,7 @@ export type Action =
   | { t: 'addItems', items: WrapSubItem[] }
   | { t: 'markUnread', ibix: number, k: Action }
   | { t: 'trash', loc: Location }
-  | { t: 'enterRigidContainerMenu', id: ItemId }
+  | { t: 'enterUi', frame: UiStackFrame }
   ;
 
 export function goBack(state: State): void {
@@ -93,6 +92,18 @@ export function resolveFutures(state: State): void {
   for (const f of fsNow) {
     doAction(state, f.action);
   }
+}
+
+export function enterRigidContainerMenu(id: ItemId): Action {
+  return { t: 'enterUi', frame: { t: 'menu', which: { t: 'rigidContainer', id }, ix: 0 } };
+}
+
+export function enterInboxMenu(): Action {
+  return { t: 'enterUi', frame: { t: 'menu', which: { t: 'inbox' }, ix: 0 } };
+}
+
+export function enterSkillsMenu(): Action {
+  return { t: 'enterUi', frame: { t: 'skills' } };
 }
 
 export function doAction(state: State, action: Action): void {
@@ -156,9 +167,6 @@ export function doAction(state: State, action: Action): void {
         appendToInbox(state, { unread: wi.unread, id });
       });
     } break;
-    case 'enterInboxMenu':
-      state.uiStack.unshift({ t: 'menu', which: { t: 'inbox' }, ix: 0 });
-      break;
     case 'displayDoc':
       state.uiStack.unshift({ t: 'display', which: action.doc });
       break;
@@ -266,8 +274,8 @@ export function doAction(state: State, action: Action): void {
     case 'trash':
       deleteAtLocation(state, action.loc);
       break;
-    case 'enterRigidContainerMenu':
-      state.uiStack.unshift({ t: 'menu', which: { t: 'rigidContainer', id: action.id }, ix: 0 });
+    case 'enterUi':
+      state.uiStack.unshift(action.frame);
       break;
     default: unreachable(action);
   }

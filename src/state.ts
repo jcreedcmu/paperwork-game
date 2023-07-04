@@ -4,6 +4,7 @@ import { FormItem } from "./form";
 import { LogLine } from "./logger";
 import { UiStackFrame } from "./menu";
 import { Resource, getResource, resources } from "./resource";
+import { Skill, Skills, initSkills, skills } from "./skills";
 import { unreachable } from "./util";
 
 export type LetterItem = { t: 'letter', body: string, money: number };
@@ -49,9 +50,6 @@ export type Future = { time: number, action: Action };
 
 export type ItemId = number;
 
-export const skills = ['translation', 'cooking', 'notary', 'writing'] as const;
-export type Skill = (typeof skills)[number];
-
 export type State = {
   items_: Record<ItemId, SubItem>,
   itemLocs_: Record<ItemId, Location | undefined>,
@@ -62,7 +60,7 @@ export type State = {
   time: number,
   selectedIndex: number | undefined,
   inv: {
-    skills: Record<Skill, number>, // number is the "level"
+    skills: Skills,
     hand: ItemId | undefined,
     inbox_: WrapItemId[],
     res_: Record<Resource, number>
@@ -80,7 +78,7 @@ export function initState(): State {
     idCounter: 0,
     time: 0,
     inv: {
-      skills: Object.fromEntries(skills.map(x => [x, 0])) as Record<Skill, number>,
+      skills: initSkills(),
       hand: undefined,
       inbox_: [],
       res_: Object.fromEntries(resources.map(x => [x, 0])) as Record<Resource, number>

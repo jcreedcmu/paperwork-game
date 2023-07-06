@@ -4,7 +4,7 @@ import { editUiAction } from './edit-letter';
 import { formEditUiAction } from './form';
 import { logger } from './logger';
 import { MenuFrame, MenuItem, MenuUiAction, UiStackFrame } from './menu';
-import { Item, Location, State, WrapItem, WrapItemId, findItem, getInbox, itemCanHoldMoney, requireRigidContainer } from './state';
+import { Item, Location, State, WrapItem, WrapItemId, findItem, getInbox, itemCanHoldMoney, requireFlexContainer, requireRigidContainer } from './state';
 import { mapval } from './util';
 
 export type DefaultAction =
@@ -66,6 +66,7 @@ function customBindingsOfItem(state: State, item: Item | undefined, loc: Locatio
       }
     };
     case 'otherRigidContainer': return {};
+    case 'flexContainer': return {};
     case 'stack':
       if (state.inv.hand === undefined)
         return {
@@ -116,6 +117,14 @@ export function getCustomBindings(state: State, frame: MenuFrame): Bindings {
       const selectedItemId = container.contents[ix];
       const item = selectedItemId === undefined ? undefined : findItem(state, selectedItemId);
       return getBindingsOfSelection(state, item, { t: 'rigidContainer', id: containerId, ix });
+    }
+    case 'flexContainer': {
+      const ix = frame.ix;
+      const containerId = frame.which.id;
+      const container = requireFlexContainer(findItem(state, containerId));
+      const selectedItemId = container.contents[ix];
+      const item = selectedItemId === undefined ? undefined : findItem(state, selectedItemId);
+      return getBindingsOfSelection(state, item, { t: 'flexContainer', id: containerId, ix });
     }
   }
 }

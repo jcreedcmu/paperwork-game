@@ -17,6 +17,11 @@ export type EnvelopeItem = {
   contents: (ItemId | undefined)[]
 };
 
+export type FlexContainerItem = {
+  t: 'flexContainer',
+  contents: ItemId[]
+};
+
 export type OtherRigidContainerItem = { t: 'otherRigidContainer', size: number, contents: (ItemId | undefined)[] };
 export type StackItem = { t: 'stack', res: Resource, quantity: number };
 
@@ -27,6 +32,7 @@ export type SubItem =
   | DocItem
   | FormItem
   | RigidContainerItem
+  | FlexContainerItem
   | StackItem
   ;
 
@@ -40,7 +46,8 @@ export type Item = { id: number } & SubItem;
 
 export type Location =
   | { t: 'inbox', ix: number }
-  | { t: 'rigidContainer', id: number, ix: number };
+  | { t: 'rigidContainer', id: number, ix: number }
+  | { t: 'flexContainer', id: number, ix: number };
 
 export type WrapItemId = { unread: boolean, id: number };
 export type WrapItem = { unread: boolean, item: Item };
@@ -101,9 +108,20 @@ export function isRigidContainer(item: SubItem): item is RigidContainerItem {
   return item.t == 'envelope' || item.t == 'otherRigidContainer';
 }
 
+export function isFlexContainer(item: SubItem): item is FlexContainerItem {
+  return item.t == 'flexContainer';
+}
+
 export function requireRigidContainer(item: Item): RigidContainerItem & { id: number } {
   if (!isRigidContainer(item)) {
     throw new Error(`item with id ${item.id} not a rigid container`);
+  }
+  return item;
+}
+
+export function requireFlexContainer(item: Item): FlexContainerItem & { id: number } {
+  if (!isFlexContainer(item)) {
+    throw new Error(`item with id ${item.id} not a flex container`);
   }
   return item;
 }
@@ -223,6 +241,19 @@ export function getItemIdFromRigidContainerItem(state: State, item: Item, ix: nu
   }
 }
 
+export function getItemIdFromFlexContainerItem(state: State, item: Item, ix: number): ItemId {
+  switch (item.t) {
+    case 'flexContainer': {
+      if (ix < 0 || ix >= item.contents.length) {
+        throw new Error(`Index ${ix} out of bounds for flex container`);
+      }
+      return item.contents[ix];
+    }
+    default:
+      throw new Error(`Tried to get id from nonflex container`);
+  }
+}
+
 // everything to do with state.inv.inbox_ should be below
 
 export function hasInboxItems(state: State): boolean {
@@ -239,6 +270,17 @@ export function removeLocation(state: State, loc: Location): ItemId {
       // adjust tail
       inbox.slice(loc.ix).forEach((item, ix) => {
         state.itemLocs_[item.id] = { t: 'inbox', ix: loc.ix + ix };
+      });
+      return id;
+    }
+    case 'flexContainer': {
+      const container = requireFlexContainer(findItem(state, loc.id));
+      const contents = container.contents;
+      const id = contents.splice(loc.ix, 1)[0];
+      state.itemLocs_[id] = undefined;
+      // adjust tail
+      contents.slice(loc.ix).forEach((id, ix) => {
+        state.itemLocs_[id] = { t: 'flexContainer', id: container.id, ix: loc.ix + ix };
       });
       return id;
     }
@@ -263,6 +305,16 @@ export function insertIntoLocation(state: State, id: number, loc: Location): voi
         state.itemLocs_[item.id] = { t: 'inbox', ix: loc.ix + ix };
       });
     } break;
+
+    case 'flexContainer': {
+      const container = requireFlexContainer(findItem(state, loc.id));
+      const contents = container.contents;
+      contents.splice(loc.ix, 0, id);
+      // adjust tail (including just-inserted item)
+      contents.slice(loc.ix).forEach((id, ix) => {
+        state.itemLocs_[id] = { t: 'flexContainer', id: container.id, ix: loc.ix + ix };
+      });
+    } break;
     case 'rigidContainer': {
       insertIntoRigidContainerItem(state, findItem(state, loc.id), loc.ix, id);
     } break;
@@ -285,6 +337,8 @@ export function getItemAtLocation(state: State, location: Location): Item {
       return findItem(state, state.inv.inbox_[location.ix].id);
     case 'rigidContainer':
       return findItem(state, getItemIdFromRigidContainerItem(state, findItem(state, location.id), location.ix));
+    case 'flexContainer':
+      return findItem(state, getItemIdFromFlexContainerItem(state, findItem(state, location.id), location.ix));
   }
 }
 
@@ -315,5 +369,6 @@ export function itemCanHoldMoney(item: Item): item is (FormItem | LetterItem) & 
     case 'envelope': return false;
     case 'stack': return false;
     case 'otherRigidContainer': return false;
+    case 'flexContainer': return false;
   }
 }

@@ -18,6 +18,7 @@ export function stringOfItem(item: Item): string {
     case 'envelope': return stringOfEnvelope(item);
     case 'stack': return stringOfStack(item);
     case 'otherRigidContainer': return 'rigid container';
+    case 'flexContainer': return 'flex container';
   }
 }
 

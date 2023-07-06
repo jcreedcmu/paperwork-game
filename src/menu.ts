@@ -1,4 +1,4 @@
-import { Action, doAction, enterInboxMenu, enterRigidContainerMenu, enterSkillsMenu } from './action';
+import { Action, doAction, enterFlexContainerMenu, enterInboxMenu, enterRigidContainerMenu, enterSkillsMenu } from './action';
 import { TextBuffer } from './buffer';
 import { Document, stringOfDoc } from './doc';
 import { EditFrame } from './edit-letter';
@@ -7,13 +7,14 @@ import { getCustomBindings } from './keys';
 import { stringOfEnvelope, stringOfStack } from './render';
 import { getResource } from './resource';
 import { SkillsFrame } from './skills';
-import { Item, Location, State, canWriteLetter, findItem, getInbox, hasInboxItems, requireRigidContainer } from './state';
+import { Item, Location, State, canWriteLetter, findItem, getInbox, hasInboxItems, requireFlexContainer, requireRigidContainer } from './state';
 import { mod } from './util';
 
 export type Menu =
   | { t: 'main' }
   | { t: 'inbox' }
   | { t: 'rigidContainer', id: number }
+  | { t: 'flexContainer', id: number }
   ;
 
 export type DisplayFrame = { t: 'display', which: Document };
@@ -80,6 +81,11 @@ function getItemMenuItem(item: Item, loc: Location): MenuItem {
         name: 'otherRigidContainer',
         action: { t: 'none' },
       }
+    case 'flexContainer':
+      return {
+        name: 'flexContainer',
+        action: enterFlexContainerMenu(item.id),
+      }
   }
 }
 
@@ -142,6 +148,20 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
       menuItems.push({ name: '<-', action: { t: 'back' } });
       return menuItems;
     }
+
+
+    case 'flexContainer': {
+      const menuItems: MenuItem[] = [];
+
+      const item = requireFlexContainer(findItem(state, frame.which.id));
+
+      for (let ix = 0; ix < item.contents.length; ix++) {
+        const itemId = item.contents[ix];
+        menuItems.push(getItemMenuItem(findItem(state, itemId), { t: 'flexContainer', id: item.id, ix }));
+      }
+      menuItems.push({ name: '<-', action: { t: 'back' } });
+      return menuItems;
+    }
   }
 }
 
@@ -150,6 +170,7 @@ function getMenuTitle(frame: MenuFrame): string {
     case 'main': return 'MAIN MENU';
     case 'inbox': return 'INBOX MENU';
     case 'rigidContainer': return 'CONTAINER MENU';
+    case 'flexContainer': return 'CONTAINER MENU';
   }
 }
 

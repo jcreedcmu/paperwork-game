@@ -76,6 +76,7 @@ function resolveSentItem(state: State, item: Item): Action {
     // shouldn't be able to send any of these
     case 'doc': return { t: 'none' };
     case 'otherRigidContainer': return { t: 'none' };
+    case 'flexContainer': return { t: 'none' };
     case 'stack': return { t: 'none' };
   }
 }
@@ -96,6 +97,10 @@ export function resolveFutures(state: State): void {
 
 export function enterRigidContainerMenu(id: ItemId): Action {
   return { t: 'enterUi', frame: { t: 'menu', which: { t: 'rigidContainer', id }, ix: 0 } };
+}
+
+export function enterFlexContainerMenu(id: ItemId): Action {
+  return { t: 'enterUi', frame: { t: 'menu', which: { t: 'flexContainer', id }, ix: 0 } };
 }
 
 export function enterInboxMenu(): Action {

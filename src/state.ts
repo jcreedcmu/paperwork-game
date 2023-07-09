@@ -72,7 +72,6 @@ export type State = {
   inv: {
     skills: Skills,
     hand: ItemId | undefined,
-    inbox_: ItemId[],
     res_: Record<Resource, number>
   },
 }
@@ -94,7 +93,6 @@ export function initState(): State {
     inv: {
       skills: initSkills(),
       hand: undefined,
-      inbox_: [],
       res_: Object.fromEntries(resources.map(x => [x, 0])) as Record<Resource, number>
     },
   };
@@ -264,17 +262,16 @@ export function getItemIdFromFlexContainerItem(state: State, item: Item, ix: num
   }
 }
 
-// everything to do with state.inv.inbox_ should be below
-
 export function hasInboxItems(state: State): boolean {
-  return state.inv.inbox_.length > 0;
+  return getInbox(state).length > 0;
 }
 
+// everything to do with state.inv.inbox_ or specialItems.inbox should be below
 
 export function removeLocation(state: State, loc: Location): ItemId {
   switch (loc.t) {
     case 'inbox': {
-      const inbox = state.inv.inbox_;
+      const inbox = getInbox(state);
       const id = inbox.splice(loc.ix, 1)[0];
       state.itemLocs_[id] = undefined;
       // adjust tail
@@ -307,8 +304,8 @@ export function deleteAtLocation(state: State, loc: Location): void {
 
 export function insertIntoLocation(state: State, id: number, loc: Location): void {
   switch (loc.t) {
-    case 'inbox': {
-      const inbox = state.inv.inbox_;
+    case 'inbox': { // XXX deprecated
+      const inbox = getInbox(state);
       inbox.splice(loc.ix, 0, id);
       // adjust tail (including just-inserted item)
       inbox.slice(loc.ix).forEach((itemId, ix) => {
@@ -333,9 +330,10 @@ export function insertIntoLocation(state: State, id: number, loc: Location): voi
   }
 }
 
+// XXX deprecated, there should be a more general appendToFlexContainer
 export function appendToInbox(state: State, itemId: ItemId): number {
-  state.inv.inbox_.push(itemId);
-  const ix = state.inv.inbox_.length - 1;
+  getInbox(state).push(itemId);
+  const ix = getInbox(state).length - 1;
   state.itemLocs_[itemId] = { t: 'inbox', ix };
   return ix;
 }
@@ -343,8 +341,8 @@ export function appendToInbox(state: State, itemId: ItemId): number {
 // assumes location has an item
 export function getItemAtLocation(state: State, location: Location): Item {
   switch (location.t) {
-    case 'inbox':
-      return findItem(state, state.inv.inbox_[location.ix]);
+    case 'inbox': // XXX deprecated
+      return findItem(state, getInbox(state)[location.ix]);
     case 'rigidContainer':
       return findItem(state, getItemIdFromRigidContainerItem(state, findItem(state, location.id), location.ix));
     case 'flexContainer':
@@ -363,8 +361,9 @@ export function getLocationDefined(state: State, itemId: ItemId): Location {
   return loc;
 }
 
+// Mutable reference to a list of item ids
 export function getInbox(state: State): ItemId[] {
-  return state.inv.inbox_;
+  return requireFlexContainer(findItem(state, state.specialItems.inbox)).contents;
 }
 
 export function itemCanHoldMoney(item: Item): item is (FormItem | LetterItem) & { id: number } {
@@ -386,7 +385,3 @@ export function isUnread(state: State, itemId: ItemId): boolean {
 export function setUnread(state: State, itemId: ItemId, unread: boolean): boolean {
   return state.unread[itemId] = unread;
 }
-
-// export function setInboxUnread(state: State, index: number, unread: boolean): void {
-//   state.inv.inbox_[index].unread = unread;
-// }

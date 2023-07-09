@@ -49,9 +49,9 @@ export type Location =
   | { t: 'rigidContainer', id: number, ix: number }
   | { t: 'flexContainer', id: number, ix: number };
 
-export type WrapItemId = { unread: boolean, id: number };
-export type WrapItem = { unread: boolean, item: Item };
-export type WrapSubItem = { unread: boolean, item: SubItem };
+export type WrapItemId = { id: number };
+export type WrapItem = { item: Item };
+export type WrapSubItem = { item: SubItem };
 
 export type Future = { time: number, action: Action };
 
@@ -59,6 +59,7 @@ export type ItemId = number;
 
 export type State = {
   items_: Record<ItemId, SubItem>,
+  unread: Record<ItemId, boolean>,
   itemLocs_: Record<ItemId, Location | undefined>,
   log: LogLine[],
   futures: Future[],
@@ -77,6 +78,7 @@ export type State = {
 export function initState(): State {
   return {
     items_: {},
+    unread: {},
     itemLocs_: {},
     log: [],
     futures: [],
@@ -299,7 +301,7 @@ export function insertIntoLocation(state: State, id: number, loc: Location): voi
   switch (loc.t) {
     case 'inbox': {
       const inbox = state.inv.inbox_;
-      inbox.splice(loc.ix, 0, { unread: false, id });
+      inbox.splice(loc.ix, 0, { id });
       // adjust tail (including just-inserted item)
       inbox.slice(loc.ix).forEach((item, ix) => {
         state.itemLocs_[item.id] = { t: 'inbox', ix: loc.ix + ix };
@@ -353,10 +355,6 @@ export function getLocationDefined(state: State, itemId: ItemId): Location {
   return loc;
 }
 
-export function setInboxUnread(state: State, index: number, unread: boolean): void {
-  state.inv.inbox_[index].unread = unread;
-}
-
 export function getInbox(state: State): WrapItemId[] {
   return state.inv.inbox_;
 }
@@ -372,3 +370,15 @@ export function itemCanHoldMoney(item: Item): item is (FormItem | LetterItem) & 
     case 'flexContainer': return false;
   }
 }
+
+export function isUnread(state: State, itemId: ItemId): boolean {
+  return state.unread[itemId] ?? false;
+}
+
+export function setUnread(state: State, itemId: ItemId, unread: boolean): boolean {
+  return state.unread[itemId] = unread;
+}
+
+// export function setInboxUnread(state: State, index: number, unread: boolean): void {
+//   state.inv.inbox_[index].unread = unread;
+// }

@@ -3,8 +3,8 @@ import { appendToInbox, createItem, getLocation, initState, insertIntoLocation, 
 describe('removeLocation', () => {
   it('should update item state correctly when removed from inbox', () => {
     const state = initState();
-    const letter1 = appendToInbox(state, { unread: false, id: createItem(state, { t: 'letter', body: '', money: 0 }) });
-    const letter2 = appendToInbox(state, { unread: false, id: createItem(state, { t: 'letter', body: '', money: 0 }) });
+    const letter1 = appendToInbox(state, { id: createItem(state, { t: 'letter', body: '', money: 0 }) });
+    const letter2 = appendToInbox(state, { id: createItem(state, { t: 'letter', body: '', money: 0 }) });
     expect(getLocation(state, letter1)).toEqual({ t: 'inbox', ix: 0 });
     expect(getLocation(state, letter2)).toEqual({ t: 'inbox', ix: 1 });
     removeLocation(state, getLocation(state, letter1)!);
@@ -15,7 +15,7 @@ describe('removeLocation', () => {
   it('should update item state correctly when removed from envelope', () => {
     const state = initState();
     const envelope = createItem(state, { t: 'envelope', address: '', contents: [], size: 3 });
-    appendToInbox(state, { unread: false, id: envelope });
+    appendToInbox(state, { id: envelope });
     const letter1 = createItem(state, { t: 'letter', body: '', money: 0 });
     const letter2 = createItem(state, { t: 'letter', body: '', money: 0 });
 

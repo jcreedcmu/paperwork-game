@@ -4,7 +4,7 @@ import { EditUiAction, doEditUiAction, makeEditFrame } from './edit-letter';
 import { Form, FormEditSaveCont, FormEditUiAction, doFormEditUiAction, findFormItem, getLayoutOfForm, makeFormEditFrame, resolveForm } from './form';
 import { logger } from './logger';
 import { MenuFrame, MenuUiAction, UiStackFrame, doMenuUiAction } from './menu';
-import { Item, ItemId, LetterItem, Location, State, WrapSubItem, appendToInbox, createItem, deleteAtLocation, findItem, findLetter, getLocation, insertIntoLocation, itemCanHoldMoney, removeLocation, requireEnvelope, setInboxUnread, setItem } from './state';
+import { Item, ItemId, LetterItem, Location, State, WrapSubItem, appendToInbox, createItem, deleteAtLocation, findItem, findLetter, getLocation, insertIntoLocation, itemCanHoldMoney, removeLocation, requireEnvelope, setItem, setUnread } from './state';
 import { adjustResource, collectResources, getResource, setResource } from "./resource";
 import { randElt, unreachable } from './util';
 import { StackDivision, divideStack } from './stack';
@@ -35,8 +35,8 @@ export type Action =
   | { t: 'menuUiAction', action: MenuUiAction }
   | { t: 'editUiAction', action: EditUiAction }
   | { t: 'formEditUiAction', action: FormEditUiAction }
-  | { t: 'addItems', items: WrapSubItem[] }
-  | { t: 'markUnread', ibix: number, k: Action }
+  | { t: 'addItems', unread: boolean, items: WrapSubItem[] }
+  | { t: 'markUnread', id: number, k: Action }
   | { t: 'trash', loc: Location }
   | { t: 'enterUi', frame: UiStackFrame }
   ;
@@ -46,11 +46,11 @@ export function goBack(state: State): void {
 }
 
 export function addInboxDoc(state: State, doc: Document): Action {
-  return { t: 'addItems', items: [{ unread: true, item: { t: 'doc', doc } }] };
+  return { t: 'addItems', unread: true, items: [{ item: { t: 'doc', doc } }] };
 }
 
 export function addInboxForm(state: State, form: Form): Action {
-  return { t: 'addItems', items: [{ unread: true, item: { t: 'form', form, formData: [], money: 0 } }] };
+  return { t: 'addItems', unread: true, items: [{ item: { t: 'form', form, formData: [], money: 0 } }] };
 }
 
 const letterPatterns: [RegExp | string, (state: State, letter: LetterItem) => Action][] = [
@@ -142,7 +142,7 @@ export function doAction(state: State, action: Action): void {
         adjustResource(state, 'paper', -1);
         adjustResource(state, 'pencil', -1);
         const id = createItem(state, { t: 'letter', body: text, money: 0 });
-        const ix = appendToInbox(state, { unread: false, id });
+        const ix = appendToInbox(state, { id });
         goBack(state);
         state.uiStack.unshift({ t: 'menu', which: { t: 'inbox' }, ix });
       }
@@ -169,7 +169,10 @@ export function doAction(state: State, action: Action): void {
     case 'addItems': {
       action.items.forEach(wi => {
         const id = createItem(state, wi.item);
-        appendToInbox(state, { unread: wi.unread, id });
+        appendToInbox(state, { id });
+        if (action.unread) {
+          setUnread(state, id, true);
+        }
       });
     } break;
     case 'displayDoc':
@@ -273,7 +276,7 @@ export function doAction(state: State, action: Action): void {
       insertIntoLocation(state, hand, action.loc);
     } break;
     case 'markUnread': {
-      setInboxUnread(state, action.ibix, false);
+      setUnread(state, action.id, false);
       doAction(state, action.k);
     } break;
     case 'trash':

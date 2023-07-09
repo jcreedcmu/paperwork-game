@@ -5,7 +5,7 @@ describe('edit form action', () => {
   it('should work on envelope', () => {
 
     const state: State = initState();
-    doAction(state, { t: 'addItems', items: [{ unread: false, item: { t: 'envelope', address: '', contents: [], size: 3 } }] });
+    doAction(state, { t: 'addItems', unread: false, items: [{ item: { t: 'envelope', address: '', contents: [], size: 3 } }] });
     doAction(state, enterInboxMenu());
     doAction(state,
       {

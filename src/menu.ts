@@ -7,7 +7,7 @@ import { getCustomBindings } from './keys';
 import { stringOfEnvelope, stringOfStack } from './render';
 import { getResource } from './resource';
 import { SkillsFrame } from './skills';
-import { Item, Location, State, canWriteLetter, findItem, getInbox, hasInboxItems, requireFlexContainer, requireRigidContainer } from './state';
+import { Item, Location, State, canWriteLetter, findItem, getInbox, hasInboxItems, isUnread, requireFlexContainer, requireRigidContainer } from './state';
 import { mod } from './util';
 
 export type Menu =
@@ -46,7 +46,7 @@ function getItemMenuItem(item: Item, loc: Location): MenuItem {
     case 'doc':
       let action: Action = { t: 'displayDoc', doc: item.doc };
       if (loc.t == 'inbox') {
-        action = { t: 'markUnread', ibix: loc.ix, k: action };
+        action = { t: 'markUnread', id: item.id, k: action };
       }
       return {
         name: stringOfDoc(item.doc),
@@ -60,7 +60,7 @@ function getItemMenuItem(item: Item, loc: Location): MenuItem {
       }
       let action: Action = { t: 'editForm', id: item.id, form: item.form, saveCont: { t: 'regularForm' } };
       if (loc.t == 'inbox') {
-        action = { t: 'markUnread', ibix: loc.ix, k: action };
+        action = { t: 'markUnread', id: item.id, k: action };
       }
       return { name, action };
     } break;
@@ -108,7 +108,7 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
         menuItems.push({ name: 'new letter', action: { t: 'newLetter' } });
       }
       if (hasInboxItems(state) || state.inv.hand !== undefined) {
-        const unreadCount = getInbox(state).filter(x => x.unread).length;
+        const unreadCount = getInbox(state).filter(x => isUnread(state, x.id)).length;
         const unread = unreadCount > 0 ? ` (${unreadCount})` : '';
         menuItems.push({ name: `inbox${unread}...`, action: enterInboxMenu() });
       }
@@ -119,7 +119,7 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
     case 'inbox': {
       const menuItems: MenuItem[] = [];
       getInbox(state).forEach((ibit, ix) => {
-        const unreadMarker = ibit.unread ? '! ' : '  ';
+        const unreadMarker = isUnread(state, ibit.id) ? '! ' : '  ';
         const menuItem = getItemMenuItem(findItem(state, ibit.id), { t: 'inbox', ix });
         menuItem.name = unreadMarker + menuItem.name;
         menuItems.push(menuItem);

@@ -82,7 +82,7 @@ function getSelectedInboxItem(state: State, frame: MenuFrame): WrapItem | undefi
   const wi: WrapItemId | undefined = getInbox(state)[frame.ix];
   if (wi === undefined)
     return wi;
-  return { unread: wi.unread, item: findItem(state, wi.id) };
+  return { item: findItem(state, wi.id) };
 }
 
 function getBindingsOfSelection(state: State, item: Item | undefined, loc: Location): Bindings {

@@ -24,8 +24,10 @@ async function go() {
   const state = initState();
   if (DEBUG.initialItems) {
     doAction(state, {
-      t: 'addItems', items: [{
-        unread: false, item: {
+      t: 'addItems',
+      unread: false,
+      items: [{
+        item: {
           t: 'envelope',
           address: '',
           contents: [],

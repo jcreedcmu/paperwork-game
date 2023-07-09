@@ -222,9 +222,11 @@ export function resolveForm(state: State, item: FormItem): Action {
         return addError(state, { t: 'paymentWrong', should: paymentDue, actual: enclosed });
       }
       return {
-        t: 'addItems', unread: true, items: [
-          { item: { t: 'stack', quantity, res: 'envelope' } }
-        ]
+        t: 'withMessage', msg: `You received ${quantity} envelopes.`, action: {
+          t: 'addItems', unread: true, items: [
+            { item: { t: 'stack', quantity, res: 'envelope' } }
+          ]
+        }
       };
     }
   }

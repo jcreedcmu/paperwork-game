@@ -1,14 +1,14 @@
 import { quit, win } from './basic-term';
-import { Document } from './doc';
-import { EditUiAction, doEditUiAction, makeEditFrame } from './edit-letter';
-import { Form, FormEditSaveCont, FormEditUiAction, doFormEditUiAction, findFormItem, getLayoutOfForm, makeFormEditFrame, resolveForm } from './form';
-import { logger } from './logger';
-import { MenuFrame, MenuUiAction, UiStackFrame, doMenuUiAction } from './menu';
-import { Item, ItemId, LetterItem, Location, State, SubItem, WrapSubItem, appendToInbox, createItem, deleteAtLocation, findItem, findLetter, getInboxId, getLocation, insertIntoLocation, itemCanHoldMoney, removeLocation, requireEnvelope, setItem, setUnread } from './state';
-import { adjustResource, collectResources, getResource, setResource } from "./resource";
-import { randElt, unreachable } from './util';
-import { StackDivision, divideStack } from './stack';
 import { DEBUG } from './debug';
+import { Document, stringOfDoc } from './doc';
+import { EditUiAction, doEditUiAction, makeEditFrame } from './edit-letter';
+import { Form, FormEditSaveCont, FormEditUiAction, doFormEditUiAction, findFormItem, getLayoutOfForm, makeFormEditFrame, resolveForm, stringOfForm } from './form';
+import { logger, message } from './logger';
+import { MenuUiAction, UiStackFrame, doMenuUiAction } from './menu';
+import { adjustResource, collectResources, getResource, setResource } from "./resource";
+import { StackDivision, divideStack } from './stack';
+import { Item, ItemId, LetterItem, Location, State, WrapSubItem, appendToInbox, createItem, deleteAtLocation, findItem, findLetter, getInboxId, getLocation, insertIntoLocation, itemCanHoldMoney, removeLocation, requireEnvelope, setItem, setUnread } from './state';
+import { randElt, unreachable } from './util';
 
 export type Action =
   | { t: 'sleep' }
@@ -39,6 +39,7 @@ export type Action =
   | { t: 'markUnread', id: number, k: Action }
   | { t: 'trash', loc: Location }
   | { t: 'enterUi', frame: UiStackFrame }
+  | { t: 'withMessage', action: Action, msg: string }
   ;
 
 export function goBack(state: State): void {
@@ -46,11 +47,20 @@ export function goBack(state: State): void {
 }
 
 export function addInboxDoc(state: State, doc: Document): Action {
-  return { t: 'addItems', unread: true, items: [{ item: { t: 'doc', doc } }] };
+  return {
+    t: 'withMessage',
+    msg: `You received a ${stringOfDoc(doc)}`,
+    action:
+      { t: 'addItems', unread: true, items: [{ item: { t: 'doc', doc } }] }
+  };
 }
 
 export function addInboxForm(state: State, form: Form): Action {
-  return { t: 'addItems', unread: true, items: [{ item: { t: 'form', form, formData: [], money: 0 } }] };
+  return {
+    t: 'withMessage',
+    msg: `You received form ${stringOfForm(form)}.`,
+    action: { t: 'addItems', unread: true, items: [{ item: { t: 'form', form, formData: [], money: 0 } }] }
+  };
 }
 
 const letterPatterns: [RegExp | string, (state: State, letter: LetterItem) => Action][] = [
@@ -289,6 +299,10 @@ export function doAction(state: State, action: Action): void {
       break;
     case 'enterUi':
       state.uiStack.unshift(action.frame);
+      break;
+    case 'withMessage':
+      message(state, action.msg);
+      doAction(state, action.action);
       break;
     default: unreachable(action);
   }

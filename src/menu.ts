@@ -143,7 +143,10 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
 
       for (let ix = 0; ix < item.contents.length; ix++) {
         const itemId = item.contents[ix];
-        menuItems.push(getItemMenuItem(state, findItem(state, itemId), { t: 'flexContainer', id: item.id, ix }));
+        const unreadMarker = isUnread(state, itemId) ? '! ' : '  ';
+        const menuItem = getItemMenuItem(state, findItem(state, itemId), { t: 'flexContainer', id: item.id, ix });
+        menuItem.name = unreadMarker + menuItem.name;
+        menuItems.push(menuItem);
       }
       menuItems.push({ name: '<-', action: { t: 'back' } });
       return menuItems;

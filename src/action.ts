@@ -4,7 +4,7 @@ import { EditUiAction, doEditUiAction, makeEditFrame } from './edit-letter';
 import { Form, FormEditSaveCont, FormEditUiAction, doFormEditUiAction, findFormItem, getLayoutOfForm, makeFormEditFrame, resolveForm } from './form';
 import { logger } from './logger';
 import { MenuFrame, MenuUiAction, UiStackFrame, doMenuUiAction } from './menu';
-import { Item, ItemId, LetterItem, Location, State, WrapSubItem, appendToInbox, createItem, deleteAtLocation, findItem, findLetter, getInboxId, getLocation, insertIntoLocation, itemCanHoldMoney, removeLocation, requireEnvelope, setItem, setUnread } from './state';
+import { Item, ItemId, LetterItem, Location, State, SubItem, WrapSubItem, appendToInbox, createItem, deleteAtLocation, findItem, findLetter, getInboxId, getLocation, insertIntoLocation, itemCanHoldMoney, removeLocation, requireEnvelope, setItem, setUnread } from './state';
 import { adjustResource, collectResources, getResource, setResource } from "./resource";
 import { randElt, unreachable } from './util';
 import { StackDivision, divideStack } from './stack';
@@ -111,6 +111,17 @@ export function enterSkillsMenu(): Action {
   return { t: 'enterUi', frame: { t: 'skills' } };
 }
 
+export function addItems(state: State, items: WrapSubItem[], unread: boolean): ItemId[] {
+  return items.map(wi => {
+    const id = createItem(state, wi.item);
+    appendToInbox(state, id);
+    if (unread) {
+      setUnread(state, id, true);
+    }
+    return id;
+  });
+}
+
 export function doAction(state: State, action: Action): void {
   if (DEBUG.actions) {
     logger(state, JSON.stringify(['doAction', state, action]));
@@ -142,7 +153,7 @@ export function doAction(state: State, action: Action): void {
         adjustResource(state, 'paper', -1);
         adjustResource(state, 'pencil', -1);
         const id = createItem(state, { t: 'letter', body: text, money: 0 });
-        const ix = appendToInbox(state, id);
+        const ix = appendToInbox(state, id).ix;
         goBack(state);
         state.uiStack.unshift({ t: 'menu', which: { t: 'flexContainer', id: getInboxId(state) }, ix });
       }
@@ -167,13 +178,7 @@ export function doAction(state: State, action: Action): void {
       adjustResource(state, 'cash', 50);
       break;
     case 'addItems': {
-      action.items.forEach(wi => {
-        const id = createItem(state, wi.item);
-        appendToInbox(state, id);
-        if (action.unread) {
-          setUnread(state, id, true);
-        }
-      });
+      addItems(state, action.items, action.unread);
     } break;
     case 'displayDoc':
       state.uiStack.unshift({ t: 'display', which: action.doc });

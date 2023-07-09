@@ -49,7 +49,6 @@ export type Location =
   | { t: 'rigidContainer', id: number, ix: number }
   | { t: 'flexContainer', id: number, ix: number };
 
-export type WrapItemId = { id: number };
 export type WrapItem = { item: Item };
 export type WrapSubItem = { item: SubItem };
 
@@ -73,7 +72,7 @@ export type State = {
   inv: {
     skills: Skills,
     hand: ItemId | undefined,
-    inbox_: WrapItemId[],
+    inbox_: ItemId[],
     res_: Record<Resource, number>
   },
 }
@@ -276,11 +275,11 @@ export function removeLocation(state: State, loc: Location): ItemId {
   switch (loc.t) {
     case 'inbox': {
       const inbox = state.inv.inbox_;
-      const id = inbox.splice(loc.ix, 1)[0].id;
+      const id = inbox.splice(loc.ix, 1)[0];
       state.itemLocs_[id] = undefined;
       // adjust tail
       inbox.slice(loc.ix).forEach((item, ix) => {
-        state.itemLocs_[item.id] = { t: 'inbox', ix: loc.ix + ix };
+        state.itemLocs_[item] = { t: 'inbox', ix: loc.ix + ix };
       });
       return id;
     }
@@ -310,10 +309,10 @@ export function insertIntoLocation(state: State, id: number, loc: Location): voi
   switch (loc.t) {
     case 'inbox': {
       const inbox = state.inv.inbox_;
-      inbox.splice(loc.ix, 0, { id });
+      inbox.splice(loc.ix, 0, id);
       // adjust tail (including just-inserted item)
-      inbox.slice(loc.ix).forEach((item, ix) => {
-        state.itemLocs_[item.id] = { t: 'inbox', ix: loc.ix + ix };
+      inbox.slice(loc.ix).forEach((itemId, ix) => {
+        state.itemLocs_[itemId] = { t: 'inbox', ix: loc.ix + ix };
       });
     } break;
 
@@ -334,10 +333,10 @@ export function insertIntoLocation(state: State, id: number, loc: Location): voi
   }
 }
 
-export function appendToInbox(state: State, item: WrapItemId): number {
-  state.inv.inbox_.push(item);
+export function appendToInbox(state: State, itemId: ItemId): number {
+  state.inv.inbox_.push(itemId);
   const ix = state.inv.inbox_.length - 1;
-  state.itemLocs_[item.id] = { t: 'inbox', ix };
+  state.itemLocs_[itemId] = { t: 'inbox', ix };
   return ix;
 }
 
@@ -345,7 +344,7 @@ export function appendToInbox(state: State, item: WrapItemId): number {
 export function getItemAtLocation(state: State, location: Location): Item {
   switch (location.t) {
     case 'inbox':
-      return findItem(state, state.inv.inbox_[location.ix].id);
+      return findItem(state, state.inv.inbox_[location.ix]);
     case 'rigidContainer':
       return findItem(state, getItemIdFromRigidContainerItem(state, findItem(state, location.id), location.ix));
     case 'flexContainer':
@@ -364,7 +363,7 @@ export function getLocationDefined(state: State, itemId: ItemId): Location {
   return loc;
 }
 
-export function getInbox(state: State): WrapItemId[] {
+export function getInbox(state: State): ItemId[] {
   return state.inv.inbox_;
 }
 

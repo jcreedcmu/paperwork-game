@@ -142,7 +142,7 @@ export function doAction(state: State, action: Action): void {
         adjustResource(state, 'paper', -1);
         adjustResource(state, 'pencil', -1);
         const id = createItem(state, { t: 'letter', body: text, money: 0 });
-        const ix = appendToInbox(state, { id });
+        const ix = appendToInbox(state, id);
         goBack(state);
         state.uiStack.unshift({ t: 'menu', which: { t: 'inbox' }, ix });
       }
@@ -169,7 +169,7 @@ export function doAction(state: State, action: Action): void {
     case 'addItems': {
       action.items.forEach(wi => {
         const id = createItem(state, wi.item);
-        appendToInbox(state, { id });
+        appendToInbox(state, id);
         if (action.unread) {
           setUnread(state, id, true);
         }

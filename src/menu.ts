@@ -108,7 +108,7 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
         menuItems.push({ name: 'new letter', action: { t: 'newLetter' } });
       }
       if (hasInboxItems(state) || state.inv.hand !== undefined) {
-        const unreadCount = getInbox(state).filter(x => isUnread(state, x.id)).length;
+        const unreadCount = getInbox(state).filter(itemId => isUnread(state, itemId)).length;
         const unread = unreadCount > 0 ? ` (${unreadCount})` : '';
         menuItems.push({ name: `inbox${unread}...`, action: enterInboxMenu() });
       }
@@ -118,9 +118,9 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
     }
     case 'inbox': {
       const menuItems: MenuItem[] = [];
-      getInbox(state).forEach((ibit, ix) => {
-        const unreadMarker = isUnread(state, ibit.id) ? '! ' : '  ';
-        const menuItem = getItemMenuItem(findItem(state, ibit.id), { t: 'inbox', ix });
+      getInbox(state).forEach((itemId, ix) => {
+        const unreadMarker = isUnread(state, itemId) ? '! ' : '  ';
+        const menuItem = getItemMenuItem(findItem(state, itemId), { t: 'inbox', ix });
         menuItem.name = unreadMarker + menuItem.name;
         menuItems.push(menuItem);
       });

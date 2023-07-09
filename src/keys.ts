@@ -4,7 +4,7 @@ import { editUiAction } from './edit-letter';
 import { formEditUiAction } from './form';
 import { logger } from './logger';
 import { MenuFrame, MenuItem, MenuUiAction, UiStackFrame } from './menu';
-import { Item, Location, State, WrapItem, WrapItemId, findItem, getInbox, itemCanHoldMoney, requireFlexContainer, requireRigidContainer } from './state';
+import { Item, ItemId, Location, State, WrapItem, findItem, getInbox, itemCanHoldMoney, requireFlexContainer, requireRigidContainer } from './state';
 import { mapval } from './util';
 
 export type DefaultAction =
@@ -79,10 +79,10 @@ function customBindingsOfItem(state: State, item: Item | undefined, loc: Locatio
 }
 
 function getSelectedInboxItem(state: State, frame: MenuFrame): WrapItem | undefined {
-  const wi: WrapItemId | undefined = getInbox(state)[frame.ix];
-  if (wi === undefined)
-    return wi;
-  return { item: findItem(state, wi.id) };
+  const itemId: ItemId | undefined = getInbox(state)[frame.ix];
+  if (itemId === undefined)
+    return itemId;
+  return { item: findItem(state, itemId) };
 }
 
 function getBindingsOfSelection(state: State, item: Item | undefined, loc: Location): Bindings {

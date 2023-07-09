@@ -46,9 +46,9 @@ function renderState(buf: TextBuffer, state: State) {
     }
   });
   row++;
-  getInbox(state).forEach(wi => {
+  getInbox(state).forEach(itemId => {
     buf.moveTo(STATUS_COLUMN, row);
-    const item = findItem(state, wi.id);
+    const item = findItem(state, itemId);
     buf.red().put(`* ${stringOfItem(item)}`);
     row++;
   });

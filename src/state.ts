@@ -1,4 +1,4 @@
-import { Action } from "./action";
+import { Action, doAction } from "./action";
 import { Document } from "./doc";
 import { FormItem } from "./form";
 import { LogLine } from "./logger";
@@ -59,6 +59,9 @@ export type ItemId = number;
 
 export type State = {
   items_: Record<ItemId, SubItem>,
+  specialItems: {
+    inbox: ItemId,
+  }
   unread: Record<ItemId, boolean>,
   itemLocs_: Record<ItemId, Location | undefined>,
   log: LogLine[],
@@ -76,8 +79,11 @@ export type State = {
 }
 
 export function initState(): State {
-  return {
+  const rv: State = {
     items_: {},
+    specialItems: {
+      inbox: 0,
+    },
     unread: {},
     itemLocs_: {},
     log: [],
@@ -93,6 +99,9 @@ export function initState(): State {
       res_: Object.fromEntries(resources.map(x => [x, 0])) as Record<Resource, number>
     },
   };
+
+  rv.specialItems.inbox = createItem(rv, { t: 'flexContainer', contents: [] });
+  return rv;
 }
 
 export function showState(state: State) {

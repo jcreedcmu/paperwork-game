@@ -4,7 +4,7 @@ import { EditUiAction, doEditUiAction, makeEditFrame } from './edit-letter';
 import { Form, FormEditSaveCont, FormEditUiAction, doFormEditUiAction, findFormItem, getLayoutOfForm, makeFormEditFrame, resolveForm } from './form';
 import { logger } from './logger';
 import { MenuFrame, MenuUiAction, UiStackFrame, doMenuUiAction } from './menu';
-import { Item, ItemId, LetterItem, Location, State, WrapSubItem, appendToInbox, createItem, deleteAtLocation, findItem, findLetter, getLocation, insertIntoLocation, itemCanHoldMoney, removeLocation, requireEnvelope, setItem, setUnread } from './state';
+import { Item, ItemId, LetterItem, Location, State, WrapSubItem, appendToInbox, createItem, deleteAtLocation, findItem, findLetter, getInboxId, getLocation, insertIntoLocation, itemCanHoldMoney, removeLocation, requireEnvelope, setItem, setUnread } from './state';
 import { adjustResource, collectResources, getResource, setResource } from "./resource";
 import { randElt, unreachable } from './util';
 import { StackDivision, divideStack } from './stack';
@@ -103,8 +103,8 @@ export function enterFlexContainerMenu(id: ItemId): Action {
   return { t: 'enterUi', frame: { t: 'menu', which: { t: 'flexContainer', id }, ix: 0 } };
 }
 
-export function enterInboxMenu(): Action {
-  return { t: 'enterUi', frame: { t: 'menu', which: { t: 'inbox' }, ix: 0 } };
+export function enterInboxMenu(state: State): Action {
+  return { t: 'enterUi', frame: { t: 'menu', which: { t: 'flexContainer', id: getInboxId(state) }, ix: 0 } };
 }
 
 export function enterSkillsMenu(): Action {
@@ -144,7 +144,7 @@ export function doAction(state: State, action: Action): void {
         const id = createItem(state, { t: 'letter', body: text, money: 0 });
         const ix = appendToInbox(state, id);
         goBack(state);
-        state.uiStack.unshift({ t: 'menu', which: { t: 'inbox' }, ix });
+        state.uiStack.unshift({ t: 'menu', which: { t: 'flexContainer', id: getInboxId(state) }, ix });
       }
       else {
         const item = findLetter(state, id);

@@ -45,7 +45,7 @@ export type RigidContainerItem =
 export type Item = { id: number } & SubItem;
 
 export type Location =
-  | { t: 'inbox', ix: number }
+  | { t: 'root' }
   | { t: 'rigidContainer', id: number, ix: number }
   | { t: 'flexContainer', id: number, ix: number };
 
@@ -270,15 +270,8 @@ export function hasInboxItems(state: State): boolean {
 
 export function removeLocation(state: State, loc: Location): ItemId {
   switch (loc.t) {
-    case 'inbox': {
-      const inbox = getInbox(state);
-      const id = inbox.splice(loc.ix, 1)[0];
-      state.itemLocs_[id] = undefined;
-      // adjust tail
-      inbox.slice(loc.ix).forEach((item, ix) => {
-        state.itemLocs_[item] = { t: 'inbox', ix: loc.ix + ix };
-      });
-      return id;
+    case 'root': {
+      throw new Error(`remove location not supported at root`);
     }
     case 'flexContainer': {
       const container = requireFlexContainer(findItem(state, loc.id));
@@ -304,15 +297,9 @@ export function deleteAtLocation(state: State, loc: Location): void {
 
 export function insertIntoLocation(state: State, id: number, loc: Location): void {
   switch (loc.t) {
-    case 'inbox': { // XXX deprecated
-      const inbox = getInbox(state);
-      inbox.splice(loc.ix, 0, id);
-      // adjust tail (including just-inserted item)
-      inbox.slice(loc.ix).forEach((itemId, ix) => {
-        state.itemLocs_[itemId] = { t: 'inbox', ix: loc.ix + ix };
-      });
+    case 'root': {
+      state.itemLocs_[id] = loc;
     } break;
-
     case 'flexContainer': {
       const container = requireFlexContainer(findItem(state, loc.id));
       const contents = container.contents;
@@ -330,19 +317,25 @@ export function insertIntoLocation(state: State, id: number, loc: Location): voi
   }
 }
 
-// XXX deprecated, there should be a more general appendToFlexContainer
 export function appendToInbox(state: State, itemId: ItemId): number {
-  getInbox(state).push(itemId);
-  const ix = getInbox(state).length - 1;
-  state.itemLocs_[itemId] = { t: 'inbox', ix };
+  return appendToFlexContainer(state, state.specialItems.inbox, itemId);
+}
+
+// XXX consider returning Location of inserted item instead?
+export function appendToFlexContainer(state: State, containerId: ItemId, itemId: ItemId): number {
+  const container = requireFlexContainer(findItem(state, containerId));
+  container.contents.push(itemId);
+  const ix = container.contents.length - 1;
+  state.itemLocs_[itemId] = { t: 'flexContainer', ix, id: container.id };
   return ix;
 }
 
 // assumes location has an item
 export function getItemAtLocation(state: State, location: Location): Item {
   switch (location.t) {
-    case 'inbox': // XXX deprecated
-      return findItem(state, getInbox(state)[location.ix]);
+    case 'root': {
+      throw new Error(`there is no uniqueness of items with location root`);
+    }
     case 'rigidContainer':
       return findItem(state, getItemIdFromRigidContainerItem(state, findItem(state, location.id), location.ix));
     case 'flexContainer':
@@ -384,4 +377,12 @@ export function isUnread(state: State, itemId: ItemId): boolean {
 
 export function setUnread(state: State, itemId: ItemId, unread: boolean): boolean {
   return state.unread[itemId] = unread;
+}
+
+export function isInbox(state: State, itemId: ItemId): boolean {
+  return state.specialItems.inbox == itemId;
+}
+
+export function getInboxId(state: State): ItemId {
+  return state.specialItems.inbox;
 }

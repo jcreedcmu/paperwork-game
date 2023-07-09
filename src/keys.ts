@@ -105,11 +105,6 @@ function getBindingsOfSelection(state: State, item: Item | undefined, loc: Locat
 export function getCustomBindings(state: State, frame: MenuFrame): Bindings {
   switch (frame.which.t) {
     case 'main': return {};
-    case 'inbox': {
-      const ix = frame.ix;
-      const item = getSelectedInboxItem(state, frame)?.item;
-      return getBindingsOfSelection(state, item, { t: 'inbox', ix });
-    }
     case 'rigidContainer': {
       const ix = frame.ix;
       const containerId = frame.which.id;

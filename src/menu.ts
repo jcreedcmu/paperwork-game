@@ -7,12 +7,11 @@ import { getCustomBindings } from './keys';
 import { stringOfEnvelope, stringOfStack } from './render';
 import { getResource } from './resource';
 import { SkillsFrame } from './skills';
-import { Item, Location, State, canWriteLetter, findItem, getInbox, hasInboxItems, isUnread, requireFlexContainer, requireRigidContainer } from './state';
+import { Item, Location, State, canWriteLetter, findItem, getInbox, hasInboxItems, isInbox, isUnread, requireFlexContainer, requireRigidContainer } from './state';
 import { mod } from './util';
 
 export type Menu =
   | { t: 'main' }
-  | { t: 'inbox' }
   | { t: 'rigidContainer', id: number }
   | { t: 'flexContainer', id: number }
   ;
@@ -31,7 +30,7 @@ export type UiStackFrame =
 
 export type MenuItem = { name: string, action: Action };
 
-function getItemMenuItem(item: Item, loc: Location): MenuItem {
+function getItemMenuItem(state: State, item: Item, loc: Location): MenuItem {
   switch (item.t) {
     case 'letter':
       let name = `letter ("${item.body.substring(0, 10)}")`;
@@ -45,7 +44,7 @@ function getItemMenuItem(item: Item, loc: Location): MenuItem {
       break;
     case 'doc':
       let action: Action = { t: 'displayDoc', doc: item.doc };
-      if (loc.t == 'inbox') {
+      if (loc.t == 'flexContainer' && isInbox(state, loc.id)) {
         action = { t: 'markUnread', id: item.id, k: action };
       }
       return {
@@ -59,7 +58,7 @@ function getItemMenuItem(item: Item, loc: Location): MenuItem {
         name = `(\$${item.money}) ` + name;
       }
       let action: Action = { t: 'editForm', id: item.id, form: item.form, saveCont: { t: 'regularForm' } };
-      if (loc.t == 'inbox') {
+      if (loc.t == 'flexContainer' && isInbox(state, loc.id)) {
         action = { t: 'markUnread', id: item.id, k: action };
       }
       return { name, action };
@@ -110,21 +109,10 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
       if (hasInboxItems(state) || state.inv.hand !== undefined) {
         const unreadCount = getInbox(state).filter(itemId => isUnread(state, itemId)).length;
         const unread = unreadCount > 0 ? ` (${unreadCount})` : '';
-        menuItems.push({ name: `inbox${unread}...`, action: enterInboxMenu() });
+        menuItems.push({ name: `inbox${unread}...`, action: enterInboxMenu(state) });
       }
       menuItems.push({ name: 'skills', action: enterSkillsMenu() });
       menuItems.push({ name: 'exit', action: { t: 'exit' } });
-      return menuItems;
-    }
-    case 'inbox': {
-      const menuItems: MenuItem[] = [];
-      getInbox(state).forEach((itemId, ix) => {
-        const unreadMarker = isUnread(state, itemId) ? '! ' : '  ';
-        const menuItem = getItemMenuItem(findItem(state, itemId), { t: 'inbox', ix });
-        menuItem.name = unreadMarker + menuItem.name;
-        menuItems.push(menuItem);
-      });
-      menuItems.push({ name: '  <-', action: { t: 'back' } });
       return menuItems;
     }
     case 'rigidContainer': {
@@ -141,15 +129,13 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
           menuItems.push({ name: '---', action });
         }
         else {
-          menuItems.push(getItemMenuItem(findItem(state, itemId), { t: 'rigidContainer', id: item.id, ix }));
+          menuItems.push(getItemMenuItem(state, findItem(state, itemId), { t: 'rigidContainer', id: item.id, ix }));
         }
 
       }
       menuItems.push({ name: '<-', action: { t: 'back' } });
       return menuItems;
     }
-
-
     case 'flexContainer': {
       const menuItems: MenuItem[] = [];
 
@@ -157,7 +143,7 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
 
       for (let ix = 0; ix < item.contents.length; ix++) {
         const itemId = item.contents[ix];
-        menuItems.push(getItemMenuItem(findItem(state, itemId), { t: 'flexContainer', id: item.id, ix }));
+        menuItems.push(getItemMenuItem(state, findItem(state, itemId), { t: 'flexContainer', id: item.id, ix }));
       }
       menuItems.push({ name: '<-', action: { t: 'back' } });
       return menuItems;
@@ -165,17 +151,16 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
   }
 }
 
-function getMenuTitle(frame: MenuFrame): string {
+function getMenuTitle(state: State, frame: MenuFrame): string {
   switch (frame.which.t) {
     case 'main': return 'MAIN MENU';
-    case 'inbox': return 'INBOX MENU';
     case 'rigidContainer': return 'CONTAINER MENU';
-    case 'flexContainer': return 'CONTAINER MENU';
+    case 'flexContainer': return isInbox(state, frame.which.id) ? 'INBOX MENU' : 'CONTAINER MENU';
   }
 }
 
 export function renderMenu(buf: TextBuffer, state: State, frame: MenuFrame): void {
-  buf.red().bold().put(getMenuTitle(frame));
+  buf.red().bold().put(getMenuTitle(state, frame));
   const items = menuItemsOfFrame(state, frame);
 
   items.forEach((item, ix) => {

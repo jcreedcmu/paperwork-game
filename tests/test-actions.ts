@@ -6,7 +6,7 @@ describe('edit form action', () => {
 
     const state: State = initState();
     doAction(state, { t: 'addItems', unread: false, items: [{ item: { t: 'envelope', address: '', contents: [], size: 3 } }] });
-    doAction(state, enterInboxMenu());
+    doAction(state, enterInboxMenu(state));
     doAction(state,
       {
         t: 'editForm',

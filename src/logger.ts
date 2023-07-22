@@ -29,17 +29,47 @@ export function message(state: State, msg: string, level: LogLevel = 'MESSAGE'):
   }
 }
 
-const LOG_COL = WIDTH - 30;
+const LOG_WIDTH = 30;
+const LOG_COL = WIDTH - LOG_WIDTH;
+
+function lineWrap(msg: string): string[] {
+  if (msg.length <= 30) {
+    return [msg];
+  }
+  else {
+    const toks = msg.split(/\s+/);
+    const rv: string[] = [];
+    toks.forEach(tok => {
+      if (rv.length == 0 || rv[rv.length - 1].length + 1 + tok.length > LOG_WIDTH) {
+        // new line
+        rv.push(tok);
+      }
+      else {
+        // append to line
+        rv[rv.length - 1] = rv[rv.length - 1] + ' ' + tok;
+      }
+    });
+    return rv;
+  }
+}
 
 export function renderLog(buf: TextBuffer, log: LogLine[]): void {
   const lines = log.slice(-10).reverse();
+  let lineIx = 0;
   lines.forEach((line, ix) => {
-    buf.moveTo(LOG_COL, ix);
     if (line.level == 'DEBUG') {
-      buf.white().put(`[${line.time}] `).put(line.msg);
+      for (const wline of lineWrap(`[${line.time}] ${line.msg}`)) {
+        buf.moveTo(LOG_COL, lineIx);
+        buf.white().put(wline);
+        lineIx++;
+      }
     }
     else {
-      buf.put(`> `).put(line.msg);
+      for (const wline of lineWrap(`> ${line.msg}`)) {
+        buf.moveTo(LOG_COL, lineIx);
+        buf.put(wline);
+        lineIx++;
+      }
     }
   });
 }

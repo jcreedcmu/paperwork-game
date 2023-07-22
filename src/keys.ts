@@ -44,15 +44,12 @@ function customBindingsOfItem(state: State, item: Item | undefined, loc: Locatio
     case 'letter': {
       const bindings: Bindings = {
         'e': { name: 'edit', action: { t: 'editLetter', id: item.id } },
-        's': { name: 'send', action: { t: 'send', id: item.id } },
       };
       return bindings;
     }
     case 'doc': return {};
     case 'form': {
-      const bindings: Bindings = {
-        's': { name: 'send', action: { t: 'send', id: item.id } },
-      };
+      const bindings: Bindings = {};
       return bindings;
     }
     case 'envelope': return {

@@ -1,3 +1,5 @@
+import * as fs from 'fs';
+
 import { quit, win } from './basic-term';
 import { DEBUG } from './debug';
 import { Document, stringOfDoc } from './doc';
@@ -5,9 +7,10 @@ import { EditUiAction, doEditUiAction, makeEditFrame } from './edit-letter';
 import { Form, FormEditSaveCont, FormEditUiAction, doFormEditUiAction, findFormItem, getLayoutOfForm, makeFormEditFrame, resolveForm, stringOfForm } from './form';
 import { logger, message } from './logger';
 import { MenuUiAction, UiStackFrame, doMenuUiAction } from './menu';
+import { maybeResolveOutbox } from './outbox';
 import { adjustResource, collectResources, getResource, setResource } from "./resource";
 import { StackDivision, divideStack } from './stack';
-import { Item, ItemId, LetterItem, Location, State, WrapSubItem, appendToInbox, createItem, deleteAtLocation, findItem, findLetter, getInboxId, getLocation, insertIntoLocation, itemCanHoldMoney, removeLocation, requireEnvelope, setItem, setUnread } from './state';
+import { Item, ItemId, LetterItem, Location, State, WrapSubItem, appendToInbox, createItem, deleteAtLocation, findItem, findLetter, getInboxId, getOutboxId, getLocation, insertIntoLocation, itemCanHoldMoney, removeLocation, requireEnvelope, setItem, setUnread } from './state';
 import { randElt, unreachable } from './util';
 
 export type Action =
@@ -18,7 +21,6 @@ export type Action =
   | { t: 'purchase' }
   | { t: 'editLetter', id: ItemId }
   | { t: 'newLetter' }
-  | { t: 'send', id: ItemId }
   | { t: 'back' }
   | { t: 'displayDoc', doc: Document }
   | { t: 'editForm', form: Form, id: ItemId, saveCont: FormEditSaveCont }
@@ -63,35 +65,7 @@ export function addInboxForm(state: State, form: Form): Action {
   };
 }
 
-const letterPatterns: [RegExp | string, (state: State, letter: LetterItem) => Action][] = [
-  [(/catalog/i), (state, letter) => addInboxDoc(state, { t: 'store-catalog' })],
-  ['money', (state, letter) => ({ t: 'bigMoney' })],
-  [(/sto-001/i), (state, letter) => addInboxForm(state, { t: 'STO-001' })],
-  [(/env-001/i), (state, letter) => addInboxForm(state, { t: 'ENV-001' })],
-  ['', (state, letter) => addInboxDoc(state, { t: 'brochure', inResponseTo: letter.body })],
-];
-
-function resolveSentItem(state: State, item: Item): Action {
-  switch (item.t) {
-    case 'letter':
-      for (const [pattern, action] of letterPatterns) {
-        if (item.body.match(pattern)) {
-          return action(state, item);
-        }
-      }
-      return { t: 'none' };
-    case 'form': return resolveForm(state, item);
-    case 'envelope': return { t: 'none' };
-
-    // shouldn't be able to send any of these
-    case 'doc': return { t: 'none' };
-    case 'otherRigidContainer': return { t: 'none' };
-    case 'flexContainer': return { t: 'none' };
-    case 'stack': return { t: 'none' };
-  }
-}
-
-function addFuture(state: State, delta_time: number, action: Action): void {
+export function addFuture(state: State, delta_time: number, action: Action): void {
   state.futures.push({ action, time: state.time + delta_time });
 }
 
@@ -117,6 +91,10 @@ export function enterInboxMenu(state: State): Action {
   return { t: 'enterUi', frame: { t: 'menu', which: { t: 'flexContainer', id: getInboxId(state) }, ix: 0 } };
 }
 
+export function enterOutboxMenu(state: State): Action {
+  return { t: 'enterUi', frame: { t: 'menu', which: { t: 'flexContainer', id: getOutboxId(state) }, ix: 0 } };
+}
+
 export function enterSkillsMenu(): Action {
   return { t: 'enterUi', frame: { t: 'skills' } };
 }
@@ -132,6 +110,11 @@ export function addItems(state: State, items: WrapSubItem[], unread: boolean): I
   });
 }
 
+function advanceTime(state: State): void {
+  state.time++;
+  maybeResolveOutbox(state);
+}
+
 export function doAction(state: State, action: Action): void {
   if (DEBUG.actions) {
     logger(state, JSON.stringify(['doAction', state, action]));
@@ -139,11 +122,11 @@ export function doAction(state: State, action: Action): void {
   switch (action.t) {
     case 'exit': quit(); break;
     case 'sleep':
-      state.time++;
+      advanceTime(state);
       break;
     case 'collect': {
       adjustResource(state, randElt(collectResources), 1);
-      state.time++;
+      advanceTime(state);
     } break;
     case 'recycle':
       adjustResource(state, 'cash', getResource(state, 'bottle'));
@@ -174,15 +157,6 @@ export function doAction(state: State, action: Action): void {
         goBack(state);
       }
     } break;
-    case 'send':
-      const item = findItem(state, action.id);
-      addFuture(state, 3, resolveSentItem(state, item));
-      const loc = getLocation(state, action.id);
-      if (loc === undefined) {
-        throw new Error(`sent element has no location`);
-      }
-      deleteAtLocation(state, loc);
-      break;
     case 'bigMoney':
       logger(state, 'got big money');
       adjustResource(state, 'cash', 50);
@@ -194,7 +168,7 @@ export function doAction(state: State, action: Action): void {
       state.uiStack.unshift({ t: 'display', which: action.doc });
       break;
     case 'debug':
-      state.uiStack.unshift({ t: 'debug' });
+      fs.writeFileSync('/tmp/state.json', JSON.stringify(state, null, 2));
       break;
     case 'none':
       break;

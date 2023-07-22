@@ -7,6 +7,7 @@ export const DEBUG = {
   initialItems: false,
   logToFile: false,
   actions: false,
+  menu: true,
 };
 
 function delay(ms: number): Promise<void> {

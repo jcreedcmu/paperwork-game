@@ -60,6 +60,7 @@ export type State = {
   specialItems: {
     root: ItemId,
     inbox: ItemId,
+    outbox: ItemId,
   }
   unread: Record<ItemId, boolean>,
   itemLocs_: Record<ItemId, Location | undefined>,
@@ -82,6 +83,7 @@ export function initState(): State {
     specialItems: {
       root: 0,
       inbox: 0,
+      outbox: 0,
     },
     unread: {},
     itemLocs_: {},
@@ -99,7 +101,9 @@ export function initState(): State {
   };
   rv.specialItems.root = createItem(rv, { t: 'flexContainer', contents: [] });
   rv.specialItems.inbox = createItem(rv, { t: 'flexContainer', contents: [] });
+  rv.specialItems.outbox = createItem(rv, { t: 'flexContainer', contents: [] });
   appendToFlexContainer(rv, rv.specialItems.root, rv.specialItems.inbox);
+  appendToFlexContainer(rv, rv.specialItems.root, rv.specialItems.outbox);
   return rv;
 }
 
@@ -378,6 +382,10 @@ export function isInbox(state: State, itemId: ItemId): boolean {
 
 export function getInboxId(state: State): ItemId {
   return state.specialItems.inbox;
+}
+
+export function getOutboxId(state: State): ItemId {
+  return state.specialItems.outbox;
 }
 
 export function getRootId(state: State): ItemId {

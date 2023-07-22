@@ -1,5 +1,7 @@
+import { enterOutboxMenu } from './action';
 import { Action, doAction, enterFlexContainerMenu, enterInboxMenu, enterRigidContainerMenu, enterSkillsMenu } from './action';
 import { TextBuffer } from './buffer';
+import { DEBUG } from './debug';
 import { Document, stringOfDoc } from './doc';
 import { EditFrame } from './edit-letter';
 import { FormEditFrame, stringOfForm } from './form';
@@ -9,6 +11,9 @@ import { getResource } from './resource';
 import { SkillsFrame } from './skills';
 import { Item, Location, State, canWriteLetter, findItem, getInbox, hasInboxItems, isInbox, isUnread, requireFlexContainer, requireRigidContainer } from './state';
 import { mod } from './util';
+
+// XXX: Might want to reconsider this
+const alwaysShowInbox = true;
 
 export type Menu =
   | { t: 'main' }
@@ -92,11 +97,12 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
   switch (frame.which.t) {
     case 'main': {
       const menuItems: MenuItem[] = [
-        // { t: 'debug' },
         { name: 'sleep', action: { t: 'sleep' } },
         { name: 'collect', action: { t: 'collect' } },
       ];
-
+      if (DEBUG.menu) {
+        menuItems.push({ name: 'debug', action: { t: 'debug' } });
+      }
       if (getResource(state, 'bottle') > 0) {
         menuItems.push({ name: 'recycle', action: { t: 'recycle' } });
       }
@@ -106,11 +112,12 @@ export function menuItemsOfFrame(state: State, frame: MenuFrame): MenuItem[] {
       if (canWriteLetter(state)) {
         menuItems.push({ name: 'new letter', action: { t: 'newLetter' } });
       }
-      if (hasInboxItems(state) || state.inv.hand !== undefined) {
+      if (hasInboxItems(state) || state.inv.hand !== undefined || alwaysShowInbox) {
         const unreadCount = getInbox(state).filter(itemId => isUnread(state, itemId)).length;
         const unread = unreadCount > 0 ? ` (${unreadCount})` : '';
         menuItems.push({ name: `inbox${unread}...`, action: enterInboxMenu(state) });
       }
+      menuItems.push({ name: `outbox...`, action: enterOutboxMenu(state) });
       menuItems.push({ name: 'skills', action: enterSkillsMenu() });
       menuItems.push({ name: 'exit', action: { t: 'exit' } });
       return menuItems;

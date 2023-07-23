@@ -5,13 +5,18 @@ import { State } from './state';
 export type ErrorResponse =
   | { t: 'badNumber', s: string }
   | { t: 'paymentMismatch', enclosed: number, specified: number }
-  | { t: 'paymentWrong', should: number, actual: number };
+  | { t: 'paymentWrong', should: number, actual: number }
+  | { t: 'addressWrong', actual: string }
+  | { t: 'itemMissing' }
+  ;
 
 function errorResponseContent(e: ErrorResponse): string {
   switch (e.t) {
     case 'badNumber': return `Can't parse '${e.s}' as a number.`;
     case 'paymentMismatch': return `Enclosed $${e.enclosed} but specified $${e.specified}.`;
     case 'paymentWrong': return `Should have paid $${e.should} but actually paid $${e.actual}.`;
+    case 'addressWrong': return `Unknown address '${e.actual}'.`;
+    case 'itemMissing': return `Required item missing in submission.`;
   }
 }
 

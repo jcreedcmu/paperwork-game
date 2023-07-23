@@ -195,7 +195,7 @@ export function doFormEditUiAction(state: State, frame: FormEditFrame, action: F
   }
 }
 
-function addError(state: State, errorResponse: ErrorResponse): Action {
+export function addError(state: State, errorResponse: ErrorResponse): Action {
   return addInboxDoc(state, { t: 'error-response', errorResponse });
 }
 

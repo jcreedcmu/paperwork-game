@@ -1,7 +1,7 @@
-import { Action, addFuture, addInboxDoc, addInboxForm } from './action';
-import { resolveForm } from './form';
+import { Action, addFuture, addInboxDoc, addInboxForm, addItems } from './action';
+import { addError, resolveForm } from './form';
 import { logger, message } from './logger';
-import { Item, LetterItem, State, deleteAtLocation, findItem, getLocation, getOutboxId, removeLocation, requireFlexContainer } from './state';
+import { EnvelopeItem, Item, LetterItem, State, deleteAtLocation, findItem, getLocation, getOutboxId, removeLocation, requireFlexContainer } from './state';
 
 export const OUTBOX_PERIOD = 10;
 
@@ -27,6 +27,29 @@ export function maybeResolveOutbox(state: State) {
   }
 }
 
+function resolveEnvelope(state: State, item: EnvelopeItem): Action {
+  if (item.address == 'department of forms') {
+    if (item.contents[0] !== undefined) {
+      return {
+        t: 'addItems', unread: true, items: [{
+          item: {
+            t: 'form',
+            form: { t: 'STO-001' },
+            formData: [],
+            money: 30,
+          }
+        }]
+      };
+    }
+    else {
+      return addError(state, { t: 'itemMissing' });
+    }
+  }
+  else {
+    return addError(state, { t: 'addressWrong', actual: item.address });
+  }
+}
+
 const letterPatterns: [RegExp | string, (state: State, letter: LetterItem) => Action][] = [
   [(/catalog/i), (state, letter) => addInboxDoc(state, { t: 'store-catalog' })],
   ['money', (state, letter) => ({ t: 'bigMoney' })],
@@ -45,7 +68,7 @@ function resolveSentItem(state: State, item: Item): Action {
       }
       return { t: 'none' };
     case 'form': return resolveForm(state, item);
-    case 'envelope': return { t: 'none' };
+    case 'envelope': return resolveEnvelope(state, item);
 
     // shouldn't be able to send any of these
     case 'doc': return { t: 'none' };

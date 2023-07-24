@@ -28,25 +28,44 @@ export function maybeResolveOutbox(state: State) {
 }
 
 function resolveEnvelope(state: State, item: EnvelopeItem): Action {
-  if (item.address == 'department of forms') {
-    if (item.contents[0] !== undefined) {
-      return {
-        t: 'addItems', unread: true, items: [{
-          item: {
-            t: 'form',
-            form: { t: 'STO-001' },
-            formData: [],
-            money: 30,
-          }
-        }]
-      };
+  switch (item.address) {
+    case 'department of forms': {
+      if (item.contents[0] !== undefined) {
+        return {
+          t: 'addItems', unread: true, items: [{
+            item: {
+              t: 'form',
+              form: { t: 'STO-001' },
+              formData: [],
+              money: 30,
+            }
+          }]
+        };
+      }
+      else {
+        return addError(state, { t: 'itemMissing' });
+      }
     }
-    else {
-      return addError(state, { t: 'itemMissing' });
-    }
-  }
-  else {
-    return addError(state, { t: 'addressWrong', actual: item.address });
+    case 'department of envelopes':
+      {
+        if (item.contents[0] !== undefined) {
+          return {
+            t: 'addItems', unread: true, items: [{
+              item: {
+                t: 'form',
+                form: { t: 'ENV-001' },
+                formData: [],
+                money: 30,
+              }
+            }]
+          };
+        }
+        else {
+          return addError(state, { t: 'itemMissing' });
+        }
+      }
+    default:
+      return addError(state, { t: 'addressWrong', actual: item.address });
   }
 }
 

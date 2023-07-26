@@ -29,6 +29,28 @@ export function maybeResolveOutbox(state: State) {
 
 function resolveEnvelope(state: State, item: EnvelopeItem): Action {
   switch (item.address) {
+    case 'university catalog service': {
+      if (item.contents[0] !== undefined) {
+        const containedItem = findItem(state, item.contents[0]);
+        if (containedItem.t != 'letter') {
+          return addError(state, { t: 'itemMissing' });
+        }
+        if (containedItem.body != 'please send university catalog') {
+          return addError(state, { t: 'itemMissing' });
+        }
+        return {
+          t: 'addItems', unread: true, items: [{
+            item: {
+              t: 'doc',
+              doc: { t: 'university-catalog' },
+            }
+          }]
+        };
+      }
+      else {
+        return addError(state, { t: 'itemMissing' });
+      }
+    }
     case 'department of forms': {
       if (item.contents[0] !== undefined) {
         return {

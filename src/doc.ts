@@ -23,13 +23,16 @@ function errorResponseContent(e: ErrorResponse): string {
 export type Document =
   | { t: 'brochure', inResponseTo: string }
   | { t: 'error-response', errorResponse: ErrorResponse }
-  | { t: 'store-catalog' };
+  | { t: 'store-catalog' }
+  | { t: 'university-catalog' }
+  ;
 
 export function stringOfDoc(doc: Document): string {
   switch (doc.t) {
     case 'brochure': return 'Brochure';
     case 'store-catalog': return 'Catalog';
     case 'error-response': return 'Response Letter';
+    case 'university-catalog': return 'University Catalog';
   }
 }
 
@@ -48,11 +51,18 @@ const storeCatalogContent =
   - paper $1
   - radio $100`;
 
+const universityCatalogContent =
+  `The university offers courses on
+  - translation
+  - cooking
+  - notary`;
+
 export function contentOfDoc(doc: Document): string {
   switch (doc.t) {
     case 'brochure': return brochureContent(doc.inResponseTo);
     case 'store-catalog': return storeCatalogContent;
     case 'error-response': return errorResponseContent(doc.errorResponse);
+    case 'university-catalog': return universityCatalogContent;
   }
 }
 
